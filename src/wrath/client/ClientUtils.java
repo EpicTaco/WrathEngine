@@ -18,8 +18,6 @@
 
 package wrath.client;
 
-import java.awt.Desktop;
-import java.awt.Desktop.Action;
 import java.awt.Font;
 import java.awt.FontFormatException;
 import java.awt.image.BufferedImage;
@@ -27,10 +25,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.nio.ByteBuffer;
 import javax.imageio.ImageIO;
-import javax.swing.JOptionPane;
 import org.newdawn.slick.TrueTypeFont;
 import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureLoader;
@@ -157,43 +153,5 @@ public class ClientUtils
             Logger.getErrorLogger().log("Could not load texture from '" + file.getName() + "'! I/O Error occured or file not found!");
         }
         return null;
-    }
-    
-    /**
-     * Opens the URL in the System's default web browser.
-     * @param url The URL in the form of a String.
-     */
-    public static void openUrlInBrowser(String url)
-    {   
-        if(Desktop.isDesktopSupported())
-        {
-            Desktop desktop = Desktop.getDesktop();
-            if(desktop.isSupported(Action.BROWSE))
-            {
-                try 
-                {
-                    desktop.browse(URI.create(url));
-                }
-                catch(IOException e)
-                {
-                    Logger.getErrorLogger().log("Could not open URL '" + url + "' in browser! URL may not be valid!");
-                }
-            }
-            else
-            {
-                Logger.getErrorLogger().log("Could not open URL '" + url + "' in browser! Action not supported!");
-            }
-        }
-    }
-    
-    /**
-     * Displays an error message in modal form, and closes the program if fatal.
-     * @param message The message to display to the user.
-     * @param fatal Determines whether or not the error is fatal, if fatal the program will close.
-     */
-    public static void throwInternalError(String message, boolean fatal)
-    {
-        JOptionPane.showMessageDialog(null, message, "!! INTERNAL ERROR !!", JOptionPane.ERROR_MESSAGE);
-        if(fatal) System.exit(0);
     }
 }
