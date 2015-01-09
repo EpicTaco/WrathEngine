@@ -15,13 +15,29 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+/**
+ * NOTES:
+ *  - Work on Scheduler.
+ *  - Work on Input.
+ *  - Work on audio.
+ *  - Work on in-game structures (Item framework, Entity framework, etc).
+ *  - Add physics.
+ *  - Add networking.
+ *  - Add encryption.
+ *  - Make external modding API.
+ */
 package wrath.client;
 
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.util.HashMap;
 import org.lwjgl.Sys;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
 import org.lwjgl.glfw.GLFWKeyCallback;
+import org.lwjgl.glfw.GLFWMouseButtonCallback;
 import org.lwjgl.glfw.GLFWvidmode;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLContext;
@@ -35,6 +51,10 @@ import wrath.util.Logger;
  */
 public class Game 
 {
+    /**
+     * Used to differentiate between whether the action should execute when a key is pressed or released.
+     */
+    public static enum KeyAction {KEY_PRESS, KEY_RELEASE;}
     /**
      * Enumerator describing what Operating Platform the game is running off of.
      */
@@ -53,18 +73,23 @@ public class Game
     private final String TITLE;
     private final double TPS;
     private final String VERSION;
-     
+
     private final Config gameConfig = new Config("game");
     private final Logger gameLogger = new Logger("info");
     
     private GLFWErrorCallback errStr;
     private GLFWKeyCallback keyStr;
+    private GLFWMouseButtonCallback mkeyStr;
+    private GLFWFramebufferSizeCallback winSizeStr;
     
     private boolean isRunning = false;
     private int resWidth = 800;
     private int resHeight = 600;
     private long window;
     private WindowState windowState;
+    
+    private final HashMap<Integer, IKeyData> keyboardMap = new HashMap<>();
+    private final HashMap<Integer, IKeyData> mouseMap = new HashMap<>();
     
     /**
      * Constructor.
@@ -94,6 +119,15 @@ public class Game
             Logger.getErrorLogger().log("Could not determine OS Type! You must define java.library.path in the runtime options using '-Djava.library.path='!");
             stopImpl();
         }
+    }
+    
+    /**
+     * Centers the window in the middle of the designated primary monitor.
+     */
+    public void centerWindow()
+    {
+        ByteBuffer vidmode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
+        GLFW.glfwSetWindowPos(window, (GLFWvidmode.width(vidmode) - getWindowWidth()) / 2, (GLFWvidmode.height(vidmode) - getWindowHeight()) / 2);
     }
     
     /**
@@ -188,6 +222,32 @@ public class Game
     }
     
     /**
+     * Gets the height, in pixels, of the window.
+     * @return Gets the height of the window, measured in pixels.
+     */
+    public int getWindowHeight()
+    {
+        IntBuffer height = IntBuffer.allocate(3);
+        IntBuffer width = IntBuffer.allocate(3);
+        GLFW.glfwGetFramebufferSize(window, width, height);
+        
+        return height.get(0);
+    }
+    
+    /**
+     * Gets the width, in pixels, of the window.
+     * @return Returns the width of the window, measured in pixels.
+     */
+    public int getWindowWidth()
+    {
+        IntBuffer height = IntBuffer.allocate(3);
+        IntBuffer width = IntBuffer.allocate(3);
+        GLFW.glfwGetFramebufferSize(window, width, height);
+        
+        return width.get(0);
+    }
+    
+    /**
      * Returns whether or not the game is currently running.
      * @return Returns true if the game is running, otherwise false.
      */
@@ -202,11 +262,17 @@ public class Game
     private void loop()
     {
         //Set-up timing
-        while(isRunning/*&& Display.isCloseRequested()*/)
+        while(isRunning && GLFW.glfwWindowShouldClose(window) != GL11.GL_TRUE)
         {
             //TODO: Create timings
             onTickPreprocessor();
+            
+            GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
             render();
+            GLFW.glfwSwapBuffers(window);
+            
+            GLFW.glfwPollEvents();
+            
         }
         
         stop();
@@ -250,6 +316,16 @@ public class Game
     {
         resWidth = width;
         resHeight = height;
+        //TODO: Adjust rendering resolution via OpenGL!
+    }
+    
+    /**
+     * Changes the size of the window.
+     * @param width New width of the window, measured in pixels.
+     * @param height New height of the window, measures in pixels.
+     */
+    public void setWindowResolution(int width, int height)
+    {
         GLFW.glfwSetWindowSize(window, width, height);
     }
     
@@ -273,13 +349,14 @@ public class Game
         }
         
         //Initialize GLFW and OpenGL
-        GLFW.glfwSetErrorCallback(new GLFWErrorCallback() {
+        GLFW.glfwSetErrorCallback((errStr = new GLFWErrorCallback()
+        {
             @Override
             public void invoke(int error, long description) 
             {
                 Logger.getErrorLogger().log("GLFW hit ERROR ID '" + error + "' with message '" + description + "'!");
             }
-        });
+        }));
         
         if(GLFW.glfwInit() != GL11.GL_TRUE)
         {
@@ -287,6 +364,42 @@ public class Game
             stopImpl();
             return;
         }
+        
+        GLFW.glfwSetFramebufferSizeCallback(window,(winSizeStr = new GLFWFramebufferSizeCallback() 
+        {
+            @Override
+            public void invoke(long window, int width, int height) 
+            {
+                if(gameConfig.getBoolean("ResolutionIsWindowSize", true))
+                    GL11.glViewport(0, 0, width, height);
+            }
+        }));
+        
+        GLFW.glfwSetKeyCallback(window, (keyStr = new GLFWKeyCallback()
+        {
+            @Override
+            public void invoke(long window, int key, int scancode, int action, int mods)
+            {
+                if(keyboardMap.containsKey(key))
+                {
+                    IKeyData dat = keyboardMap.get(key);
+                    if(dat.getRawAction() == action) dat.execute();
+                }
+            }
+        }));
+        
+        GLFW.glfwSetMouseButtonCallback(window, (mkeyStr = new GLFWMouseButtonCallback() 
+        {
+            @Override
+            public void invoke(long window, int button, int action, int mods) 
+            {
+                if(mouseMap.containsKey(button))
+                {
+                    IKeyData dat = mouseMap.get(button);
+                    if(dat.getRawAction() == action) dat.execute();
+                }
+            }
+        }));
         
         GLFW.glfwDefaultWindowHints();
         GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GL11.GL_FALSE);
@@ -301,6 +414,9 @@ public class Game
         else if(gameConfig.getString("WindowState", "Windowed").equalsIgnoreCase("fullscreen_windowed")) windowState = WindowState.FULLSCREEN_WINDOWED;
         else if(gameConfig.getString("WindowState", "Windowed").equalsIgnoreCase("fullscreen")) windowState = WindowState.FULLSCREEN;
         
+        resWidth = gameConfig.getInt("ResolutionWidth", 800);
+        resHeight = gameConfig.getInt("ResolutionHeight", 600);
+        
         if(windowState == WindowState.FULLSCREEN)
         {
             ByteBuffer videomode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
@@ -314,16 +430,18 @@ public class Game
         }
         else if(windowState == WindowState.WINDOWED)
         {
-            
+            window = GLFW.glfwCreateWindow(gameConfig.getInt("WindowWidth", 800), gameConfig.getInt("WindowHeight", 600), TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
         }
         else if(windowState == WindowState.WINDOWED_UNDECORATED)
         {
-            
+            GLFW.glfwWindowHint(GLFW.GLFW_DECORATED, GL11.GL_FALSE);
+            window = GLFW.glfwCreateWindow(gameConfig.getInt("WindowWidth", 800), gameConfig.getInt("WindowHeight", 600), TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
         }
         
         if(window == MemoryUtil.NULL)
         {
-            //Error occured!
+            Logger.getErrorLogger().log("Could not initialize window! Window Info[(" + resWidth + "x" + resHeight + ")@(" + gameConfig.getInt("WindowWidth", 800) + "x" + gameConfig.getInt("WindowHeight", 600) + ")]");
+            stopImpl();
         }
         
         GLFW.glfwMakeContextCurrent(window);
@@ -351,14 +469,69 @@ public class Game
      */
     private void stopImpl()
     {
+        try{
+        winSizeStr.release();
         keyStr.release();
+        mkeyStr.release();
         GLFW.glfwDestroyWindow(window);
         GLFW.glfwTerminate();
         
         gameConfig.save();
-        gameLogger.close();
+        if(gameLogger != null && !gameLogger.isClosed()) gameLogger.close();
         errStr.release();
-        
+        }catch(Exception e){}
         System.exit(0);
+    }
+    
+    /**
+     * Internal class to store Key Data in a hash map.
+     */
+    public class IKeyData
+    {
+        private final KeyAction action;
+        private final int actionRaw;
+        private final Runnable event;
+
+        /**
+         * Constructor.
+         * @param action The {@link wrath.client.Game.KeyAction} to trigger the event on.
+         * @param event The action to execute when the specified key's specified action occurs.
+         */
+        public IKeyData(KeyAction action, Runnable event)
+        {
+            this.action = action;
+            
+            if(action == KeyAction.KEY_PRESS) this.actionRaw = GLFW.GLFW_PRESS;
+            else this.actionRaw = GLFW.GLFW_RELEASE;
+            
+            this.event = event;
+        }
+        
+        /**
+         * Executes the event specified in the constructor, as if the action was triggered by the input.
+         */
+        public void execute()
+        {
+            event.run();
+        }
+        
+        /**
+         * Gets the {@link wrath.client.Game.KeyAction} of the key set.
+         * This is used to determine whether to execute the event when a key is pressed, or execute the event when the key is released.
+         * @return Returns the {@link wrath.client.Game.KeyAction} specified in the Constructor.
+         */
+        public KeyAction getAction()
+        {
+            return action;
+        }
+        
+        /**
+         * Used by the internal engine to obtain the GLFW action code.
+         * @return Returns the int version of the KeyAction for use with GLFW.
+         */
+        public int getRawAction()
+        {
+            return actionRaw;
+        }
     }
 }
