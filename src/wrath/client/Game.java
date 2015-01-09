@@ -227,6 +227,7 @@ public class Game
         
         //TODO: initialize display and opengl
         
+        onGameOpen();
         loop();
     }
     
@@ -235,6 +236,7 @@ public class Game
      */
     public void stop()
     {
+        onGameClose();
         isRunning = false;
     }
     
