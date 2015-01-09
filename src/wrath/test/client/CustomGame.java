@@ -26,8 +26,14 @@ import wrath.client.Game;
  */
 public class CustomGame extends Game
 {
+    public CustomGame(String[] args)
+    {
+        super("Test Client", "INDEV", 30, RenderMode.Mode2D);
+        start(args);
+    }
+    
     public static void main(String[] args)
     {
-        
+        new CustomGame(args);
     }
 }

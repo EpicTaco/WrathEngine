@@ -17,11 +17,151 @@
  */
 package wrath.client;
 
+import wrath.util.Config;
+import wrath.util.Logger;
+
 /**
  * The entry point and base of the game. Make a class extending this and overriding at least render() method.
  * @author EpicTaco
  */
 public class Game 
 {
+    public static enum Platform {LINUX, MACOS, SOLARIS, WINDOWS;}
+    public static enum RenderMode {Mode2D, Mode3D;}
+    public static enum WindowState {FULLSCREEN, FULLSCREEN_WINDOWED, WINDOWED, WINDOWED_UNDECORATED;}
     
+    private final RenderMode MODE;
+    private final Platform OS;
+    private final String TITLE;
+    private final double TPS;
+    private final String VERSION;
+     
+    private final Config gameConfig = new Config("game");
+    private final Logger gameLogger = new Logger("info");
+    
+    private boolean isRunning = false;
+    
+    public Game(String gameTitle, String version, double ticksPerSecond, RenderMode renderMode)
+    {
+        MODE = renderMode;
+        TITLE = gameTitle;
+        VERSION = version;
+        TPS = ticksPerSecond;
+        
+        String osBuf = System.getProperty("os.name").toLowerCase();
+        if(osBuf.contains("win")) OS = Platform.WINDOWS;
+        else if(osBuf.contains("mac")) OS = Platform.MACOS;
+        else if(osBuf.contains("nix") || osBuf.contains("nux") || osBuf.contains("aix")) OS = Platform.LINUX;
+        else if(osBuf.contains("sunos")) OS = Platform.SOLARIS;
+        else
+        {
+            OS = null;
+            Logger.getErrorLogger().log("Could not determine OS Type! You must define java.library.path in the runtime options using '-Djava.library.path='!");
+            return;
+        }
+        
+        
+    }
+    
+    public Config getConfig()
+    {
+        return gameConfig;
+    }
+    
+    public Logger getErrorLogger()
+    {
+        return Logger.getErrorLogger();
+    }
+    
+    public Logger getLogger()
+    {
+        return gameLogger;
+    }
+    
+    public Platform getOS()
+    {
+        return OS;
+    }
+    
+    public RenderMode getRenderMode()
+    {
+        return MODE;
+    }
+    
+    public String getTitle()
+    {
+        return TITLE;
+    }
+    
+    public double getTPS()
+    {
+        return TPS;
+    }
+    
+    public String getVersion()
+    {
+        return VERSION;
+    }
+    
+    public boolean isRunnning()
+    {
+        return isRunning;
+    }
+    
+    private void loop()
+    {
+        //Set-up timing
+        while(isRunning/*&& Display.isCloseRequested()*/)
+        {
+            //TODO: Create timings
+            onTickPreprocessor();
+            render();
+        }
+        
+        stop();
+        stopImpl();
+    }
+    
+    protected void onGameClose(){}
+    
+    protected void onGameOpen(){}
+    
+    protected void onTick(){}
+    
+    private void onTickPreprocessor()
+    {
+        onTick();
+    }
+    
+    protected void render(){}
+    
+    public void start(String[] args)
+    {
+        isRunning = true;
+        gameLogger.log("Launching " + TITLE + " Client v." + VERSION + "...");
+        
+        for(String a : args)
+        {
+            String[] b = a.split("=", 2);
+            if(b.length <= 1) return;
+            if(b[0].startsWith("#")) continue;
+            
+            gameConfig.setProperty(b[0], b[1]);
+        }
+        
+        //TODO: initialize display and opengl
+        
+        loop();
+    }
+    
+    public void stop()
+    {
+        isRunning = false;
+    }
+    
+    private void stopImpl()
+    {
+        gameConfig.save();
+        gameLogger.close();
+    }
 }
