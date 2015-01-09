@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import javax.imageio.ImageIO;
+import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.TrueTypeFont;
 import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureLoader;
@@ -118,6 +119,18 @@ public class ClientUtils
         }
         
         return ByteBuffer.allocate(0);
+    }
+    
+    /**
+     * Converts a primitive Java boolean to the LWJGL version of the boolean.
+     * Mostly a convenience method.
+     * @param bool The primitive Java boolean value.
+     * @return Returns the LWJGL version of the boolean.
+     */
+    public static int getLWJGLBoolean(boolean bool)
+    {
+        if(bool) return GL11.GL_TRUE;
+        else return GL11.GL_FALSE;
     }
     
     /**

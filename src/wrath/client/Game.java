@@ -17,6 +17,15 @@
  */
 package wrath.client;
 
+import java.nio.ByteBuffer;
+import org.lwjgl.Sys;
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.glfw.GLFWKeyCallback;
+import org.lwjgl.glfw.GLFWvidmode;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GLContext;
+import org.lwjgl.system.MemoryUtil;
 import wrath.util.Config;
 import wrath.util.Logger;
 
@@ -48,7 +57,14 @@ public class Game
     private final Config gameConfig = new Config("game");
     private final Logger gameLogger = new Logger("info");
     
+    private GLFWErrorCallback errStr;
+    private GLFWKeyCallback keyStr;
+    
     private boolean isRunning = false;
+    private int resWidth = 800;
+    private int resHeight = 600;
+    private long window;
+    private WindowState windowState;
     
     /**
      * Constructor.
@@ -65,6 +81,8 @@ public class Game
         VERSION = version;
         TPS = ticksPerSecond;
         
+        System.setProperty("org.lwjgl.librarypath", "assets/native");
+        
         String osBuf = System.getProperty("os.name").toLowerCase();
         if(osBuf.contains("win")) OS = Platform.WINDOWS;
         else if(osBuf.contains("mac")) OS = Platform.MACOS;
@@ -74,10 +92,8 @@ public class Game
         {
             OS = null;
             Logger.getErrorLogger().log("Could not determine OS Type! You must define java.library.path in the runtime options using '-Djava.library.path='!");
-            return;
+            stopImpl();
         }
-        
-        
     }
     
     /**
@@ -124,6 +140,24 @@ public class Game
     public RenderMode getRenderMode()
     {
         return MODE;
+    }
+    
+    /**
+     * Gets the height of the rendering resolution.
+     * @return Returns the height of the rendering resolution.
+     */
+    public int getResolutionHeight()
+    {
+        return resHeight;
+    }
+    
+    /**
+     * Gets the width of the rendering resolution.
+     * @return Returns the width of the rendering resolution.
+     */
+    public int getResolutionWidth()
+    {
+        return resWidth;
     }
     
     /**
@@ -208,14 +242,27 @@ public class Game
     protected void render(){}
     
     /**
+     * Sets the rendering resolution as well as the window size of the window.
+     * @param width The width, in pixels, of the resolution.
+     * @param height The height, in pixels, of the resolution.
+     */
+    public void setResolution(int width, int height)
+    {
+        resWidth = width;
+        resHeight = height;
+        GLFW.glfwSetWindowSize(window, width, height);
+    }
+    
+    /**
      * Method that is used to load the game and all of it's resources.
      * @param args Arguments, usually from the main method (entry point).
      */
     public void start(String[] args)
     {
         isRunning = true;
-        gameLogger.log("Launching " + TITLE + " Client v." + VERSION + "...");
+        gameLogger.log("Launching '" + TITLE + "' Client v." + VERSION + " on '" + OS.toString() +"' platform with LWJGL v." + Sys.getVersion() + "!");
         
+        //Interpret command-line arguments
         for(String a : args)
         {
             String[] b = a.split("=", 2);
@@ -225,7 +272,65 @@ public class Game
             gameConfig.setProperty(b[0], b[1]);
         }
         
-        //TODO: initialize display and opengl
+        //Initialize GLFW and OpenGL
+        GLFW.glfwSetErrorCallback(new GLFWErrorCallback() {
+            @Override
+            public void invoke(int error, long description) 
+            {
+                Logger.getErrorLogger().log("GLFW hit ERROR ID '" + error + "' with message '" + description + "'!");
+            }
+        });
+        
+        if(GLFW.glfwInit() != GL11.GL_TRUE)
+        {
+            Logger.getErrorLogger().log("Could not initialize GLFW! Unknown Error!");
+            stopImpl();
+            return;
+        }
+        
+        GLFW.glfwDefaultWindowHints();
+        GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GL11.GL_FALSE);
+        GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, ClientUtils.getLWJGLBoolean(gameConfig.getBoolean("WindowResizable", true)));
+        GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, ClientUtils.getLWJGLBoolean(gameConfig.getBoolean("APIForwardCompatMode", false)));
+        GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_DEBUG_CONTEXT, ClientUtils.getLWJGLBoolean(gameConfig.getBoolean("DebugMode", false)));
+        GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, gameConfig.getInt("DisplaySamples", 0));
+        GLFW.glfwWindowHint(GLFW.GLFW_REFRESH_RATE, gameConfig.getInt("DisplayRefreshRate", 0));
+        
+        if(gameConfig.getString("WindowState", "Windowed").equalsIgnoreCase("windowed")) windowState = WindowState.WINDOWED;
+        else if(gameConfig.getString("WindowState", "Windowed").equalsIgnoreCase("windowed_undecorated")) windowState = WindowState.WINDOWED_UNDECORATED;
+        else if(gameConfig.getString("WindowState", "Windowed").equalsIgnoreCase("fullscreen_windowed")) windowState = WindowState.FULLSCREEN_WINDOWED;
+        else if(gameConfig.getString("WindowState", "Windowed").equalsIgnoreCase("fullscreen")) windowState = WindowState.FULLSCREEN;
+        
+        if(windowState == WindowState.FULLSCREEN)
+        {
+            ByteBuffer videomode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
+            window = GLFW.glfwCreateWindow(GLFWvidmode.width(videomode), GLFWvidmode.height(videomode), TITLE, GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL);
+        }
+        else if(windowState == WindowState.FULLSCREEN_WINDOWED)
+        {
+            ByteBuffer videomode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
+            GLFW.glfwWindowHint(GLFW.GLFW_DECORATED, GL11.GL_FALSE);
+            window = GLFW.glfwCreateWindow(GLFWvidmode.width(videomode), GLFWvidmode.height(videomode), TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
+        }
+        else if(windowState == WindowState.WINDOWED)
+        {
+            
+        }
+        else if(windowState == WindowState.WINDOWED_UNDECORATED)
+        {
+            
+        }
+        
+        if(window == MemoryUtil.NULL)
+        {
+            //Error occured!
+        }
+        
+        GLFW.glfwMakeContextCurrent(window);
+        if(gameConfig.getBoolean("DisplayVsync", true)) GLFW.glfwSwapInterval(1);
+        GLFW.glfwShowWindow(window);
+        GLContext.createFromCurrent();
+        GL11.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         
         onGameOpen();
         loop();
@@ -237,6 +342,7 @@ public class Game
     public void stop()
     {
         onGameClose();
+        gameLogger.log("Stopping '" + TITLE + "' Client v." + VERSION + "!");
         isRunning = false;
     }
     
@@ -245,7 +351,14 @@ public class Game
      */
     private void stopImpl()
     {
+        keyStr.release();
+        GLFW.glfwDestroyWindow(window);
+        GLFW.glfwTerminate();
+        
         gameConfig.save();
         gameLogger.close();
+        errStr.release();
+        
+        System.exit(0);
     }
 }
