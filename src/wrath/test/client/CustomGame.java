@@ -18,6 +18,7 @@
 package wrath.test.client;
 
 import wrath.client.Game;
+import wrath.client.Key;
 
 /**
  * Example game for testing the engine.
@@ -29,7 +30,28 @@ public class CustomGame extends Game
     public CustomGame(String[] args)
     {
         super("Test Client", "INDEV", 30, RenderMode.Mode2D);
-        start(args);
+        start(new String[]{"WindowState=windowed", "ResolutionWidth=1024", "ResolutionHeight=720", "ResolutionIsWindowSize=true"});
+    }
+    
+    @Override
+    public void onGameOpen()
+    {
+        addKeyboardFunction(Key.KEY_W, KeyAction.KEY_HOLD_DOWN, () ->
+        {
+            System.out.println("csp");
+        });
+        
+        addKeyboardFunction(Key.KEY_END, KeyAction.KEY_PRESS, () ->
+        {
+            stop();
+        });
+        
+        addKeyboardFunction(Key.KEY_LEFT_ALT, KeyAction.KEY_PRESS, () ->
+        {
+            setCursorEnabled(!isCursorEnabled());
+        });
+        
+        this.setCursorEnabled(true);
     }
     
     public static void main(String[] args)

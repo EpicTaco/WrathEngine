@@ -19,7 +19,6 @@
 /**
  * NOTES:
  *  - Work on Scheduler.
- *  - Work on Input.
  *  - Work on audio.
  *  - Work on in-game structures (Item framework, Entity framework, etc).
  *  - Add physics.
@@ -29,9 +28,11 @@
  */
 package wrath.client;
 
+import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.HashMap;
+import org.lwjgl.LWJGLUtil;
 import org.lwjgl.Sys;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -54,11 +55,7 @@ public class Game
     /**
      * Used to differentiate between whether the action should execute when a key is pressed or released.
      */
-    public static enum KeyAction {KEY_PRESS, KEY_RELEASE;}
-    /**
-     * Enumerator describing what Operating Platform the game is running off of.
-     */
-    public static enum Platform {LINUX, MACOS, SOLARIS, WINDOWS;}
+    public static enum KeyAction {KEY_HOLD_DOWN, KEY_PRESS, KEY_RELEASE;}
     /**
      * Enumerator describing whether the game should be run in 2D Mode or 3D Mode.
      */
@@ -69,7 +66,6 @@ public class Game
     public static enum WindowState {FULLSCREEN, FULLSCREEN_WINDOWED, WINDOWED, WINDOWED_UNDECORATED;}
     
     private final RenderMode MODE;
-    private final Platform OS;
     private final String TITLE;
     private final double TPS;
     private final String VERSION;
@@ -89,7 +85,9 @@ public class Game
     private WindowState windowState;
     
     private final HashMap<Integer, IKeyData> keyboardMap = new HashMap<>();
+    private final HashMap<Integer, Runnable> persKeyboardMap = new HashMap<>();
     private final HashMap<Integer, IKeyData> mouseMap = new HashMap<>();
+    private final HashMap<Integer, Runnable> persMouseMap = new HashMap<>();
     
     /**
      * Constructor.
@@ -108,17 +106,42 @@ public class Game
         
         System.setProperty("org.lwjgl.librarypath", "assets/native");
         
-        String osBuf = System.getProperty("os.name").toLowerCase();
-        if(osBuf.contains("win")) OS = Platform.WINDOWS;
-        else if(osBuf.contains("mac")) OS = Platform.MACOS;
-        else if(osBuf.contains("nix") || osBuf.contains("nux") || osBuf.contains("aix")) OS = Platform.LINUX;
-        else if(osBuf.contains("sunos")) OS = Platform.SOLARIS;
-        else
-        {
-            OS = null;
-            Logger.getErrorLogger().log("Could not determine OS Type! You must define java.library.path in the runtime options using '-Djava.library.path='!");
-            stopImpl();
-        }
+        File screenshotDir = new File("etc/screenshots");
+        if(!screenshotDir.exists()) screenshotDir.mkdirs();
+    }
+    
+    /**
+     * Adds a listener to a specified key on the {@link wrath.client.Key}.
+     * @param key The key to respond to.
+     * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
+     * @param event The {@link java.lang.Runnable} event to run after specified button is affected by the specified action.
+     */
+    public void addKeyboardFunction(int key, KeyAction action, Runnable event)
+    {
+        if(action == KeyAction.KEY_HOLD_DOWN)
+            keyboardMap.put(key, new IKeyData(KeyAction.KEY_PRESS, () ->
+            {
+                persKeyboardMap.put(key, event);
+                event.run();
+            }));
+        else keyboardMap.put(key, new IKeyData(action, event));
+    }
+    
+    /**
+     * Adds a listener to a specified key on the {@link wrath.client.Key}.
+     * @param key The key to respond to.
+     * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
+     * @param event The {@link java.lang.Runnable} event to run after specified button is affected by the specified action.
+     */
+    public void addMouseFunction(int key, KeyAction action, Runnable event)
+    {
+        if(action == KeyAction.KEY_HOLD_DOWN)
+            mouseMap.put(key, new IKeyData(KeyAction.KEY_PRESS, () ->
+            {
+                persMouseMap.put(key, event);
+                event.run();
+            }));
+        else mouseMap.put(key, new IKeyData(action, event));
     }
     
     /**
@@ -162,9 +185,9 @@ public class Game
      * Gets the Operating System the game is running on.
      * @return Returns the enumerator-style object representing what Operating System the game is running on.
      */
-    public Platform getOS()
+    public LWJGLUtil.Platform getOS()
     {
-        return OS;
+        return LWJGLUtil.getPlatform();
     }
     
     /**
@@ -248,6 +271,15 @@ public class Game
     }
     
     /**
+     * Returns whether or not the cursor is enabled.
+     * @return Returns true if the cursor is enabled, otherwise false.
+     */
+    public boolean isCursorEnabled()
+    {
+        return GLFW.glfwGetInputMode(window, GLFW.GLFW_CURSOR) == GLFW.GLFW_CURSOR_NORMAL;
+    }
+    
+    /**
      * Returns whether or not the game is currently running.
      * @return Returns true if the game is running, otherwise false.
      */
@@ -272,7 +304,6 @@ public class Game
             GLFW.glfwSwapBuffers(window);
             
             GLFW.glfwPollEvents();
-            
         }
         
         stop();
@@ -299,13 +330,53 @@ public class Game
      */
     private void onTickPreprocessor()
     {
+        persKeyboardMap.entrySet().stream().map((pairs) -> (Runnable) pairs.getValue()).forEach((ev) -> 
+        {
+            ev.run();
+        });
+
+        persMouseMap.entrySet().stream().map((pairs) -> (Runnable) pairs.getValue()).forEach((ev) -> 
+        {
+            ev.run();
+        });
+        
         onTick();
+    }
+    
+    /**
+     * Un-binds all functions bound to the specified key on the keyboard.
+     * @param key The key to un-bind all functions on.
+     */
+    public void removeKeyboardFunction(int key)
+    {
+        if(keyboardMap.containsKey(key))
+            keyboardMap.remove(key);
+    }
+    
+    /**
+     * Un-binds all functions bound to the specified key on the mouse.
+     * @param key The key to un-bind all functions on.
+     */
+    public void removeMouseFunction(int key)
+    {
+        if(mouseMap.containsKey(key))
+            mouseMap.remove(key);
     }
     
     /**
      * Override-able method that is called as much as possible to issue rendering commands.
      */
     protected void render(){}
+    
+    /**
+     * Enables or disables the cursor.
+     * @param cursorEnabled Whether the cursor should be enabled or disabled.
+     */
+    public void setCursorEnabled(boolean cursorEnabled)
+    {
+        if(cursorEnabled) GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
+        else GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
+    }
     
     /**
      * Sets the rendering resolution as well as the window size of the window.
@@ -336,18 +407,17 @@ public class Game
     public void start(String[] args)
     {
         isRunning = true;
-        gameLogger.log("Launching '" + TITLE + "' Client v." + VERSION + " on '" + OS.toString() +"' platform with LWJGL v." + Sys.getVersion() + "!");
+        gameLogger.log("Launching '" + TITLE + "' Client v." + VERSION + " on '" + LWJGLUtil.getPlatformName() +"' platform with LWJGL v." + Sys.getVersion() + "!");
         
         //Interpret command-line arguments
         for(String a : args)
         {
             String[] b = a.split("=", 2);
             if(b.length <= 1) return;
-            if(b[0].startsWith("#")) continue;
             
             gameConfig.setProperty(b[0], b[1]);
         }
-        
+
         //Initialize GLFW and OpenGL
         GLFW.glfwSetErrorCallback((errStr = new GLFWErrorCallback()
         {
@@ -364,42 +434,6 @@ public class Game
             stopImpl();
             return;
         }
-        
-        GLFW.glfwSetFramebufferSizeCallback(window,(winSizeStr = new GLFWFramebufferSizeCallback() 
-        {
-            @Override
-            public void invoke(long window, int width, int height) 
-            {
-                if(gameConfig.getBoolean("ResolutionIsWindowSize", true))
-                    GL11.glViewport(0, 0, width, height);
-            }
-        }));
-        
-        GLFW.glfwSetKeyCallback(window, (keyStr = new GLFWKeyCallback()
-        {
-            @Override
-            public void invoke(long window, int key, int scancode, int action, int mods)
-            {
-                if(keyboardMap.containsKey(key))
-                {
-                    IKeyData dat = keyboardMap.get(key);
-                    if(dat.getRawAction() == action) dat.execute();
-                }
-            }
-        }));
-        
-        GLFW.glfwSetMouseButtonCallback(window, (mkeyStr = new GLFWMouseButtonCallback() 
-        {
-            @Override
-            public void invoke(long window, int button, int action, int mods) 
-            {
-                if(mouseMap.containsKey(button))
-                {
-                    IKeyData dat = mouseMap.get(button);
-                    if(dat.getRawAction() == action) dat.execute();
-                }
-            }
-        }));
         
         GLFW.glfwDefaultWindowHints();
         GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GL11.GL_FALSE);
@@ -430,12 +464,14 @@ public class Game
         }
         else if(windowState == WindowState.WINDOWED)
         {
-            window = GLFW.glfwCreateWindow(gameConfig.getInt("WindowWidth", 800), gameConfig.getInt("WindowHeight", 600), TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
+            if(!gameConfig.getBoolean("ResolutionIsWindowSize", true)) window = GLFW.glfwCreateWindow(gameConfig.getInt("WindowWidth", 800), gameConfig.getInt("WindowHeight", 600), TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
+            else window = GLFW.glfwCreateWindow(gameConfig.getInt("ResolutionWidth", 800), gameConfig.getInt("ResolutionHeight", 600), TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
         }
         else if(windowState == WindowState.WINDOWED_UNDECORATED)
         {
             GLFW.glfwWindowHint(GLFW.GLFW_DECORATED, GL11.GL_FALSE);
-            window = GLFW.glfwCreateWindow(gameConfig.getInt("WindowWidth", 800), gameConfig.getInt("WindowHeight", 600), TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
+            if(!gameConfig.getBoolean("ResolutionIsWindowSize", true)) window = GLFW.glfwCreateWindow(gameConfig.getInt("WindowWidth", 800), gameConfig.getInt("WindowHeight", 600), TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
+            else window = GLFW.glfwCreateWindow(gameConfig.getInt("ResolutionWidth", 800), gameConfig.getInt("ResolutionHeight", 600), TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
         }
         
         if(window == MemoryUtil.NULL)
@@ -444,10 +480,49 @@ public class Game
             stopImpl();
         }
         
+        GLFW.glfwSetKeyCallback(window, (keyStr = new GLFWKeyCallback()
+        {
+            @Override
+            public void invoke(long window, int key, int scancode, int action, int mods)
+            {
+                if(persKeyboardMap.containsKey(key) && action == GLFW.GLFW_RELEASE) persKeyboardMap.remove(key);
+                if(keyboardMap.containsKey(key))
+                {
+                    IKeyData dat = keyboardMap.get(key);
+                    if(dat.getRawAction() == action) dat.execute();
+                }
+            }
+        }));
+        
+        GLFW.glfwSetMouseButtonCallback(window, (mkeyStr = new GLFWMouseButtonCallback() 
+        {
+            @Override
+            public void invoke(long window, int button, int action, int mods) 
+            {
+                if(persMouseMap.containsKey(button) && action == GLFW.GLFW_RELEASE) persMouseMap.remove(button);
+                if(mouseMap.containsKey(button))
+                {
+                    IKeyData dat = mouseMap.get(button);
+                    if(dat.getRawAction() == action) dat.execute();
+                }
+            }
+        }));
+        
         GLFW.glfwMakeContextCurrent(window);
         if(gameConfig.getBoolean("DisplayVsync", true)) GLFW.glfwSwapInterval(1);
         GLFW.glfwShowWindow(window);
         GLContext.createFromCurrent();
+        
+        GLFW.glfwSetFramebufferSizeCallback(window,(winSizeStr = new GLFWFramebufferSizeCallback() 
+        {
+            @Override
+            public void invoke(long window, int width, int height) 
+            {
+                if(gameConfig.getBoolean("ResolutionIsWindowSize", true))
+                    GL11.glViewport(0, 0, width, height);
+            }
+        }));
+                
         GL11.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         
         onGameOpen();
@@ -459,6 +534,8 @@ public class Game
      */
     public void stop()
     {
+        if(!isRunning) return;
+        
         onGameClose();
         gameLogger.log("Stopping '" + TITLE + "' Client v." + VERSION + "!");
         isRunning = false;
@@ -480,13 +557,14 @@ public class Game
         if(gameLogger != null && !gameLogger.isClosed()) gameLogger.close();
         errStr.release();
         }catch(Exception e){}
+        
         System.exit(0);
     }
     
     /**
      * Internal class to store Key Data in a hash map.
      */
-    public class IKeyData
+    private class IKeyData
     {
         private final KeyAction action;
         private final int actionRaw;
@@ -501,8 +579,8 @@ public class Game
         {
             this.action = action;
             
-            if(action == KeyAction.KEY_PRESS) this.actionRaw = GLFW.GLFW_PRESS;
-            else this.actionRaw = GLFW.GLFW_RELEASE;
+            if(action == KeyAction.KEY_RELEASE) this.actionRaw = GLFW.GLFW_RELEASE;
+                else this.actionRaw = GLFW.GLFW_PRESS;
             
             this.event = event;
         }
