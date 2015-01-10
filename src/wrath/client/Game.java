@@ -18,7 +18,6 @@
 
 /**
  * NOTES:
- *  - Work on Scheduler.
  *  - Work on audio.
  *  - Work on in-game structures (Item framework, Entity framework, etc).
  *  - Add physics.
@@ -30,7 +29,6 @@ package wrath.client;
 
 import java.io.File;
 import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 import java.util.HashMap;
 import org.lwjgl.LWJGLUtil;
 import org.lwjgl.Sys;
@@ -43,6 +41,7 @@ import org.lwjgl.glfw.GLFWvidmode;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLContext;
 import org.lwjgl.system.MemoryUtil;
+import wrath.common.scheduler.Scheduler;
 import wrath.util.Config;
 import wrath.util.Logger;
 
@@ -72,6 +71,7 @@ public class Game
 
     private final Config gameConfig = new Config("game");
     private final Logger gameLogger = new Logger("info");
+    private final Scheduler gameScheduler = new Scheduler();
     
     private GLFWErrorCallback errStr;
     private GLFWKeyCallback keyStr;
@@ -146,11 +146,12 @@ public class Game
     
     /**
      * Centers the window in the middle of the designated primary monitor.
+     * DO NOT use this while in any kind of full-screen mode.
      */
     public void centerWindow()
     {
         ByteBuffer vidmode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
-        GLFW.glfwSetWindowPos(window, (GLFWvidmode.width(vidmode) - getWindowWidth()) / 2, (GLFWvidmode.height(vidmode) - getWindowHeight()) / 2);
+        GLFW.glfwSetWindowPos(window, GLFWvidmode.width(vidmode) / 5, GLFWvidmode.height(vidmode) / 5);
     }
     
     /**
@@ -218,6 +219,15 @@ public class Game
     }
     
     /**
+     * Gets the standardized {@link wrath.common.scheduler.Scheduler} for the game.
+     * @return Returns the scheduler for the game.
+     */
+    public Scheduler getScheduler()
+    {
+        return gameScheduler;
+    }
+    
+    /**
      * Gets the title/name of the Game.
      * @return Returns the title of the Game.
      */
@@ -245,29 +255,12 @@ public class Game
     }
     
     /**
-     * Gets the height, in pixels, of the window.
-     * @return Gets the height of the window, measured in pixels.
+     * Gets the GLFW Window ID.
+     * @return Returns the {@link org.lwjgl.glfw.GLFW} window ID.
      */
-    public int getWindowHeight()
+    public long getWindowID()
     {
-        IntBuffer height = IntBuffer.allocate(3);
-        IntBuffer width = IntBuffer.allocate(3);
-        GLFW.glfwGetFramebufferSize(window, width, height);
-        
-        return height.get(0);
-    }
-    
-    /**
-     * Gets the width, in pixels, of the window.
-     * @return Returns the width of the window, measured in pixels.
-     */
-    public int getWindowWidth()
-    {
-        IntBuffer height = IntBuffer.allocate(3);
-        IntBuffer width = IntBuffer.allocate(3);
-        GLFW.glfwGetFramebufferSize(window, width, height);
-        
-        return width.get(0);
+        return window;
     }
     
     /**
@@ -293,11 +286,22 @@ public class Game
      */
     private void loop()
     {
-        //Set-up timing
+        long last = System.nanoTime();
+        final double conv = 1000000000.0 / TPS;
+        double delta = 0.0;
+        long now;
+        
         while(isRunning && GLFW.glfwWindowShouldClose(window) != GL11.GL_TRUE)
         {
-            //TODO: Create timings
-            onTickPreprocessor();
+            now = System.nanoTime();
+            delta += (now - last) / conv;
+            last = now;
+            
+            while(delta >= 1)
+            {
+                onTickPreprocessor();
+                delta--;
+            }
             
             GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
             render();
@@ -340,6 +344,7 @@ public class Game
             ev.run();
         });
         
+        gameScheduler.onTick();
         onTick();
     }
     
@@ -470,6 +475,7 @@ public class Game
         else if(windowState == WindowState.WINDOWED_UNDECORATED)
         {
             GLFW.glfwWindowHint(GLFW.GLFW_DECORATED, GL11.GL_FALSE);
+            
             if(!gameConfig.getBoolean("ResolutionIsWindowSize", true)) window = GLFW.glfwCreateWindow(gameConfig.getInt("WindowWidth", 800), gameConfig.getInt("WindowHeight", 600), TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
             else window = GLFW.glfwCreateWindow(gameConfig.getInt("ResolutionWidth", 800), gameConfig.getInt("ResolutionHeight", 600), TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
         }

@@ -35,12 +35,7 @@ public class CustomGame extends Game
     
     @Override
     public void onGameOpen()
-    {
-        addKeyboardFunction(Key.KEY_W, KeyAction.KEY_HOLD_DOWN, () ->
-        {
-            System.out.println("csp");
-        });
-        
+    {   
         addKeyboardFunction(Key.KEY_END, KeyAction.KEY_PRESS, () ->
         {
             stop();
@@ -51,7 +46,7 @@ public class CustomGame extends Game
             setCursorEnabled(!isCursorEnabled());
         });
         
-        this.setCursorEnabled(true);
+        setCursorEnabled(false);
     }
     
     public static void main(String[] args)
