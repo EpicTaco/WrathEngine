@@ -286,6 +286,13 @@ public class Game
      */
     private void loop()
     {
+        //Input Checking
+        int inpCount = 0;
+        double checksPerSec = gameConfig.getDouble("PersInputCheckPerSecond", 15.0);
+        if(checksPerSec > TPS) checksPerSec = TPS;
+        final double INPUT_CHECK_TICKS = TPS / checksPerSec;
+        
+        //Timings
         long last = System.nanoTime();
         final double conv = 1000000000.0 / TPS;
         double delta = 0.0;
@@ -300,6 +307,23 @@ public class Game
             while(delta >= 1)
             {
                 onTickPreprocessor();
+                
+                if(INPUT_CHECK_TICKS == 1 || inpCount >= INPUT_CHECK_TICKS)
+                {
+                    persKeyboardMap.entrySet().stream().map((pairs) -> (Runnable) pairs.getValue()).forEach((ev) -> 
+                    {
+                        ev.run();
+                    });
+
+                    persMouseMap.entrySet().stream().map((pairs) -> (Runnable) pairs.getValue()).forEach((ev) -> 
+                    {
+                        ev.run();
+                    });
+                    
+                    inpCount -= INPUT_CHECK_TICKS;
+                }
+                else inpCount++;
+                
                 delta--;
             }
             
@@ -334,16 +358,6 @@ public class Game
      */
     private void onTickPreprocessor()
     {
-        persKeyboardMap.entrySet().stream().map((pairs) -> (Runnable) pairs.getValue()).forEach((ev) -> 
-        {
-            ev.run();
-        });
-
-        persMouseMap.entrySet().stream().map((pairs) -> (Runnable) pairs.getValue()).forEach((ev) -> 
-        {
-            ev.run();
-        });
-        
         gameScheduler.onTick();
         onTick();
     }

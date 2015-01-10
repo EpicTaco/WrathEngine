@@ -26,7 +26,7 @@ import wrath.client.Key;
  * @author Trent Spears
  */
 public class CustomGame extends Game
-{
+{ 
     public CustomGame(String[] args)
     {
         super("Test Client", "INDEV", 30, RenderMode.Mode2D);
