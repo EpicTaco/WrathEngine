@@ -618,12 +618,14 @@ public class Game
         }));
         
         GL11.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        GL11.glViewport(0, 0, resWidth, resHeight);
+        GL11.glViewport(0, 0, winWidth, winHeight);
         GL11.glMatrixMode(GL11.GL_PROJECTION);
         GL11.glLoadIdentity();
-        if(MODE == RenderMode.Mode2D) GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
+        float ratio = resWidth / resHeight;
+        if(MODE == RenderMode.Mode2D) GL11.glOrtho(-ratio, ratio, -1.f, 1.f, 1.f,- 1.f);
         //TODO: Make 3D!    else GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
         GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glLoadIdentity();
         
         onGameOpen();
         loop();

@@ -17,6 +17,8 @@
  */
 package wrath.test.client;
 
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL11;
 import wrath.client.Game;
 import wrath.client.Key;
 
@@ -47,6 +49,21 @@ public class CustomGame extends Game
         });
         
         setCursorEnabled(false);
+    }
+    
+    @Override
+    public void render()
+    {
+        GL11.glRotatef((float) GLFW.glfwGetTime() * 50.f, 0.f, 0.f, 1.f);
+        
+        GL11.glBegin(GL11.GL_TRIANGLES);
+        GL11.glColor3f(1.f, 0.f, 0.f);
+        GL11.glVertex3f(-0.6f, -0.4f, 0.f);
+        GL11.glColor3f(0.f, 1.f, 0.f);
+        GL11.glVertex3f(0.6f, -0.4f, 0.f);
+        GL11.glColor3f(0.f, 0.f, 1.f);
+        GL11.glVertex3f(0.f, 0.6f, 0.f);
+        GL11.glEnd();
     }
     
     public static void main(String[] args)
