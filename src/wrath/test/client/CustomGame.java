@@ -48,6 +48,11 @@ public class CustomGame extends Game
             setCursorEnabled(!isCursorEnabled());
         });
         
+        addKeyboardFunction(Key.KEY_F12, KeyAction.KEY_PRESS, () ->
+        {
+            screenShot("screenie" + System.nanoTime()/50);
+        });
+        
         setCursorEnabled(false);
     }
     

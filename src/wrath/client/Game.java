@@ -28,9 +28,14 @@
  */
 package wrath.client;
 
+import java.awt.Font;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
+import javax.imageio.ImageIO;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.LWJGLUtil;
 import org.lwjgl.Sys;
 import org.lwjgl.glfw.GLFW;
@@ -42,6 +47,7 @@ import org.lwjgl.glfw.GLFWvidmode;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLContext;
 import org.lwjgl.system.MemoryUtil;
+import org.newdawn.slick.TrueTypeFont;
 import wrath.common.scheduler.Scheduler;
 import wrath.util.Config;
 import wrath.util.Logger;
@@ -79,6 +85,7 @@ public class Game
     private GLFWMouseButtonCallback mkeyStr;
     private GLFWFramebufferSizeCallback winSizeStr;
     
+    private float fps = 0;
     private boolean isRunning = false;
     private int resWidth = 800;
     private int resHeight = 600;
@@ -86,6 +93,7 @@ public class Game
     private WindowState windowState;
     private int winWidth = 800;
     private int winHeight = 600;
+    private float ratio = resWidth / resHeight;
     
     private final HashMap<Integer, IKeyData> keyboardMap = new HashMap<>();
     private final HashMap<Integer, Runnable> persKeyboardMap = new HashMap<>();
@@ -177,6 +185,15 @@ public class Game
     }
     
     /**
+     * Gets the last recorded FPS count.
+     * @return Returns the last FPS count.
+     */
+    public float getFPS()
+    {
+        return fps;
+    }
+    
+    /**
      * Gets the standard {@link wrath.util.Logger} for the game.
      * @return Returns the standard {@link wrath.util.Logger} for the game.
      */
@@ -201,6 +218,16 @@ public class Game
     public RenderMode getRenderMode()
     {
         return MODE;
+    }
+    
+    /**
+     * Returns the resolution ratio for (primarily) use with glOrtho().
+     * Calculated as resolution_width/resolution_height.
+     * @return Returns the rendering ratio.
+     */
+    public float getRenderingRatio()
+    {
+        return ratio;
     }
     
     /**
@@ -307,6 +334,10 @@ public class Game
      */
     private void loop()
     {
+        // FPS counter.
+        int fpsBuf = 0;
+        int fpsCount = 0;
+        
         //Input Checking
         int inpCount = 0;
         double checksPerSec = gameConfig.getDouble("PersInputCheckPerSecond", 15.0);
@@ -345,11 +376,21 @@ public class Game
                 }
                 else inpCount++;
                 
+                if(fpsCount >= TPS)
+                {
+                    fps = fpsBuf;
+                    fpsBuf = 0;
+                    fpsCount-=TPS;
+                }
+                else fpsCount++;
+                
                 delta--;
             }
             
             GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
             render();
+            GL11.glFlush();
+            fpsBuf++;
             GLFW.glfwSwapBuffers(window);
             
             GLFW.glfwPollEvents();
@@ -409,6 +450,61 @@ public class Game
     protected void render(){}
     
     /**
+     * Takes a screen-shot and saves it to the file specified as a PNG.
+     * @param saveToName The name of the file to save the screen-shot to (excluding file extension).
+     */
+    public void screenShot(String saveToName)
+    {
+        screenShot(saveToName, ClientUtils.ImageFormat.PNG);
+    }
+    
+    /**
+     * Takes a screen-shot and saves it to the file specified.
+     * @param saveToName The name of the file to save the screen-shot to (excluding file extension).
+     * @param format The format to save the image as.
+     */
+    public void screenShot(String saveToName, ClientUtils.ImageFormat format)
+    {
+        File saveTo = new File("etc/screenshots/" + saveToName + "." + format.name().toLowerCase());
+        
+        int width = this.resWidth;
+        int height = this.resHeight;
+                
+        GL11.glReadBuffer(GL11.GL_FRONT);
+        ByteBuffer buffer = BufferUtils.createByteBuffer(resWidth * resHeight * 4);
+        GL11.glReadPixels(0, 0, width, height, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
+ 
+        Thread t = new Thread(() -> 
+        {
+            BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        
+            for(int x = 0; x < width; x++)
+            {
+                for(int y = 0; y < height; y++)
+                {
+                    int i = (x + (width * y)) * 4;
+                    int r = buffer.get(i) & 0xFF;
+                    int g = buffer.get(i + 1) & 0xFF;
+                    int b = buffer.get(i + 2) & 0xFF;
+                    image.setRGB(x, height - (y + 1), (0xFF << 24) | (r << 16) | (g << 8) | b);
+                }
+            }
+        
+            try
+            {
+                ImageIO.write(image, format.name(), saveTo);
+                gameLogger.log("Saved screenshot '" + saveTo.getName() + "'!");
+            }
+            catch(IOException e)
+            {
+                Logger.getErrorLogger().log("Could not save Screenshot to '" + saveTo.getName() + "'! I/O Error has occured!");
+            } 
+        });
+        
+        t.start();
+    }
+    
+    /**
      * Enables or disables the cursor.
      * @param cursorEnabled Whether the cursor should be enabled or disabled.
      */
@@ -427,9 +523,10 @@ public class Game
     {
         resWidth = width;
         resHeight = height;
+        ratio = resWidth / resHeight;
         GL11.glMatrixMode(GL11.GL_PROJECTION);
         GL11.glLoadIdentity();
-        if(MODE == RenderMode.Mode2D) GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
+        if(MODE == RenderMode.Mode2D) GL11.glOrtho(-ratio, ratio, -1.f, 1.f, 1.f,- 1.f);
         //TODO: Make 3D!    else GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
         if(gameConfig.getBoolean("ResolutionIsWindowSize", true))
         {
@@ -455,9 +552,10 @@ public class Game
         {
             resWidth = winWidth;
             resHeight = winHeight;
+            ratio = resWidth / resHeight;
             GL11.glMatrixMode(GL11.GL_PROJECTION);
             GL11.glLoadIdentity();
-            if(MODE == RenderMode.Mode2D) GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
+            if(MODE == RenderMode.Mode2D) GL11.glOrtho(-ratio, ratio, -1.f, 1.f, 1.f,- 1.f);
             //TODO: Make 3D!    else GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
         }
     }
@@ -611,7 +709,7 @@ public class Game
                 {
                     GL11.glMatrixMode(GL11.GL_PROJECTION);
                     GL11.glLoadIdentity();
-                    if(MODE == RenderMode.Mode2D) GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
+                    if(MODE == RenderMode.Mode2D) GL11.glOrtho(-ratio, ratio, -1.f, 1.f, 1.f,- 1.f);
                     //TODO: Make 3D!    else GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
                 }
             }
@@ -621,7 +719,7 @@ public class Game
         GL11.glViewport(0, 0, winWidth, winHeight);
         GL11.glMatrixMode(GL11.GL_PROJECTION);
         GL11.glLoadIdentity();
-        float ratio = resWidth / resHeight;
+        ratio = resWidth / resHeight;
         if(MODE == RenderMode.Mode2D) GL11.glOrtho(-ratio, ratio, -1.f, 1.f, 1.f,- 1.f);
         //TODO: Make 3D!    else GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
         GL11.glMatrixMode(GL11.GL_MODELVIEW);

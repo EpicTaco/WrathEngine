@@ -52,7 +52,7 @@ public class ClientUtils
     private ClientUtils(){}
     
     /**
-     * Loads a TrueTypeFont from a regular java font.
+     * !!! Currently Broken !!! Loads a TrueTypeFont from a regular java font.
      * @param javaFont The Font from {@link java.awt.Font}.
      * @param antiAliasing Whether or not to make the edges look smoother.
      * @return Returns the converted font.
