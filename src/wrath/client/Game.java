@@ -18,12 +18,13 @@
 
 /**
  * NOTES:
- *  - Work on audio.
- *  - Work on in-game structures (Item framework, Entity framework, etc).
- *  - Add physics.
- *  - Add networking.
- *  - Add encryption.
- *  - Make external modding API.
+ *  - Work on audio
+ *  - Add an in-game structures (Item framework, Entity framework, etc)
+ *  - Add physics
+ *  - Add networking
+ *  - Add encryption
+ *  - Add external modding API
+ *  - Add GUI Toolkits.
  */
 package wrath.client;
 
@@ -83,6 +84,8 @@ public class Game
     private int resHeight = 600;
     private long window;
     private WindowState windowState;
+    private int winWidth = 800;
+    private int winHeight = 600;
     
     private final HashMap<Integer, IKeyData> keyboardMap = new HashMap<>();
     private final HashMap<Integer, Runnable> persKeyboardMap = new HashMap<>();
@@ -255,12 +258,30 @@ public class Game
     }
     
     /**
+     * Returns the height of the window.
+     * @return Returns the height of the window.
+     */
+    public int getWindowHeight()
+    {
+        return winHeight;
+    }
+    
+    /**
      * Gets the GLFW Window ID.
      * @return Returns the {@link org.lwjgl.glfw.GLFW} window ID.
      */
     public long getWindowID()
     {
         return window;
+    }
+    
+    /**
+     * Returns the width of the window.
+     * @return Returns the width of the window.
+     */
+    public int getWindowWidth()
+    {
+        return winWidth;
     }
     
     /**
@@ -406,7 +427,17 @@ public class Game
     {
         resWidth = width;
         resHeight = height;
-        //TODO: Adjust rendering resolution via OpenGL!
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glLoadIdentity();
+        if(MODE == RenderMode.Mode2D) GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
+        //TODO: Make 3D!    else GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
+        if(gameConfig.getBoolean("ResolutionIsWindowSize", true))
+        {
+            winWidth = resWidth;
+            winHeight = resHeight;
+            GLFW.glfwSetWindowSize(window, width, height);
+            GL11.glViewport(0, 0, width, height);
+        }
     }
     
     /**
@@ -416,7 +447,19 @@ public class Game
      */
     public void setWindowResolution(int width, int height)
     {
+        winWidth = width;
+        winHeight = height;
         GLFW.glfwSetWindowSize(window, width, height);
+        GL11.glViewport(0, 0, width, height);
+        if(gameConfig.getBoolean("ResolutionIsWindowSize", true))
+        {
+            resWidth = winWidth;
+            resHeight = winHeight;
+            GL11.glMatrixMode(GL11.GL_PROJECTION);
+            GL11.glLoadIdentity();
+            if(MODE == RenderMode.Mode2D) GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
+            //TODO: Make 3D!    else GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
+        }
     }
     
     /**
@@ -473,30 +516,55 @@ public class Game
         if(windowState == WindowState.FULLSCREEN)
         {
             ByteBuffer videomode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
-            window = GLFW.glfwCreateWindow(GLFWvidmode.width(videomode), GLFWvidmode.height(videomode), TITLE, GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL);
+            winWidth = GLFWvidmode.width(videomode);
+            winHeight = GLFWvidmode.height(videomode);
+            window = GLFW.glfwCreateWindow(winWidth, winHeight, TITLE, GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL);
         }
         else if(windowState == WindowState.FULLSCREEN_WINDOWED)
         {
             ByteBuffer videomode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
+            winWidth = GLFWvidmode.width(videomode);
+            winHeight = GLFWvidmode.height(videomode);
+            
             GLFW.glfwWindowHint(GLFW.GLFW_DECORATED, GL11.GL_FALSE);
-            window = GLFW.glfwCreateWindow(GLFWvidmode.width(videomode), GLFWvidmode.height(videomode), TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
+            window = GLFW.glfwCreateWindow(winWidth, winHeight, TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
         }
         else if(windowState == WindowState.WINDOWED)
         {
-            if(!gameConfig.getBoolean("ResolutionIsWindowSize", true)) window = GLFW.glfwCreateWindow(gameConfig.getInt("WindowWidth", 800), gameConfig.getInt("WindowHeight", 600), TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
-            else window = GLFW.glfwCreateWindow(gameConfig.getInt("ResolutionWidth", 800), gameConfig.getInt("ResolutionHeight", 600), TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
+            if(!gameConfig.getBoolean("ResolutionIsWindowSize", true))
+            {
+                winWidth = gameConfig.getInt("WindowWidth", 800);
+                winHeight = gameConfig.getInt("WindowHeight", 600);
+                window = GLFW.glfwCreateWindow(winWidth, winHeight, TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
+            }
+            else
+            {
+                winWidth = resWidth;
+                winHeight = resHeight;
+                window = GLFW.glfwCreateWindow(winWidth, winHeight, TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
+            }
         }
         else if(windowState == WindowState.WINDOWED_UNDECORATED)
         {
             GLFW.glfwWindowHint(GLFW.GLFW_DECORATED, GL11.GL_FALSE);
             
-            if(!gameConfig.getBoolean("ResolutionIsWindowSize", true)) window = GLFW.glfwCreateWindow(gameConfig.getInt("WindowWidth", 800), gameConfig.getInt("WindowHeight", 600), TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
-            else window = GLFW.glfwCreateWindow(gameConfig.getInt("ResolutionWidth", 800), gameConfig.getInt("ResolutionHeight", 600), TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
+            if(!gameConfig.getBoolean("ResolutionIsWindowSize", true))
+            {
+                winWidth = gameConfig.getInt("WindowWidth", 800);
+                winHeight = gameConfig.getInt("WindowHeight", 600);
+                window = GLFW.glfwCreateWindow(winWidth, winHeight, TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
+            }
+            else
+            {
+                winWidth = resWidth;
+                winHeight = resHeight;
+                window = GLFW.glfwCreateWindow(winWidth, winHeight, TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
+            }
         }
         
         if(window == MemoryUtil.NULL)
         {
-            Logger.getErrorLogger().log("Could not initialize window! Window Info[(" + resWidth + "x" + resHeight + ")@(" + gameConfig.getInt("WindowWidth", 800) + "x" + gameConfig.getInt("WindowHeight", 600) + ")]");
+            Logger.getErrorLogger().log("Could not initialize window! Window Info[(" + resWidth + "x" + resHeight + ")@(" + winWidth + "x" + winHeight + ")]");
             stopImpl();
         }
         
@@ -538,12 +606,24 @@ public class Game
             @Override
             public void invoke(long window, int width, int height) 
             {
+                GL11.glViewport(0, 0, width, height);
                 if(gameConfig.getBoolean("ResolutionIsWindowSize", true))
-                    GL11.glViewport(0, 0, width, height);
+                {
+                    GL11.glMatrixMode(GL11.GL_PROJECTION);
+                    GL11.glLoadIdentity();
+                    if(MODE == RenderMode.Mode2D) GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
+                    //TODO: Make 3D!    else GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
+                }
             }
         }));
-                
+        
         GL11.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        GL11.glViewport(0, 0, resWidth, resHeight);
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glLoadIdentity();
+        if(MODE == RenderMode.Mode2D) GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
+        //TODO: Make 3D!    else GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
         
         onGameOpen();
         loop();
