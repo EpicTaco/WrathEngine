@@ -510,7 +510,7 @@ public class Game
         double delta = 0.0;
         long now;
         
-        while(isRunning && GLFW.glfwWindowShouldClose(window) != GL11.GL_TRUE)
+        while(isRunning && (!windowOpen || GLFW.glfwWindowShouldClose(window) != GL11.GL_TRUE))
         {
             now = System.nanoTime();
             delta += (now - last) / conv;
@@ -547,13 +547,16 @@ public class Game
                 delta--;
             }
             
-            GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-            render();
-            GL11.glFlush();
-            fpsBuf++;
-            GLFW.glfwSwapBuffers(window);
+            if(windowOpen)
+            {
+                GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+                render();
+                GL11.glFlush();
+                fpsBuf++;
+                GLFW.glfwSwapBuffers(window);
             
-            GLFW.glfwPollEvents();
+                GLFW.glfwPollEvents();
+            }
         }
         
         stop();

@@ -53,6 +53,11 @@ public class CustomGame extends Game
             screenShot("screenie" + System.nanoTime()/50);
         });
         
+        addKeyboardFunction(Key.KEY_S, KeyAction.KEY_PRESS, () ->
+        {
+            getLogger().log("Recorded FPS: " + getFPS());
+        });
+        
         setCursorEnabled(false);
     }
     
