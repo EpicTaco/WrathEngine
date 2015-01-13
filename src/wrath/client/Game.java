@@ -31,7 +31,6 @@ package wrath.client;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import javax.imageio.ImageIO;
@@ -57,19 +56,19 @@ import wrath.util.Logger;
  */
 public class Game 
 {
-    public static enum InputForm implements Serializable {JOYSTICK, KEYBOARD, MOUSE;}
+    public static enum InputForm {JOYSTICK, KEYBOARD, MOUSE;}
     /**
      * Used to differentiate between whether the action should execute when a key is pressed or released.
      */
-    public static enum KeyAction implements Serializable {KEY_HOLD_DOWN, KEY_PRESS, KEY_RELEASE;}
+    public static enum KeyAction {KEY_HOLD_DOWN, KEY_PRESS, KEY_RELEASE;}
     /**
      * Enumerator describing whether the game should be run in 2D Mode or 3D Mode.
      */
-    public static enum RenderMode implements Serializable {Mode2D,Mode3D;}
+    public static enum RenderMode {Mode2D,Mode3D;}
     /**
      * Enumerator describing the display mode of the Window.
      */
-    public static enum WindowState implements Serializable {FULLSCREEN, FULLSCREEN_WINDOWED, WINDOWED, WINDOWED_UNDECORATED;}
+    public static enum WindowState {FULLSCREEN, FULLSCREEN_WINDOWED, WINDOWED, WINDOWED_UNDECORATED;}
     
     private final RenderMode MODE;
     private final String TITLE;
@@ -97,9 +96,9 @@ public class Game
     private float ratio = resWidth / resHeight;
     
     private final HashMap<Integer, KeyData> keyboardMap = new HashMap<>();
-    private final HashMap<Integer, KeyRunnable> persKeyboardMap = new HashMap<>();
+    private final HashMap<Integer, Runnable> persKeyboardMap = new HashMap<>();
     private final HashMap<Integer, KeyData> mouseMap = new HashMap<>();
-    private final HashMap<Integer, KeyRunnable> persMouseMap = new HashMap<>();
+    private final HashMap<Integer, Runnable> persMouseMap = new HashMap<>();
     
     /**
      * Constructor.
@@ -126,19 +125,15 @@ public class Game
      * Adds a listener to a specified key on the {@link wrath.client.Key}.
      * @param key The key to respond to.
      * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
-     * @param event The {@link java.lang.Runnable} event to run after specified button is affected by the specified action.
+     * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
      */
-    public void addKeyboardFunction(int key, KeyAction action, KeyRunnable event)
+    public void addKeyboardFunction(int key, KeyAction action, Runnable event)
     {
         if(action == KeyAction.KEY_HOLD_DOWN)
-            keyboardMap.put(key, new KeyData(KeyAction.KEY_PRESS, new KeyRunnable()
+            keyboardMap.put(key, new KeyData(KeyAction.KEY_PRESS, () -> 
             {
-                @Override
-                public void run()
-                {
-                    persKeyboardMap.put(key, event);
-                    event.run();
-                }
+                persKeyboardMap.put(key, event);
+                event.run();
             }, key, InputForm.KEYBOARD));
         else keyboardMap.put(key, new KeyData(action, event, key, InputForm.KEYBOARD));
     }
@@ -147,22 +142,16 @@ public class Game
      * Adds a listener to a specified key on the {@link wrath.client.Key}.
      * @param key The key to respond to.
      * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
-     * @param event The {@link java.lang.Runnable} event to run after specified button is affected by the specified action.
+     * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
      */
-    public void addMouseFunction(int key, KeyAction action, KeyRunnable event)
+    public void addMouseFunction(int key, KeyAction action, Runnable event)
     {
         if(action == KeyAction.KEY_HOLD_DOWN)
-        {
-            mouseMap.put(key, new KeyData(action, new KeyRunnable()
+            mouseMap.put(key, new KeyData(action, () -> 
             {
-                @Override
-                public void run()
-                {
-                    persMouseMap.put(key, event);
-                    event.run();
-                }
+                persMouseMap.put(key, event);
+                event.run();
             }, key, InputForm.MOUSE));
-        }
         else mouseMap.put(key, new KeyData(action, event, key, InputForm.MOUSE));
     }
     
@@ -361,15 +350,6 @@ public class Game
     public boolean isWindowOpen()
     {
         return windowOpen;
-    }
-    
-    /**
-    * Loads the key into the map if it was loaded in from a file. 
-    */
-    private void loadKeyDataIntoMap(final KeyData data)
-    {
-        if(data.getInputForm() == InputForm.KEYBOARD) keyboardMap.put(data.getKey(), data);
-        else if(data.getInputForm() == InputForm.MOUSE) mouseMap.put(data.getKey(), data);
     }
     
     /**
@@ -573,12 +553,12 @@ public class Game
                 
                 if(INPUT_CHECK_TICKS == 1 || inpCount >= INPUT_CHECK_TICKS)
                 {
-                    persKeyboardMap.entrySet().stream().map((pairs) -> (KeyRunnable) pairs.getValue()).forEach((ev) -> 
+                    persKeyboardMap.entrySet().stream().map((pairs) -> (Runnable) pairs.getValue()).forEach((ev) -> 
                     {
                         ev.run();
                     });
 
-                    persMouseMap.entrySet().stream().map((pairs) -> (KeyRunnable) pairs.getValue()).forEach((ev) -> 
+                    persMouseMap.entrySet().stream().map((pairs) -> (Runnable) pairs.getValue()).forEach((ev) -> 
                     {
                         ev.run();
                     });

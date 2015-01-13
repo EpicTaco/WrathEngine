@@ -129,10 +129,7 @@ public class Scheduler
                     if(t.isActive())
                     {
                         t.run();
-                        if(t.isRepeating())
-                        {
-                            runTaskLater(t, t.getDelay());
-                        }
+                        if(t.isRepeating()) runTaskLater(t, t.getDelay());
                     }
                 });
             }

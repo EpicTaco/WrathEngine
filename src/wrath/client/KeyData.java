@@ -17,22 +17,21 @@
  */
 package wrath.client;
 
-import java.io.Serializable;
 import org.lwjgl.glfw.GLFW;
 
 /**
  * Keeps track of keys.
  * @author Trent Spears
  */
-public class KeyData implements Serializable
+public class KeyData
 {
     private final Game.KeyAction action;
     private final int actionRaw;
-    private final KeyRunnable event;
+    private final Runnable event;
     private final Game.InputForm form;
     private final int key;
     
-    public KeyData(Game.KeyAction action, KeyRunnable event, int glfwKey, Game.InputForm form)
+    public KeyData(Game.KeyAction action, Runnable event, int glfwKey, Game.InputForm form)
     {
         this.action = action;
             
