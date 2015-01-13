@@ -89,7 +89,7 @@ public class Game
     private int resHeight = 600;
     private long window;
     private boolean windowOpen = false;
-    private WindowState windowState;
+    private WindowState windowState = null;
     private int winWidth = 800;
     private int winHeight = 600;
     private float ratio = resWidth / resHeight;
@@ -165,10 +165,11 @@ public class Game
     }
     
     /**
-     * Destroys and deallocates all GLFW window resources.
+     * Destroys and deallocates all GLFW/window resources.
      */
-    private void destroyWindow()
+    public void destroyWindow()
     {
+        if(!windowOpen) return;
         windowOpen = false;
         
         winSizeStr.release();
@@ -324,6 +325,15 @@ public class Game
     }
     
     /**
+     * Gets the current state of the window as of {@link wrath.client.Game.WindowState}.
+     * @return Returns the current state of the window.
+     */
+    public WindowState getWindowState()
+    {
+        return windowState;
+    }
+    
+    /**
      * Returns whether or not the cursor is enabled.
      * @return Returns true if the cursor is enabled, otherwise false.
      */
@@ -345,8 +355,10 @@ public class Game
      * Private method to start the display.
      * Made independent from start() so window options can be adjusted real-time.
      */
-    private void initDisplay()
+    public void initWindow()
     {
+        if(windowOpen) return;
+        
         GLFW.glfwDefaultWindowHints();
         GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GL11.GL_FALSE);
         GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, ClientUtils.getLWJGLBoolean(gameConfig.getBoolean("WindowResizable", true)));
@@ -354,11 +366,13 @@ public class Game
         GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_DEBUG_CONTEXT, ClientUtils.getLWJGLBoolean(gameConfig.getBoolean("DebugMode", false)));
         GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, gameConfig.getInt("DisplaySamples", 0));
         GLFW.glfwWindowHint(GLFW.GLFW_REFRESH_RATE, gameConfig.getInt("DisplayRefreshRate", 0));
+
+        String wstatestr = gameConfig.getString("WindowState", "Windowed");
         
-        if(gameConfig.getString("WindowState", "Windowed").equalsIgnoreCase("windowed")) windowState = WindowState.WINDOWED;
-        else if(gameConfig.getString("WindowState", "Windowed").equalsIgnoreCase("windowed_undecorated")) windowState = WindowState.WINDOWED_UNDECORATED;
-        else if(gameConfig.getString("WindowState", "Windowed").equalsIgnoreCase("fullscreen_windowed")) windowState = WindowState.FULLSCREEN_WINDOWED;
-        else if(gameConfig.getString("WindowState", "Windowed").equalsIgnoreCase("fullscreen")) windowState = WindowState.FULLSCREEN;
+        if(wstatestr.equalsIgnoreCase("windowed")) windowState = WindowState.WINDOWED;
+        else if(wstatestr.equalsIgnoreCase("windowed_undecorated")) windowState = WindowState.WINDOWED_UNDECORATED;
+        else if(wstatestr.equalsIgnoreCase("fullscreen_windowed")) windowState = WindowState.FULLSCREEN_WINDOWED;
+        else if(wstatestr.equalsIgnoreCase("fullscreen")) windowState = WindowState.FULLSCREEN;
         
         resWidth = gameConfig.getInt("ResolutionWidth", 800);
         resHeight = gameConfig.getInt("ResolutionHeight", 600);
@@ -456,13 +470,28 @@ public class Game
             @Override
             public void invoke(long window, int width, int height) 
             {
+                if(width <= 0 || height <= 0) return;
+                
                 GL11.glViewport(0, 0, width, height);
+                winWidth = width;
+                winHeight = height;
+                
+                gameConfig.setProperty("WindowWidth", width + "");
+                gameConfig.setProperty("WindowHeight", height + "");
+                
                 if(gameConfig.getBoolean("ResolutionIsWindowSize", true))
                 {
                     GL11.glMatrixMode(GL11.GL_PROJECTION);
                     GL11.glLoadIdentity();
+                    
+                    resWidth = winWidth;
+                    resHeight = winHeight;
+                    ratio = resWidth / resHeight;
                     if(MODE == RenderMode.Mode2D) GL11.glOrtho(-ratio, ratio, -1.f, 1.f, 1.f,- 1.f);
                     //TODO: Make 3D!    else GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
+                    
+                    gameConfig.setProperty("ResolutionWidth", width + "");
+                    gameConfig.setProperty("ResolutionHeight", height + "");
                 }
             }
         }));
@@ -691,13 +720,21 @@ public class Game
         GL11.glLoadIdentity();
         if(MODE == RenderMode.Mode2D) GL11.glOrtho(-ratio, ratio, -1.f, 1.f, 1.f,- 1.f);
         //TODO: Make 3D!    else GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
+        
+        gameConfig.setProperty("ResolutionWidth", width + "");
+        gameConfig.setProperty("ResolutionHeight", height + "");
+        
         if(gameConfig.getBoolean("ResolutionIsWindowSize", true))
         {
             winWidth = resWidth;
             winHeight = resHeight;
             GLFW.glfwSetWindowSize(window, width, height);
             GL11.glViewport(0, 0, width, height);
+            
+            gameConfig.setProperty("WindowWidth", width + "");
+            gameConfig.setProperty("WindowHeight", height + "");
         }
+
     }
     
     /**
@@ -711,6 +748,10 @@ public class Game
         winHeight = height;
         GLFW.glfwSetWindowSize(window, width, height);
         GL11.glViewport(0, 0, width, height);
+        
+        gameConfig.setProperty("WindowWidth", width + "");
+        gameConfig.setProperty("WindowHeight", height + "");
+        
         if(gameConfig.getBoolean("ResolutionIsWindowSize", true))
         {
             resWidth = winWidth;
@@ -720,7 +761,23 @@ public class Game
             GL11.glLoadIdentity();
             if(MODE == RenderMode.Mode2D) GL11.glOrtho(-ratio, ratio, -1.f, 1.f, 1.f,- 1.f);
             //TODO: Make 3D!    else GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
+            
+            gameConfig.setProperty("ResolutionWidth", width + "");
+            gameConfig.setProperty("ResolutionHeight", height + "");
         }
+    }
+    
+    /**
+     * Changes the state of the window.
+     * This method will require the window to restart, and this will be done via {@link wrath.client.Game#destroyWindow() } and {@link wrath.client.Game#initWindow() }.
+     * @param state The state to set the window to.
+     */
+    public void setWindowState(WindowState state)
+    {
+        gameConfig.setProperty("WindowState", state.toString().toUpperCase());
+        destroyWindow();
+        initWindow();
+        gameConfig.save();
     }
     
     /**
@@ -766,7 +823,7 @@ public class Game
             return;
         }
         
-        initDisplay();
+        initWindow();
         
         onGameOpen();
         loop();

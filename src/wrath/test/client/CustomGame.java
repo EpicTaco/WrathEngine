@@ -32,7 +32,7 @@ public class CustomGame extends Game
     public CustomGame(String[] args)
     {
         super("Test Client", "INDEV", 30, RenderMode.Mode2D);
-        start(new String[]{"WindowState=windowed", "ResolutionWidth=1024", "ResolutionHeight=720", "ResolutionIsWindowSize=true"});
+        start(new String[]{"ResolutionIsWindowSize=true"});
     }
     
     @Override
@@ -56,6 +56,12 @@ public class CustomGame extends Game
         addKeyboardFunction(Key.KEY_S, KeyAction.KEY_PRESS, () ->
         {
             getLogger().log("Recorded FPS: " + getFPS());
+        });
+        
+        addKeyboardFunction(Key.KEY_ENTER, KeyAction.KEY_PRESS, () ->
+        {
+            if(getWindowState() == WindowState.WINDOWED) setWindowState(WindowState.FULLSCREEN);
+            else setWindowState(WindowState.WINDOWED);
         });
         
         setCursorEnabled(false);
