@@ -49,6 +49,7 @@ import org.lwjgl.system.MemoryUtil;
 import wrath.common.scheduler.Scheduler;
 import wrath.util.Config;
 import wrath.util.Logger;
+import wrath.util.MiscUtils;
 
 /**
  * The entry point and base of the game. Make a class extending this and overriding at least render() method.
@@ -429,6 +430,7 @@ public class Game
         if(window == MemoryUtil.NULL)
         {
             Logger.getErrorLogger().log("Could not initialize window! Window Info[(" + resWidth + "x" + resHeight + ")@(" + winWidth + "x" + winHeight + ")]");
+            ClientUtils.throwInternalError("Window failed to initialize!", false);
             stopImpl();
         }
         
@@ -819,6 +821,7 @@ public class Game
         if(GLFW.glfwInit() != GL11.GL_TRUE)
         {
             Logger.getErrorLogger().log("Could not initialize GLFW! Unknown Error!");
+            ClientUtils.throwInternalError("Failed to initialize GLFW!", false);
             stopImpl();
             return;
         }

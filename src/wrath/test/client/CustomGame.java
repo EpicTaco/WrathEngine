@@ -60,7 +60,7 @@ public class CustomGame extends Game
         
         addKeyboardFunction(Key.KEY_ENTER, KeyAction.KEY_PRESS, () ->
         {
-            if(getWindowState() == WindowState.WINDOWED) setWindowState(WindowState.FULLSCREEN);
+            if(getWindowState() == WindowState.WINDOWED) setWindowState(WindowState.FULLSCREEN_WINDOWED);
             else setWindowState(WindowState.WINDOWED);
         });
         
