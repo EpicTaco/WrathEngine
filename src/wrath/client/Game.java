@@ -31,6 +31,7 @@ package wrath.client;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import javax.imageio.ImageIO;
@@ -49,7 +50,6 @@ import org.lwjgl.system.MemoryUtil;
 import wrath.common.scheduler.Scheduler;
 import wrath.util.Config;
 import wrath.util.Logger;
-import wrath.util.MiscUtils;
 
 /**
  * The entry point and base of the game. Make a class extending this and overriding at least render() method.
@@ -57,18 +57,19 @@ import wrath.util.MiscUtils;
  */
 public class Game 
 {
+    public static enum InputForm implements Serializable {JOYSTICK, KEYBOARD, MOUSE;}
     /**
      * Used to differentiate between whether the action should execute when a key is pressed or released.
      */
-    public static enum KeyAction {KEY_HOLD_DOWN, KEY_PRESS, KEY_RELEASE;}
+    public static enum KeyAction implements Serializable {KEY_HOLD_DOWN, KEY_PRESS, KEY_RELEASE;}
     /**
      * Enumerator describing whether the game should be run in 2D Mode or 3D Mode.
      */
-    public static enum RenderMode {Mode2D,Mode3D;}
+    public static enum RenderMode implements Serializable {Mode2D,Mode3D;}
     /**
      * Enumerator describing the display mode of the Window.
      */
-    public static enum WindowState {FULLSCREEN, FULLSCREEN_WINDOWED, WINDOWED, WINDOWED_UNDECORATED;}
+    public static enum WindowState implements Serializable {FULLSCREEN, FULLSCREEN_WINDOWED, WINDOWED, WINDOWED_UNDECORATED;}
     
     private final RenderMode MODE;
     private final String TITLE;
@@ -95,10 +96,10 @@ public class Game
     private int winHeight = 600;
     private float ratio = resWidth / resHeight;
     
-    private final HashMap<Integer, IKeyData> keyboardMap = new HashMap<>();
-    private final HashMap<Integer, Runnable> persKeyboardMap = new HashMap<>();
-    private final HashMap<Integer, IKeyData> mouseMap = new HashMap<>();
-    private final HashMap<Integer, Runnable> persMouseMap = new HashMap<>();
+    private final HashMap<Integer, KeyData> keyboardMap = new HashMap<>();
+    private final HashMap<Integer, KeyRunnable> persKeyboardMap = new HashMap<>();
+    private final HashMap<Integer, KeyData> mouseMap = new HashMap<>();
+    private final HashMap<Integer, KeyRunnable> persMouseMap = new HashMap<>();
     
     /**
      * Constructor.
@@ -127,15 +128,19 @@ public class Game
      * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
      * @param event The {@link java.lang.Runnable} event to run after specified button is affected by the specified action.
      */
-    public void addKeyboardFunction(int key, KeyAction action, Runnable event)
+    public void addKeyboardFunction(int key, KeyAction action, KeyRunnable event)
     {
         if(action == KeyAction.KEY_HOLD_DOWN)
-            keyboardMap.put(key, new IKeyData(KeyAction.KEY_PRESS, () ->
+            keyboardMap.put(key, new KeyData(KeyAction.KEY_PRESS, new KeyRunnable()
             {
-                persKeyboardMap.put(key, event);
-                event.run();
-            }));
-        else keyboardMap.put(key, new IKeyData(action, event));
+                @Override
+                public void run()
+                {
+                    persKeyboardMap.put(key, event);
+                    event.run();
+                }
+            }, key, InputForm.KEYBOARD));
+        else keyboardMap.put(key, new KeyData(action, event, key, InputForm.KEYBOARD));
     }
     
     /**
@@ -144,15 +149,21 @@ public class Game
      * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
      * @param event The {@link java.lang.Runnable} event to run after specified button is affected by the specified action.
      */
-    public void addMouseFunction(int key, KeyAction action, Runnable event)
+    public void addMouseFunction(int key, KeyAction action, KeyRunnable event)
     {
         if(action == KeyAction.KEY_HOLD_DOWN)
-            mouseMap.put(key, new IKeyData(KeyAction.KEY_PRESS, () ->
+        {
+            mouseMap.put(key, new KeyData(action, new KeyRunnable()
             {
-                persMouseMap.put(key, event);
-                event.run();
-            }));
-        else mouseMap.put(key, new IKeyData(action, event));
+                @Override
+                public void run()
+                {
+                    persMouseMap.put(key, event);
+                    event.run();
+                }
+            }, key, InputForm.MOUSE));
+        }
+        else mouseMap.put(key, new KeyData(action, event, key, InputForm.MOUSE));
     }
     
     /**
@@ -353,6 +364,15 @@ public class Game
     }
     
     /**
+    * Loads the key into the map if it was loaded in from a file. 
+    */
+    private void loadKeyDataIntoMap(final KeyData data)
+    {
+        if(data.getInputForm() == InputForm.KEYBOARD) keyboardMap.put(data.getKey(), data);
+        else if(data.getInputForm() == InputForm.MOUSE) mouseMap.put(data.getKey(), data);
+    }
+    
+    /**
      * Private method to start the display.
      * Made independent from start() so window options can be adjusted real-time.
      */
@@ -442,7 +462,7 @@ public class Game
                 if(persKeyboardMap.containsKey(key) && action == GLFW.GLFW_RELEASE) persKeyboardMap.remove(key);
                 if(keyboardMap.containsKey(key))
                 {
-                    IKeyData dat = keyboardMap.get(key);
+                    KeyData dat = keyboardMap.get(key);
                     if(dat.getRawAction() == action) dat.execute();
                 }
             }
@@ -456,7 +476,7 @@ public class Game
                 if(persMouseMap.containsKey(button) && action == GLFW.GLFW_RELEASE) persMouseMap.remove(button);
                 if(mouseMap.containsKey(button))
                 {
-                    IKeyData dat = mouseMap.get(button);
+                    KeyData dat = mouseMap.get(button);
                     if(dat.getRawAction() == action) dat.execute();
                 }
             }
@@ -553,12 +573,12 @@ public class Game
                 
                 if(INPUT_CHECK_TICKS == 1 || inpCount >= INPUT_CHECK_TICKS)
                 {
-                    persKeyboardMap.entrySet().stream().map((pairs) -> (Runnable) pairs.getValue()).forEach((ev) -> 
+                    persKeyboardMap.entrySet().stream().map((pairs) -> (KeyRunnable) pairs.getValue()).forEach((ev) -> 
                     {
                         ev.run();
                     });
 
-                    persMouseMap.entrySet().stream().map((pairs) -> (Runnable) pairs.getValue()).forEach((ev) -> 
+                    persMouseMap.entrySet().stream().map((pairs) -> (KeyRunnable) pairs.getValue()).forEach((ev) -> 
                     {
                         ev.run();
                     });
@@ -859,57 +879,5 @@ public class Game
         }catch(Exception e){}
         
         System.exit(0);
-    }
-    
-    /**
-     * Internal class to store Key Data in a hash map.
-     */
-    private class IKeyData
-    {
-        private final KeyAction action;
-        private final int actionRaw;
-        private final Runnable event;
-
-        /**
-         * Constructor.
-         * @param action The {@link wrath.client.Game.KeyAction} to trigger the event on.
-         * @param event The action to execute when the specified key's specified action occurs.
-         */
-        public IKeyData(KeyAction action, Runnable event)
-        {
-            this.action = action;
-            
-            if(action == KeyAction.KEY_RELEASE) this.actionRaw = GLFW.GLFW_RELEASE;
-                else this.actionRaw = GLFW.GLFW_PRESS;
-            
-            this.event = event;
-        }
-        
-        /**
-         * Executes the event specified in the constructor, as if the action was triggered by the input.
-         */
-        public void execute()
-        {
-            event.run();
-        }
-        
-        /**
-         * Gets the {@link wrath.client.Game.KeyAction} of the key set.
-         * This is used to determine whether to execute the event when a key is pressed, or execute the event when the key is released.
-         * @return Returns the {@link wrath.client.Game.KeyAction} specified in the Constructor.
-         */
-        public KeyAction getAction()
-        {
-            return action;
-        }
-        
-        /**
-         * Used by the internal engine to obtain the GLFW action code.
-         * @return Returns the int version of the KeyAction for use with GLFW.
-         */
-        public int getRawAction()
-        {
-            return actionRaw;
-        }
     }
 }

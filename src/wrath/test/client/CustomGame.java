@@ -21,6 +21,7 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import wrath.client.Game;
 import wrath.client.Key;
+import wrath.client.KeyRunnable;
 
 /**
  * Example game for testing the engine.
@@ -38,30 +39,50 @@ public class CustomGame extends Game
     @Override
     public void onGameOpen()
     {   
-        addKeyboardFunction(Key.KEY_END, KeyAction.KEY_PRESS, () ->
+        addKeyboardFunction(Key.KEY_END, KeyAction.KEY_PRESS, new KeyRunnable()
         {
-            stop();
+            @Override
+            public void run()
+            {
+                stop();
+            }
         });
         
-        addKeyboardFunction(Key.KEY_LEFT_ALT, KeyAction.KEY_PRESS, () ->
+        addKeyboardFunction(Key.KEY_LEFT_ALT, KeyAction.KEY_PRESS, new KeyRunnable()
         {
-            setCursorEnabled(!isCursorEnabled());
+            @Override
+            public void run()
+            {
+                setCursorEnabled(!isCursorEnabled());
+            }
         });
         
-        addKeyboardFunction(Key.KEY_F12, KeyAction.KEY_PRESS, () ->
+        addKeyboardFunction(Key.KEY_F12, KeyAction.KEY_PRESS, new KeyRunnable()
         {
-            screenShot("screenie" + System.nanoTime()/50);
+            @Override
+            public void run()
+            {
+                screenShot("screenie" + System.nanoTime()/50);
+            }
         });
         
-        addKeyboardFunction(Key.KEY_S, KeyAction.KEY_PRESS, () ->
+        addKeyboardFunction(Key.KEY_S, KeyAction.KEY_PRESS, new KeyRunnable()
         {
-            getLogger().log("Recorded FPS: " + getFPS());
+            @Override
+            public void run()
+            {
+                getLogger().log("Recorded FPS: " + getFPS());
+            }
         });
         
-        addKeyboardFunction(Key.KEY_ENTER, KeyAction.KEY_PRESS, () ->
+        addKeyboardFunction(Key.KEY_ENTER, KeyAction.KEY_PRESS, new KeyRunnable()
         {
-            if(getWindowState() == WindowState.WINDOWED) setWindowState(WindowState.FULLSCREEN_WINDOWED);
-            else setWindowState(WindowState.WINDOWED);
+            @Override
+            public void run()
+            {
+                if(getWindowState() == WindowState.WINDOWED) setWindowState(WindowState.FULLSCREEN_WINDOWED);
+                else setWindowState(WindowState.WINDOWED);
+            }
         });
         
         setCursorEnabled(false);
