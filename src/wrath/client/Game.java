@@ -46,6 +46,7 @@ import org.lwjgl.glfw.GLFWvidmode;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLContext;
 import org.lwjgl.system.MemoryUtil;
+import wrath.client.KeyData.KeyAction;
 import wrath.common.scheduler.Scheduler;
 import wrath.util.Config;
 import wrath.util.Logger;
@@ -56,11 +57,6 @@ import wrath.util.Logger;
  */
 public class Game 
 {
-    public static enum InputForm {JOYSTICK, KEYBOARD, MOUSE;}
-    /**
-     * Used to differentiate between whether the action should execute when a key is pressed or released.
-     */
-    public static enum KeyAction {KEY_HOLD_DOWN, KEY_PRESS, KEY_RELEASE;}
     /**
      * Enumerator describing whether the game should be run in 2D Mode or 3D Mode.
      */
@@ -99,6 +95,7 @@ public class Game
     private final HashMap<Integer, Runnable> persKeyboardMap = new HashMap<>();
     private final HashMap<Integer, KeyData> mouseMap = new HashMap<>();
     private final HashMap<Integer, Runnable> persMouseMap = new HashMap<>();
+    private final HashMap<String, Runnable> savedFuncMap = new HashMap<>();
     
     /**
      * Constructor.
@@ -134,8 +131,28 @@ public class Game
             {
                 persKeyboardMap.put(key, event);
                 event.run();
-            }, key, InputForm.KEYBOARD));
-        else keyboardMap.put(key, new KeyData(action, event, key, InputForm.KEYBOARD));
+            }, key));
+        else keyboardMap.put(key, new KeyData(action, event, key));
+    }
+    
+    /**
+     * Adds a listener to a specified key on the {@link wrath.client.Key}.
+     * @param key The key to respond to.
+     * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
+     * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
+     */
+    public void addKeyboardFunction(int key, KeyAction action, String functionId)
+    {
+        if(!savedFuncMap.containsKey(functionId)) return;
+        
+        Runnable event = savedFuncMap.get(functionId);
+        if(action == KeyAction.KEY_HOLD_DOWN)
+            keyboardMap.put(key, new KeyData(KeyAction.KEY_PRESS, () -> 
+            {
+                persKeyboardMap.put(key, event);
+                event.run();
+            }, key));
+        else keyboardMap.put(key, new KeyData(action, event, key));
     }
     
     /**
@@ -151,8 +168,38 @@ public class Game
             {
                 persMouseMap.put(key, event);
                 event.run();
-            }, key, InputForm.MOUSE));
-        else mouseMap.put(key, new KeyData(action, event, key, InputForm.MOUSE));
+            }, key));
+        else mouseMap.put(key, new KeyData(action, event, key));
+    }
+    
+    /**
+     * Adds a listener to a specified key on the {@link wrath.client.Key}.
+     * @param key The key to respond to.
+     * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
+     * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
+     */
+    public void addMouseFunction(int key, KeyAction action, String functionId)
+    {
+        if(!savedFuncMap.containsKey(functionId)) return;
+        
+        Runnable event = savedFuncMap.get(functionId);
+        if(action == KeyAction.KEY_HOLD_DOWN)
+            mouseMap.put(key, new KeyData(action, () -> 
+            {
+                persMouseMap.put(key, event);
+                event.run();
+            }, key));
+        else mouseMap.put(key, new KeyData(action, event, key));
+    }
+    
+    /**
+     * Adds a listener to a specified String ID to be added later to a Keyboard or mouse function.
+     * @param id The String ID of the saved function.
+     * @param event The event to be saved.
+     */
+    public void addSavedFunction(String id, Runnable event)
+    {
+        savedFuncMap.put(id, event);
     }
     
     /**

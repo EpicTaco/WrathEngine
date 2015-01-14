@@ -21,6 +21,8 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import wrath.client.Game;
 import wrath.client.Key;
+import wrath.client.KeyData.KeyAction;
+import wrath.util.Config;
 
 /**
  * Example game for testing the engine.
@@ -29,37 +31,24 @@ import wrath.client.Key;
  */
 public class CustomGame extends Game
 { 
+    private Config keyConfig = new Config("keys"); 
+    
     public CustomGame(String[] args)
     {
         super("Test Client", "INDEV", 30, RenderMode.Mode2D);
         start(new String[]{"ResolutionIsWindowSize=true"});
     }
     
+    private void loadSavedKeyBindings()
+    {
+        
+    }
+    
     @Override
     public void onGameOpen()
     {   
-        addKeyboardFunction(Key.KEY_END, KeyAction.KEY_PRESS, this::stop);
-        
-        addKeyboardFunction(Key.KEY_LEFT_ALT, KeyAction.KEY_PRESS, () -> 
-        {
-            setCursorEnabled(!isCursorEnabled());
-        });
-        
-        addKeyboardFunction(Key.KEY_F12, KeyAction.KEY_PRESS, () -> 
-        {
-            screenShot("screenie" + System.nanoTime()/50);
-        });
-        
-        addKeyboardFunction(Key.KEY_S, KeyAction.KEY_PRESS, () -> 
-        {
-            getLogger().log("Recorded FPS: " + getFPS());
-        });
-        
-        addKeyboardFunction(Key.KEY_ENTER, KeyAction.KEY_PRESS, () -> 
-        {
-            if(getWindowState() == WindowState.WINDOWED) setWindowState(WindowState.FULLSCREEN_WINDOWED);
-            else setWindowState(WindowState.WINDOWED);
-        });
+        setupInputFunctions();
+        loadSavedKeyBindings();
         
         setCursorEnabled(false);
     }
@@ -77,6 +66,32 @@ public class CustomGame extends Game
         GL11.glColor3f(0.f, 0.f, 1.f);
         GL11.glVertex3f(0.f, 0.6f, 0.f);
         GL11.glEnd();
+    }
+    
+    private void setupInputFunctions()
+    {
+        addSavedFunction("stop", this::stop);
+        
+        addSavedFunction("cursor_toggle", () -> 
+        {
+            setCursorEnabled(!isCursorEnabled());
+        });
+        
+        addSavedFunction("screenshot", () -> 
+        {
+            screenShot("screenie" + System.nanoTime()/50);
+        });
+        
+        addSavedFunction("get_fps", () -> 
+        {
+            getLogger().log("Recorded FPS: " + getFPS());
+        });
+        
+        addSavedFunction("toggle_window_state", () -> 
+        {
+            if(getWindowState() == WindowState.WINDOWED) setWindowState(WindowState.FULLSCREEN_WINDOWED);
+            else setWindowState(WindowState.WINDOWED);
+        });
     }
     
     public static void main(String[] args)

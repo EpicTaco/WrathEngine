@@ -25,22 +25,25 @@ import org.lwjgl.glfw.GLFW;
  */
 public class KeyData
 {
-    private final Game.KeyAction action;
+    /**
+     * Used to differentiate between whether the action should execute when a key is pressed or released.
+     */
+    public static enum KeyAction {KEY_HOLD_DOWN, KEY_PRESS, KEY_RELEASE;}
+    
+    private final KeyAction action;
     private final int actionRaw;
     private final Runnable event;
-    private final Game.InputForm form;
     private final int key;
     
-    public KeyData(Game.KeyAction action, Runnable event, int glfwKey, Game.InputForm form)
+    public KeyData(KeyAction action, Runnable event, int glfwKey)
     {
         this.action = action;
             
-        if(action == Game.KeyAction.KEY_RELEASE) this.actionRaw = GLFW.GLFW_RELEASE;
+        if(action == KeyAction.KEY_RELEASE) this.actionRaw = GLFW.GLFW_RELEASE;
             else this.actionRaw = GLFW.GLFW_PRESS;
         
         this.event = event;
-        this.key = glfwKey;
-        this.form = form;        
+        this.key = glfwKey;      
     }
     
     /**
@@ -56,7 +59,7 @@ public class KeyData
     * This is used to determine whether to execute the event when a key is pressed, or execute the event when the key is released.
     * @return Returns the {@link wrath.client.Game.KeyAction} specified in the Constructor.
     */
-    public Game.KeyAction getAction()
+    public KeyAction getAction()
     {
         return action;
     }
@@ -68,16 +71,6 @@ public class KeyData
     public int getKey() 
     {
         return key;
-    }
-    
-    /**
-     * Gets what type of input the data is listening from.
-     * @return Returns the {@link wrath.client.Game.InputForm} associated with
-     * this data.
-     */
-    public Game.InputForm getInputForm() 
-    {
-        return form;
     }
 
     /**
