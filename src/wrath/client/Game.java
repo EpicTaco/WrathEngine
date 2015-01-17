@@ -46,7 +46,7 @@ import org.lwjgl.glfw.GLFWvidmode;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLContext;
 import org.lwjgl.system.MemoryUtil;
-import wrath.client.KeyData.KeyAction;
+import wrath.client.Key.KeyAction;
 import wrath.common.scheduler.Scheduler;
 import wrath.util.Config;
 import wrath.util.Logger;
@@ -120,28 +120,30 @@ public class Game
     
     /**
      * Adds a listener to a specified key on the {@link wrath.client.Key}.
-     * @param key The key to respond to.
+     * @param key The {@link wrath.client.Key} to respond to.
+     * @param keyMod The {@link wrath.client.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
      * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
      * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
      */
-    public void addKeyboardFunction(int key, KeyAction action, Runnable event)
+    public void addKeyboardFunction(int key, int keyMod, KeyAction action, Runnable event)
     {
         if(action == KeyAction.KEY_HOLD_DOWN)
             keyboardMap.put(key, new KeyData(KeyAction.KEY_PRESS, () -> 
             {
                 persKeyboardMap.put(key, event);
                 event.run();
-            }, key));
-        else keyboardMap.put(key, new KeyData(action, event, key));
+            }, key, keyMod));
+        else keyboardMap.put(key, new KeyData(action, event, key, keyMod));
     }
     
     /**
      * Adds a listener to a specified key on the {@link wrath.client.Key}.
      * @param key The key to respond to.
+     * @param keyMod The {@link wrath.client.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
      * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
      * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
      */
-    public void addKeyboardFunction(int key, KeyAction action, String functionId)
+    public void addKeyboardFunction(int key, int keyMod, KeyAction action, String functionId)
     {
         if(!savedFuncMap.containsKey(functionId)) return;
         
@@ -151,34 +153,36 @@ public class Game
             {
                 persKeyboardMap.put(key, event);
                 event.run();
-            }, key));
-        else keyboardMap.put(key, new KeyData(action, event, key));
+            }, key, keyMod));
+        else keyboardMap.put(key, new KeyData(action, event, key, keyMod));
     }
     
     /**
      * Adds a listener to a specified key on the {@link wrath.client.Key}.
      * @param key The key to respond to.
+     * @param keyMod The {@link wrath.client.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
      * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
      * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
      */
-    public void addMouseFunction(int key, KeyAction action, Runnable event)
+    public void addMouseFunction(int key, int keyMod, KeyAction action, Runnable event)
     {
         if(action == KeyAction.KEY_HOLD_DOWN)
             mouseMap.put(key, new KeyData(action, () -> 
             {
                 persMouseMap.put(key, event);
                 event.run();
-            }, key));
-        else mouseMap.put(key, new KeyData(action, event, key));
+            }, key, keyMod));
+        else mouseMap.put(key, new KeyData(action, event, key, keyMod));
     }
     
     /**
      * Adds a listener to a specified key on the {@link wrath.client.Key}.
      * @param key The key to respond to.
+     * @param keyMod The {@link wrath.client.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
      * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
      * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
      */
-    public void addMouseFunction(int key, KeyAction action, String functionId)
+    public void addMouseFunction(int key, int keyMod, KeyAction action, String functionId)
     {
         if(!savedFuncMap.containsKey(functionId)) return;
         
@@ -188,8 +192,8 @@ public class Game
             {
                 persMouseMap.put(key, event);
                 event.run();
-            }, key));
-        else mouseMap.put(key, new KeyData(action, event, key));
+            }, key, keyMod));
+        else mouseMap.put(key, new KeyData(action, event, key, keyMod));
     }
     
     /**
@@ -487,10 +491,10 @@ public class Game
             public void invoke(long window, int key, int scancode, int action, int mods)
             {
                 if(persKeyboardMap.containsKey(key) && action == GLFW.GLFW_RELEASE) persKeyboardMap.remove(key);
-                if(keyboardMap.containsKey(key))
+                else if(keyboardMap.containsKey(key))
                 {
                     KeyData dat = keyboardMap.get(key);
-                    if(dat.getRawAction() == action) dat.execute();
+                    if(dat.getRawAction() == action && (dat.getKeyMod() == -1 || mods == dat.getKeyMod())) dat.execute();
                 }
             }
         }));
@@ -501,10 +505,10 @@ public class Game
             public void invoke(long window, int button, int action, int mods) 
             {
                 if(persMouseMap.containsKey(button) && action == GLFW.GLFW_RELEASE) persMouseMap.remove(button);
-                if(mouseMap.containsKey(button))
+                else if(mouseMap.containsKey(button))
                 {
                     KeyData dat = mouseMap.get(button);
-                    if(dat.getRawAction() == action) dat.execute();
+                    if(dat.getRawAction() == action && (dat.getKeyMod() == -1 || mods == dat.getKeyMod())) dat.execute();
                 }
             }
         }));

@@ -21,8 +21,7 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import wrath.client.Game;
 import wrath.client.Key;
-import wrath.client.KeyData.KeyAction;
-import wrath.util.Config;
+import wrath.client.Key.KeyAction;
 
 /**
  * Example game for testing the engine.
@@ -30,25 +29,27 @@ import wrath.util.Config;
  * @author Trent Spears
  */
 public class CustomGame extends Game
-{ 
-    private Config keyConfig = new Config("keys"); 
-    
+{   
     public CustomGame(String[] args)
     {
         super("Test Client", "INDEV", 30, RenderMode.Mode2D);
         start(new String[]{"ResolutionIsWindowSize=true"});
     }
     
-    private void loadSavedKeyBindings()
-    {
-        
-    }
-    
     @Override
     public void onGameOpen()
     {   
         setupInputFunctions();
-        loadSavedKeyBindings();
+        
+        addKeyboardFunction(Key.KEY_ENTER, Key.MOD_ALT, KeyAction.KEY_PRESS, "toggle_fullscreen");
+        addKeyboardFunction(Key.KEY_END, -1, KeyAction.KEY_PRESS, "stop");
+        addKeyboardFunction(Key.KEY_F12, -1, KeyAction.KEY_PRESS, "screenshot");
+        addKeyboardFunction(Key.KEY_F10, Key.MOD_ALT, KeyAction.KEY_PRESS, "cursor_toggle");
+        
+        addMouseFunction(Key.MOUSE_BUTTON_1, -1, KeyAction.KEY_HOLD_DOWN, () ->
+        {
+            System.out.println("dd");
+        });
         
         setCursorEnabled(false);
     }
@@ -79,7 +80,7 @@ public class CustomGame extends Game
         
         addSavedFunction("screenshot", () -> 
         {
-            screenShot("screenie" + System.nanoTime()/50);
+            screenShot("screenie" + System.nanoTime()/1000000000);
         });
         
         addSavedFunction("get_fps", () -> 
@@ -87,7 +88,7 @@ public class CustomGame extends Game
             getLogger().log("Recorded FPS: " + getFPS());
         });
         
-        addSavedFunction("toggle_window_state", () -> 
+        addSavedFunction("toggle_fullscreen", () -> 
         {
             if(getWindowState() == WindowState.WINDOWED) setWindowState(WindowState.FULLSCREEN_WINDOWED);
             else setWindowState(WindowState.WINDOWED);

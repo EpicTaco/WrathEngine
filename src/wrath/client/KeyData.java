@@ -18,6 +18,7 @@
 package wrath.client;
 
 import org.lwjgl.glfw.GLFW;
+import wrath.client.Key.KeyAction;
 
 /**
  * Keeps track of keys.
@@ -25,17 +26,15 @@ import org.lwjgl.glfw.GLFW;
  */
 public class KeyData
 {
-    /**
-     * Used to differentiate between whether the action should execute when a key is pressed or released.
-     */
-    public static enum KeyAction {KEY_HOLD_DOWN, KEY_PRESS, KEY_RELEASE;}
+
     
     private final KeyAction action;
     private final int actionRaw;
     private final Runnable event;
     private final int key;
+    private final int mod;
     
-    public KeyData(KeyAction action, Runnable event, int glfwKey)
+    public KeyData(KeyAction action, Runnable event, int glfwKey, int glfwMod)
     {
         this.action = action;
             
@@ -43,7 +42,8 @@ public class KeyData
             else this.actionRaw = GLFW.GLFW_PRESS;
         
         this.event = event;
-        this.key = glfwKey;      
+        this.key = glfwKey;
+        this.mod = glfwMod;
     }
     
     /**
@@ -73,6 +73,15 @@ public class KeyData
         return key;
     }
 
+    /**
+     * Returns the {@link wrath.client.Key} modification.
+     * @return Gets the KeyMod assigned to the data.
+     */
+    public int getKeyMod()
+    {
+        return mod;
+    }
+    
     /**
      * Used by the internal engine to obtain the GLFW action code.
      * @return Returns the int version of the KeyAction for use with GLFW.

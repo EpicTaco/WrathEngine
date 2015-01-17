@@ -25,6 +25,12 @@ import org.lwjgl.glfw.GLFW;
  */
 public class Key
 {
+    
+    /**
+     * Used to differentiate between whether the action should execute when a key is pressed or released.
+     */
+    public static enum KeyAction {KEY_HOLD_DOWN, KEY_PRESS, KEY_RELEASE;}
+    
     /**
      * Private constructor, this cannot be made into an instance.
      */
@@ -156,10 +162,11 @@ public class Key
 		KEY_MENU          = GLFW.GLFW_KEY_MENU,
 		KEY_LAST          = KEY_MENU,
                 //Mod Keys
-                MOD_SHIFT = 0x1,
-                MOD_CONTROL = 0x2,
-                MOD_ALT = 0x4,
-                MOD_SUPER = 0x8;
+                MOD_NONE = -1,
+                MOD_SHIFT = GLFW.GLFW_MOD_SHIFT,
+                MOD_CONTROL = GLFW.GLFW_MOD_CONTROL,
+                MOD_ALT = GLFW.GLFW_MOD_ALT,
+                MOD_SUPER = GLFW.GLFW_MOD_SUPER;
                         
     //Mouse Keys
     public static final int
