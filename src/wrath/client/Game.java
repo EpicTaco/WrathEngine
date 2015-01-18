@@ -231,6 +231,8 @@ public class Game
         if(!windowOpen) return;
         windowOpen = false;
         
+        gameLogger.log("Closing window [(" + resWidth + "x" + resHeight + ")@(" + winWidth + "x" + winHeight + ")]");
+        
         winSizeStr.release();
         keyStr.release();
         mkeyStr.release();
@@ -440,8 +442,8 @@ public class Game
     }
     
     /**
-     * Private method to start the display.
-     * Made independent from start() so window options can be adjusted real-time.
+     * Method to start the display.
+     * Made independent from start() so window options can be adjusted without restarting game.
      */
     public void initWindow()
     {
@@ -470,13 +472,26 @@ public class Game
             ByteBuffer videomode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
             winWidth = GLFWvidmode.width(videomode);
             winHeight = GLFWvidmode.height(videomode);
-            window = GLFW.glfwCreateWindow(winWidth, winHeight, TITLE, GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL);
+            
+            if(gameConfig.getBoolean("ResolutionIsWindowSize", true))
+            {
+                resWidth = winWidth;
+                resHeight = winHeight;
+            }
+            
+            window = GLFW.glfwCreateWindow(winWidth, winHeight, TITLE, GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL); 
         }
         else if(windowState == WindowState.FULLSCREEN_WINDOWED)
         {
             ByteBuffer videomode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
             winWidth = GLFWvidmode.width(videomode);
             winHeight = GLFWvidmode.height(videomode);
+            
+            if(gameConfig.getBoolean("ResolutionIsWindowSize", true))
+            {
+                resWidth = winWidth;
+                resHeight = winHeight;
+            }
             
             GLFW.glfwWindowHint(GLFW.GLFW_DECORATED, GL11.GL_FALSE);
             window = GLFW.glfwCreateWindow(winWidth, winHeight, TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
@@ -521,6 +536,8 @@ public class Game
             stopImpl();
         }
         
+        gameLogger.log("Opened window [(" + resWidth + "x" + resHeight + ")@(" + winWidth + "x" + winHeight + ")]");
+        
         GLFW.glfwSetKeyCallback(window, (keyStr = new GLFWKeyCallback()
         {
             @Override
@@ -560,6 +577,7 @@ public class Game
         
         GLFW.glfwMakeContextCurrent(window);
         if(gameConfig.getBoolean("DisplayVsync", true)) GLFW.glfwSwapInterval(1);
+        else GLFW.glfwSwapInterval(0);
         GLFW.glfwShowWindow(window);
         GLContext.createFromCurrent();
         
@@ -943,7 +961,7 @@ public class Game
         if(!isRunning) return;
         
         if(gameHandler != null) gameHandler.onGameClose();
-        gameLogger.log("Stopping '" + TITLE + "' Client v." + VERSION + "!");
+        
         isRunning = false;
     }
     
@@ -957,6 +975,7 @@ public class Game
         GLFW.glfwTerminate();
         
         gameConfig.save();
+        gameLogger.log("Stopping '" + TITLE + "' Client v." + VERSION + "!");
         if(gameLogger != null && !gameLogger.isClosed()) gameLogger.close();
         errStr.release();
         }catch(Exception e){}

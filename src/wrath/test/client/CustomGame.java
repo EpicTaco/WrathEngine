@@ -68,7 +68,7 @@ public class CustomGame extends Game implements GameEventHandler
     @Override
     public void render()
     {
-        GL11.glRotatef((float) GLFW.glfwGetTime() * 50.f, 0.f, 0.f, 1.f);
+        GL11.glRotatef((float) GLFW.glfwGetTime() / 10, 0.f, 0.f, 1.f);
         
         GL11.glBegin(GL11.GL_TRIANGLES);
         GL11.glColor3f(1.f, 0.f, 0.f);
