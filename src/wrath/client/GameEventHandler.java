@@ -22,7 +22,7 @@ package wrath.client;
  * To be implemented by the game developer to receive events.
  * @author Trent Spears
  */
-public interface EventHandler
+public interface GameEventHandler
 {
     /**
      * Method that is called when a key is pressed.

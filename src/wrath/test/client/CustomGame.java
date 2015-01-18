@@ -19,7 +19,7 @@ package wrath.test.client;
 
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
-import wrath.client.EventHandler;
+import wrath.client.GameEventHandler;
 import wrath.client.Game;
 import wrath.client.Key;
 import wrath.client.Key.KeyAction;
@@ -29,12 +29,12 @@ import wrath.client.Key.KeyAction;
  * Extends {@link wrath.client.Game} class.
  * @author Trent Spears
  */
-public class CustomGame extends Game implements EventHandler
+public class CustomGame extends Game implements GameEventHandler
 {   
     public CustomGame(String[] args)
     {
         super("Test Client", "INDEV", 30, RenderMode.Mode2D);
-        registerEventHandler(this);
+        setGameEventHandler(this);
         start(new String[]{"ResolutionIsWindowSize=true"});
     }
     

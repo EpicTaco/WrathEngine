@@ -74,7 +74,7 @@ public class Game
     private final String VERSION;
 
     private final Config gameConfig = new Config("game");
-    private EventHandler gameHandler = null;
+    private GameEventHandler gameHandler = null;
     private final Logger gameLogger = new Logger("info");
     private final Scheduler gameScheduler = new Scheduler();
     
@@ -283,6 +283,15 @@ public class Game
     public float getFPS()
     {
         return fps;
+    }
+    
+    /**
+     * Gets the currently-registered {@link wrath.client.GameEventHandler} linked to this Game.
+     * @return Returns the Client's general GameEventHandler.
+     */
+    public GameEventHandler getGameEventHandler()
+    {
+        return gameHandler;
     }
     
     /**
@@ -704,15 +713,6 @@ public class Game
     }
     
     /**
-     * Adds a {@link wrath.client.EventHandler} to the client.
-     * @param handler The EventHandler the client should report to.
-     */
-    public void registerEventHandler(EventHandler handler)
-    {
-        gameHandler = handler;
-    }
-    
-    /**
      * Un-binds all functions bound to the specified key on the keyboard.
      * @param key The key to un-bind all functions on.
      */
@@ -800,6 +800,15 @@ public class Game
     {
         if(cursorEnabled) GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
         else GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
+    }
+    
+    /**
+     * Adds a {@link wrath.client.GameEventHandler} to the client.
+     * @param handler The GameEventHandler the client should report to.
+     */
+    public void setGameEventHandler(GameEventHandler handler)
+    {
+        gameHandler = handler;
     }
     
     /**
