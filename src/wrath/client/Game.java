@@ -18,7 +18,7 @@
 
 /**
  * NOTES:
- *  - Add custom cursors
+ *  - Add font rendering
  *  - Work on audio
  *  - Add an in-game structures (Item framework, Entity framework, etc)
  *  - Add physics
@@ -33,6 +33,7 @@ import wrath.client.input.KeyData;
 import wrath.client.handlers.GameEventHandler;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -53,6 +54,7 @@ import org.lwjgl.openal.ALContext;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLContext;
 import org.lwjgl.system.MemoryUtil;
+import org.newdawn.slick.opengl.PNGDecoder;
 import wrath.client.input.Key.KeyAction;
 import wrath.common.scheduler.Scheduler;
 import wrath.util.Config;
@@ -94,6 +96,7 @@ public class Game
     private long cursor = -1;
     private double curx = 0;
     private double cury = 0;
+    private int font;
     private float fps = 0;
     private boolean isRunning = false;
     private int resWidth = 800;
@@ -246,6 +249,7 @@ public class Game
         charStr.release();
         curStr.release();
         AL.destroy(audiocontext);
+        if(cursor != -1) GLFW.glfwDestroyCursor(cursor);
         GLFW.glfwDestroyWindow(window);
     }
     
@@ -768,6 +772,59 @@ public class Game
     protected void render(){}
     
     /**
+     * Renders text using a font bitmap.
+     * @param string the string to render
+     * @param gridSize the dimensions of the bitmap grid (e.g. 16 -> 16x16 grid;
+     * 8 -> 8x8 grid)
+     * @param x the x-coordinate of the bottom-left corner of where the string
+     * starts rendering
+     * @param y the y-coordinate of the bottom-left corner of where the string
+     * starts rendering
+     * @param characterWidth the width of the character
+     * @param characterHeight the height of the character
+     */
+    public void renderString(String string, int gridSize, float x, float y, float characterWidth, float characterHeight) 
+    {
+        GL11.glPushAttrib(GL11.GL_TEXTURE_BIT | GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT);
+        GL11.glEnable(GL11.GL_CULL_FACE);
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, font);
+
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ONE);
+
+        GL11.glPushMatrix();
+
+        GL11.glTranslatef(x, y, 0);
+        GL11.glBegin(GL11.GL_QUADS);
+
+        for (int i = 0; i < string.length(); i++) 
+        {
+            int asciiCode = (int) string.charAt(i);
+
+            final float cellSize = 1.0f / gridSize;
+
+            float cellX = ((int) asciiCode % gridSize) * cellSize;
+
+            float cellY = ((int) asciiCode / gridSize) * cellSize;
+            GL11.glTexCoord2f(cellX, cellY + cellSize);
+            GL11.glVertex2f(i * characterWidth / 6, y);
+            GL11.glTexCoord2f(cellX + cellSize, cellY + cellSize);
+            GL11.glVertex2f(i * characterWidth / 6 + characterWidth / 3, y);
+            GL11.glTexCoord2f(cellX + cellSize, cellY);
+            GL11.glVertex2f(i * characterWidth / 6 + characterWidth / 3, y + characterHeight / 1.5f);
+            GL11.glTexCoord2f(cellX, cellY);
+            GL11.glVertex2f(i * characterWidth / 6, y + characterHeight);
+        }
+        GL11.glEnd();
+        GL11.glPopMatrix();
+        GL11.glPopAttrib();
+    }
+
+    /**
      * Takes a screen-shot and saves it to the file specified as a PNG.
      * @param saveToName The name of the file to save the screen-shot to (excluding file extension).
      */
@@ -845,6 +902,31 @@ public class Game
     {
         if(cursorEnabled) GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
         else GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
+    }
+    
+    /**
+     * Sets the font to render all text.
+     * Must be used after {@link wrath.client.Game#initWindow() }.
+     * @param fontFile The file to load the font from.
+     */
+    public void setFont(File fontFile)
+    {
+        //TODO: Attempt to use ClientUtil getByteBufferFromImage()
+        try
+        {
+            font = GL11.glGenTextures();
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, font);
+            PNGDecoder dec = new PNGDecoder(new FileInputStream(fontFile));
+            ByteBuffer buf = BufferUtils.createByteBuffer(4 * dec.getHeight() * dec.getWidth());
+            dec.decode(buf, dec.getWidth() * 4, PNGDecoder.RGBA);
+            buf.flip();
+            GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, dec.getWidth(), dec.getHeight(), 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buf);
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+        }
+        catch(IOException e)
+        {
+            Logger.getErrorLogger().log("Could not load font from '" + fontFile.getName() + "'! I/O Error occured!");
+        }
     }
     
     /**

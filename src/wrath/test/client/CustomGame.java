@@ -17,7 +17,7 @@
  */
 package wrath.test.client;
 
-import org.lwjgl.glfw.GLFW;
+import java.io.File;
 import org.lwjgl.opengl.GL11;
 import wrath.client.handlers.GameEventHandler;
 import wrath.client.Game;
@@ -47,6 +47,7 @@ public class CustomGame extends Game implements GameEventHandler
     @Override
     public void onGameOpen()
     {   
+        setFont(new File("assets/fonts/font_white.png"));
         setupInputFunctions();
         
         addKeyboardFunction(Key.KEY_ENTER, Key.MOD_ALT, KeyAction.KEY_PRESS, "toggle_fullscreen");
@@ -69,7 +70,7 @@ public class CustomGame extends Game implements GameEventHandler
     @Override
     public void render()
     {
-        GL11.glRotatef((float) GLFW.glfwGetTime() / 10, 0.f, 0.f, 1.f);
+        renderString("FPS: " + getFPS(), 16, -1.0f, 0.42f, 0.2f, 0.2f);
         
         GL11.glBegin(GL11.GL_TRIANGLES);
         GL11.glColor3f(1.0f, 0.0f, 0.0f);
