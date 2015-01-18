@@ -38,6 +38,8 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.LWJGLUtil;
 import org.lwjgl.Sys;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.glfw.GLFWCharCallback;
+import org.lwjgl.glfw.GLFWCursorPosCallback;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
 import org.lwjgl.glfw.GLFWKeyCallback;
@@ -72,14 +74,19 @@ public class Game
     private final String VERSION;
 
     private final Config gameConfig = new Config("game");
+    private EventHandler gameHandler = null;
     private final Logger gameLogger = new Logger("info");
     private final Scheduler gameScheduler = new Scheduler();
     
+    private GLFWCharCallback charStr;
+    private GLFWCursorPosCallback curStr;
     private GLFWErrorCallback errStr;
     private GLFWKeyCallback keyStr;
     private GLFWMouseButtonCallback mkeyStr;
     private GLFWFramebufferSizeCallback winSizeStr;
     
+    private double curx = 0;
+    private double cury = 0;
     private float fps = 0;
     private boolean isRunning = false;
     private int resWidth = 800;
@@ -227,6 +234,8 @@ public class Game
         winSizeStr.release();
         keyStr.release();
         mkeyStr.release();
+        charStr.release();
+        curStr.release();
         GLFW.glfwDestroyWindow(window);
     }
     
@@ -237,6 +246,24 @@ public class Game
     public Config getConfig()
     {
         return gameConfig;
+    }
+    
+    /**
+     * Gets the X position of the cursor.
+     * @return Returns the X position of the cursor.
+     */
+    public double getCursorX()
+    {
+        return curx;
+    }
+    
+    /**
+     * Gets the Y position of the cursor.
+     * @return Returns the Y position of the cursor.
+     */
+    public double getCursorY()
+    {
+        return cury;
     }
     
     /**
@@ -513,6 +540,15 @@ public class Game
             }
         }));
         
+        GLFW.glfwSetCharCallback(window, (charStr = new GLFWCharCallback() 
+        {
+            @Override
+            public void invoke(long window, int codepoint) 
+            {
+                if(gameHandler != null) gameHandler.onCharInput((char) codepoint);
+            }
+        }));
+        
         GLFW.glfwMakeContextCurrent(window);
         if(gameConfig.getBoolean("DisplayVsync", true)) GLFW.glfwSwapInterval(1);
         GLFW.glfwShowWindow(window);
@@ -549,6 +585,17 @@ public class Game
             }
         }));
         
+        GLFW.glfwSetCursorPosCallback(window, (curStr = new GLFWCursorPosCallback()
+        {
+            @Override
+            public void invoke(long window, double x, double y)
+            {
+                curx = x;
+                cury = y;
+                if(gameHandler != null) gameHandler.onCursorMove(x, y);
+            }
+        }));
+        
         GL11.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         GL11.glViewport(0, 0, winWidth, winHeight);
         GL11.glMatrixMode(GL11.GL_PROJECTION);
@@ -582,7 +629,7 @@ public class Game
         
         //Input Checking
         int inpCount = 0;
-        double checksPerSec = gameConfig.getDouble("PersInputCheckPerSecond", 15.0);
+        double checksPerSec = gameConfig.getDouble("PersInputCheckPerSecond", 10.0);
         if(checksPerSec > TPS) checksPerSec = TPS;
         final double INPUT_CHECK_TICKS = TPS / checksPerSec;
         
@@ -645,20 +692,7 @@ public class Game
         stopImpl();
     }
     
-    /**
-     * Override-able method that is called when the game is closed (as soon as the close is requested).
-     */
-    protected void onGameClose(){}
     
-    /**
-     * Override-able method that is called when the game is opened (right before the loop initializes.
-     */
-    protected void onGameOpen(){}
-    
-    /**
-     * Override-able method that is called every time the game's logic is supposed to update.
-     */
-    protected void onTick(){}
     
     /**
      * Private method that takes care of all background processes before onTick() is called.
@@ -666,7 +700,16 @@ public class Game
     private void onTickPreprocessor()
     {
         gameScheduler.onTick();
-        onTick();
+        if(gameHandler != null) gameHandler.onTick();
+    }
+    
+    /**
+     * Adds a {@link wrath.client.EventHandler} to the client.
+     * @param handler The EventHandler the client should report to.
+     */
+    public void registerEventHandler(EventHandler handler)
+    {
+        gameHandler = handler;
     }
     
     /**
@@ -879,7 +922,7 @@ public class Game
         
         initWindow();
         
-        onGameOpen();
+        if(gameHandler != null) gameHandler.onGameOpen();
         loop();
     }
     
@@ -890,7 +933,7 @@ public class Game
     {
         if(!isRunning) return;
         
-        onGameClose();
+        if(gameHandler != null) gameHandler.onGameClose();
         gameLogger.log("Stopping '" + TITLE + "' Client v." + VERSION + "!");
         isRunning = false;
     }

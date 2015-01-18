@@ -19,6 +19,7 @@ package wrath.test.client;
 
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
+import wrath.client.EventHandler;
 import wrath.client.Game;
 import wrath.client.Key;
 import wrath.client.Key.KeyAction;
@@ -28,13 +29,20 @@ import wrath.client.Key.KeyAction;
  * Extends {@link wrath.client.Game} class.
  * @author Trent Spears
  */
-public class CustomGame extends Game
+public class CustomGame extends Game implements EventHandler
 {   
     public CustomGame(String[] args)
     {
         super("Test Client", "INDEV", 30, RenderMode.Mode2D);
+        registerEventHandler(this);
         start(new String[]{"ResolutionIsWindowSize=true"});
     }
+    
+    @Override
+    public void onCharInput(char c){}
+    
+    @Override
+    public void onCursorMove(double x, double y){}
     
     @Override
     public void onGameOpen()
@@ -42,17 +50,20 @@ public class CustomGame extends Game
         setupInputFunctions();
         
         addKeyboardFunction(Key.KEY_ENTER, Key.MOD_ALT, KeyAction.KEY_PRESS, "toggle_fullscreen");
-        addKeyboardFunction(Key.KEY_END, -1, KeyAction.KEY_PRESS, "stop");
-        addKeyboardFunction(Key.KEY_F12, -1, KeyAction.KEY_PRESS, "screenshot");
+        addKeyboardFunction(Key.KEY_END, Key.MOD_NONE, KeyAction.KEY_PRESS, "stop");
+        addKeyboardFunction(Key.KEY_F12, Key.MOD_NONE, KeyAction.KEY_PRESS, "screenshot");
         addKeyboardFunction(Key.KEY_F10, Key.MOD_ALT, KeyAction.KEY_PRESS, "cursor_toggle");
-        
-        addMouseFunction(Key.MOUSE_BUTTON_1, -1, KeyAction.KEY_HOLD_DOWN, () ->
-        {
-            System.out.println("dd");
-        });
+        addKeyboardFunction(Key.KEY_SPACE, Key.MOD_SHIFT, KeyAction.KEY_PRESS, () -> {System.out.println(getFPS());});
+        addMouseFunction(Key.MOUSE_BUTTON_1, Key.MOD_NONE, KeyAction.KEY_HOLD_DOWN, () -> {System.out.println("test");});
         
         setCursorEnabled(false);
     }
+    
+    @Override
+    public void onGameClose(){}
+    
+    @Override
+    public void onTick(){}
     
     @Override
     public void render()
