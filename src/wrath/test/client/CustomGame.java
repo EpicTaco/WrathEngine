@@ -19,10 +19,10 @@ package wrath.test.client;
 
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
-import wrath.client.GameEventHandler;
+import wrath.client.handlers.GameEventHandler;
 import wrath.client.Game;
-import wrath.client.Key;
-import wrath.client.Key.KeyAction;
+import wrath.client.input.Key;
+import wrath.client.input.Key.KeyAction;
 
 /**
  * Example game for testing the engine.
@@ -56,6 +56,7 @@ public class CustomGame extends Game implements GameEventHandler
         addKeyboardFunction(Key.KEY_SPACE, Key.MOD_SHIFT, KeyAction.KEY_PRESS, () -> {System.out.println(getFPS());});
         addMouseFunction(Key.MOUSE_BUTTON_1, Key.MOD_NONE, KeyAction.KEY_HOLD_DOWN, () -> {System.out.println("test");});
         
+        setCursor(Key.CURSOR_CROSSHAIR);
         setCursorEnabled(false);
     }
     
@@ -71,19 +72,19 @@ public class CustomGame extends Game implements GameEventHandler
         GL11.glRotatef((float) GLFW.glfwGetTime() / 10, 0.f, 0.f, 1.f);
         
         GL11.glBegin(GL11.GL_TRIANGLES);
-        GL11.glColor3f(1.f, 0.f, 0.f);
-        GL11.glVertex3f(-0.6f, -0.4f, 0.f);
-        GL11.glColor3f(0.f, 1.f, 0.f);
-        GL11.glVertex3f(0.6f, -0.4f, 0.f);
-        GL11.glColor3f(0.f, 0.f, 1.f);
-        GL11.glVertex3f(0.f, 0.6f, 0.f);
+        GL11.glColor3f(1.0f, 0.0f, 0.0f);
+        GL11.glVertex3f(-0.6f, -0.4f, 0.0f);
+        GL11.glColor3f(0.0f, 1.0f, 0.0f);
+        GL11.glVertex3f(0.6f, -0.4f, 0.0f);
+        GL11.glColor3f(0.0f, 0.0f, 1.0f);
+        GL11.glVertex3f(0.0f, 0.6f, 0.0f);
         GL11.glEnd();
     }
     
     private void setupInputFunctions()
     {
         addSavedFunction("stop", this::stop);
-        
+
         addSavedFunction("cursor_toggle", () -> 
         {
             setCursorEnabled(!isCursorEnabled());

@@ -15,10 +15,10 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package wrath.client;
+package wrath.client.input;
 
 import org.lwjgl.glfw.GLFW;
-import wrath.client.Key.KeyAction;
+import wrath.client.input.Key.KeyAction;
 
 /**
  * Keeps track of keys.
@@ -65,7 +65,7 @@ public class KeyData
     }
         
     /**
-     * Gets the {@link wrath.client.Key}.
+     * Gets the {@link wrath.client.input.Key}.
      * @return Returns the key id.
      */
     public int getKey() 
@@ -74,7 +74,7 @@ public class KeyData
     }
 
     /**
-     * Returns the {@link wrath.client.Key} modification.
+     * Returns the {@link wrath.client.input.Key} modification.
      * @return Gets the KeyMod assigned to the data.
      */
     public int getKeyMod()

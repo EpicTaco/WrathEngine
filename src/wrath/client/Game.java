@@ -18,6 +18,7 @@
 
 /**
  * NOTES:
+ *  - Add custom cursors
  *  - Work on audio
  *  - Add an in-game structures (Item framework, Entity framework, etc)
  *  - Add physics
@@ -28,6 +29,8 @@
  */
 package wrath.client;
 
+import wrath.client.input.KeyData;
+import wrath.client.handlers.GameEventHandler;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -45,10 +48,12 @@ import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
 import org.lwjgl.glfw.GLFWKeyCallback;
 import org.lwjgl.glfw.GLFWMouseButtonCallback;
 import org.lwjgl.glfw.GLFWvidmode;
+import org.lwjgl.openal.AL;
+import org.lwjgl.openal.ALContext;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLContext;
 import org.lwjgl.system.MemoryUtil;
-import wrath.client.Key.KeyAction;
+import wrath.client.input.Key.KeyAction;
 import wrath.common.scheduler.Scheduler;
 import wrath.util.Config;
 import wrath.util.Logger;
@@ -85,6 +90,8 @@ public class Game
     private GLFWMouseButtonCallback mkeyStr;
     private GLFWFramebufferSizeCallback winSizeStr;
     
+    private ALContext audiocontext;
+    private long cursor = -1;
     private double curx = 0;
     private double cury = 0;
     private float fps = 0;
@@ -126,9 +133,9 @@ public class Game
     }
     
     /**
-     * Adds a listener to a specified key on the {@link wrath.client.Key}.
-     * @param key The {@link wrath.client.Key} to respond to.
-     * @param keyMod The {@link wrath.client.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
+     * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
+     * @param key The {@link wrath.client.input.Key} to respond to.
+     * @param keyMod The {@link wrath.client.input.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
      * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
      * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
      */
@@ -144,9 +151,9 @@ public class Game
     }
     
     /**
-     * Adds a listener to a specified key on the {@link wrath.client.Key}.
+     * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
      * @param key The key to respond to.
-     * @param keyMod The {@link wrath.client.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
+     * @param keyMod The {@link wrath.client.input.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
      * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
      * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
      */
@@ -165,9 +172,9 @@ public class Game
     }
     
     /**
-     * Adds a listener to a specified key on the {@link wrath.client.Key}.
+     * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
      * @param key The key to respond to.
-     * @param keyMod The {@link wrath.client.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
+     * @param keyMod The {@link wrath.client.input.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
      * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
      * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
      */
@@ -183,9 +190,9 @@ public class Game
     }
     
     /**
-     * Adds a listener to a specified key on the {@link wrath.client.Key}.
+     * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
      * @param key The key to respond to.
-     * @param keyMod The {@link wrath.client.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
+     * @param keyMod The {@link wrath.client.input.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
      * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
      * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
      */
@@ -238,6 +245,7 @@ public class Game
         mkeyStr.release();
         charStr.release();
         curStr.release();
+        AL.destroy(audiocontext);
         GLFW.glfwDestroyWindow(window);
     }
     
@@ -580,6 +588,8 @@ public class Game
         else GLFW.glfwSwapInterval(0);
         GLFW.glfwShowWindow(window);
         GLContext.createFromCurrent();
+        audiocontext = ALContext.create();
+        audiocontext.makeCurrent();
         
         GLFW.glfwSetFramebufferSizeCallback(window,(winSizeStr = new GLFWFramebufferSizeCallback() 
         {
@@ -622,6 +632,8 @@ public class Game
                 if(gameHandler != null) gameHandler.onCursorMove(x, y);
             }
         }));
+        
+        if(cursor != -1) GLFW.glfwSetCursor(window, cursor);
         
         GL11.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         GL11.glViewport(0, 0, winWidth, winHeight);
@@ -808,6 +820,21 @@ public class Game
         });
         
         t.start();
+    }
+    
+    /**
+     * Changes the cursor from a list of standard cursors located in {@link wrath.client.input.Key}.
+     * @param cursormode The {@link wrath.client.input.Key} Cursor to switch to.
+     */
+    public void setCursor(int cursormode)
+    {
+        if(cursor != -1)
+        {
+            GLFW.glfwDestroyCursor(cursor);
+            cursor = -1;
+        }
+        cursor = GLFW.glfwCreateStandardCursor(cursormode);
+        GLFW.glfwSetCursor(window, cursor);
     }
     
     /**

@@ -15,10 +15,10 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package wrath.client;
+package wrath.client.handlers;
 
 /**
- * Interface to handle events.
+ * Interface to handle general {@link wrath.client.Game} events.
  * To be implemented by the game developer to receive events.
  * @author Trent Spears
  */

@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package wrath.client;
+package wrath.client.input;
 
 import org.lwjgl.glfw.GLFW;
 
@@ -181,7 +181,12 @@ public class Key
                 MOUSE_BUTTON_LAST   = MOUSE_BUTTON_8,
 		MOUSE_BUTTON_LEFT   = MOUSE_BUTTON_1,
 		MOUSE_BUTTON_RIGHT  = MOUSE_BUTTON_2,
-		MOUSE_BUTTON_MIDDLE = MOUSE_BUTTON_3;
+		MOUSE_BUTTON_MIDDLE = MOUSE_BUTTON_3,
+                //Cursors
+                CURSOR_ARROW = GLFW.GLFW_ARROW_CURSOR,
+                CURSOR_CROSSHAIR = GLFW.GLFW_CROSSHAIR_CURSOR,
+                CURSOR_HAND = GLFW.GLFW_HAND_CURSOR,
+                CURSOR_IBEAM = GLFW.GLFW_IBEAM_CURSOR;
     
     //Joystick Keys
     public static final int
