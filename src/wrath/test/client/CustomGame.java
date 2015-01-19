@@ -104,9 +104,7 @@ public class CustomGame extends Game implements GameEventHandler
     
     @Override
     public void render()
-    {
-        //renderString("FPS: " + getFPS(), 16, 100, 100, 10f, 10f);
-        
+    {  
         GL11.glBegin(GL11.GL_POLYGON);
             GL11.glColor3f(1, 0, 0);
             GL11.glVertex2f(x, y);
