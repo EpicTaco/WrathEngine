@@ -18,22 +18,16 @@
 package wrath.client;
 
 import java.awt.Desktop;
-import java.awt.Font;
-import java.awt.FontFormatException;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
-import org.newdawn.slick.TrueTypeFont;
-import org.newdawn.slick.opengl.Texture;
-import org.newdawn.slick.opengl.TextureLoader;
-import org.newdawn.slick.util.ResourceLoader;
+import org.lwjgl.opengl.GL12;
 import wrath.util.Logger;
 
 /**
@@ -58,17 +52,6 @@ public class ClientUtils
     private ClientUtils(){}
     
     /**
-     * !!! Currently Broken !!! Loads a TrueTypeFont from a regular java font.
-     * @param javaFont The Font from {@link java.awt.Font}.
-     * @param antiAliasing Whether or not to make the edges look smoother.
-     * @return Returns the converted font.
-     */
-    public static TrueTypeFont convertFontFromJavaFont(Font javaFont, boolean antiAliasing)
-    {
-        return new TrueTypeFont(javaFont, antiAliasing);
-    }
-    
-        /**
      * Displays a pop-up message.
      * @param popupTitle The title of the pop-up message.
      * @param message The message displayed on the pop-up.
@@ -89,40 +72,14 @@ public class ClientUtils
     }
     
     /**
-     * Loads a Java AWT Font from a file.
-     * @param file The file to load the font from.
-     * @return Returns the font object.
-     */
-    public static Font getFontFromFile(File file)
-    {
-        Font awtFont = null;
-        
-        try(InputStream inputStream = ResourceLoader.getResourceAsStream("myfont.ttf")) 
-        {
-            awtFont = Font.createFont(Font.TRUETYPE_FONT, inputStream);
-        }
-        catch(FontFormatException e)
-        {
-            Logger.getErrorLogger().log("Could not load font from '" + file.getName() + "'! Not a valid font format!");
-        }
-        catch(IOException e)
-        {
-            Logger.getErrorLogger().log("Could not load font from '" + file.getName() + "'! I/O Error has occured!");
-        }
-        
-        return awtFont;
-    }
-    
-    /**
      * Loads a ByteBuffer (Used in OpenGL) from most images.
-     * @param file File to load image from.
+     * @param image Image to convert.
      * @return Returns the ByteBuffer converting from the original image.
      */
-    public static ByteBuffer getImageToByteBuffer(File file) 
+    public static ByteBuffer getImageToByteBuffer(BufferedImage image) 
     {
         try
         {
-            BufferedImage image = ImageIO.read(file);
             byte[] imageBuffer = new byte[image.getWidth()*image.getHeight()*4];
             int counter = 0;
             for(int i = 0; i < image.getWidth(); i++)
@@ -139,9 +96,9 @@ public class ClientUtils
             }
             return ByteBuffer.wrap(imageBuffer);
         }
-        catch(IOException | NullPointerException e)
+        catch(NullPointerException e)
         {
-            Logger.getErrorLogger().log("Could not convert Image to ByteBuffer! I/O Error has occured!");
+            Logger.getErrorLogger().log("Could not convert Image to ByteBuffer! Operations Error has occured!");
         }
         
         return ByteBuffer.allocate(0);
@@ -162,36 +119,58 @@ public class ClientUtils
     /**
      * Loads a Slick-Utils/LWJGL Texture from an image.
      * @param file The file to load the texture from.
-     * @return Returns the texture object, null if could not be read.
+     * @return Returns the LWJGL texture id.
      */
-    public static Texture getTexture(File file)
+    public static int get2DTexture(File file)
     {
-        // Format Detection
-        ImageFormat format;
-        
-        if(file.getName().endsWith(".png") || file.getName().endsWith(".PNG")) format = ImageFormat.PNG;
-        else if(file.getName().endsWith(".jpg") || file.getName().endsWith(".JPG")) format = ImageFormat.JPEG;
-        else if(file.getName().endsWith(".jpeg") || file.getName().endsWith(".JPEG")) format = ImageFormat.JPEG;
-        else if(file.getName().endsWith(".gif") || file.getName().endsWith(".GIF")) format = ImageFormat.GIF;
-        else
+        BufferedImage image = loadImageFromFile(file);
+        int[] pixels = new int[image.getWidth() * image.getHeight()];
+        image.getRGB(0, 0, image.getWidth(), image.getHeight(), pixels, 0, image.getWidth());
+
+        ByteBuffer buffer = BufferUtils.createByteBuffer(image.getWidth() * image.getHeight() * 4);
+
+        for(int y = 0; y < image.getHeight(); y++)
         {
-            Logger.getErrorLogger().log("Could not load texture from '" + file.getName() + "'! Texture is in an unsupported format!");
-            return null;
+            for(int x = 0; x < image.getWidth(); x++)
+            {
+                int pixel = pixels[y * image.getWidth() + x];
+                buffer.put((byte) ((pixel >> 16) & 0xFF));
+                buffer.put((byte) ((pixel >> 8) & 0xFF));
+                buffer.put((byte) (pixel & 0xFF));
+                buffer.put((byte) ((pixel >> 24) & 0xFF));
+            }
         }
+        buffer.flip();
         
-        // Load the texture
-        Texture t;
-        try (FileInputStream fis = new FileInputStream(file)) 
+        int id = GL11.glGenTextures();
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, id);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8, image.getWidth(), image.getHeight(), 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
+        return id;
+    }
+    
+    /**
+     * Loads a {@link java.awt.image.BufferedImage} from a {@link java.io.File}.
+     * @param file The {@link java.io.File} to load the {@link java.awt.image.BufferedImage} from.
+     * @return Returns the {@link java.awt.image.BufferedImage} located in the {@link java.io.File}.
+     */
+    public static BufferedImage loadImageFromFile(File file)
+    {
+        BufferedImage ret = null;
+        
+        try
         {
-            t = TextureLoader.getTexture(format.name(), fis);
-            fis.close();
-            return t;
+            ret = ImageIO.read(file);
         }
         catch(IOException e)
         {
-            Logger.getErrorLogger().log("Could not load texture from '" + file.getName() + "'! I/O Error occured or file not found!");
+            Logger.getErrorLogger().log("Could not load image from file! I/O Error!");
         }
-        return null;
+        
+        return ret;
     }
     
     /**

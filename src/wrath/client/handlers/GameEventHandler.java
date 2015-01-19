@@ -52,4 +52,11 @@ public interface GameEventHandler
      * Method that is called every time the game's logic is supposed to update.
      */
     public void onTick();
+    
+    /**
+     * Called when the window is resized.
+     * @param newWidth The new width of the window.
+     * @param newHeight The new height of the window.
+     */
+    public void onWindowResize(int newWidth, int newHeight);
 }

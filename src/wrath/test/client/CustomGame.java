@@ -17,7 +17,9 @@
  */
 package wrath.test.client;
 
+import java.io.File;
 import org.lwjgl.opengl.GL11;
+import wrath.client.ClientUtils;
 import wrath.client.handlers.GameEventHandler;
 import wrath.client.Game;
 import wrath.client.input.Key;
@@ -31,13 +33,13 @@ import wrath.common.scheduler.Task;
  */
 public class CustomGame extends Game implements GameEventHandler
 {   
-    int x = 0,y = 0,stage=0;
+    int x=0,y=0,stage=1,texture=-1;
     
     public CustomGame(String[] args)
     {
         super("Test Client", "INDEV", 30, RenderMode.Mode2D);
         setGameEventHandler(this);
-        start(new String[]{"ResolutionIsWindowSize=true"});
+        start(args);
     }
     
     @Override
@@ -49,6 +51,7 @@ public class CustomGame extends Game implements GameEventHandler
     @Override
     public void onGameOpen()
     {   
+        texture = ClientUtils.get2DTexture(new File("assets/textures/wood.png"));
         setupInputFunctions();
         
         addKeyboardFunction(Key.KEY_ENTER, Key.MOD_ALT, KeyAction.KEY_PRESS, "toggle_fullscreen");
@@ -61,39 +64,37 @@ public class CustomGame extends Game implements GameEventHandler
         setCursor(Key.CURSOR_CROSSHAIR);
         setCursorEnabled(false);
         
-        getScheduler().runTaskLater(new Task()
+        this.getScheduler().runTaskLater(new Task()
         {
             @Override
             public void run()
             {
-                if(stage == 0)
+                if(stage == 1)
                 {
                     x = 50;
-                    y = 0;
-                    stage++;
-                }
-                else if(stage == 1)
-                {
-                    x = 0;
-                    y = 50;
                     stage++;
                 }
                 else if(stage == 2)
                 {
-                    x = 50;
+                    x = 0;
                     y = 50;
                     stage++;
                 }
                 else if(stage == 3)
                 {
+                    x = 50;
+                    y = 50;
+                    stage++;
+                }
+                else if(stage == 4)
+                {
                     x = 0;
                     y = 0;
-                    stage = 0;
+                    stage = 1;
                 }
-                
-                getScheduler().runTaskLater(this, 10);
+                getScheduler().runTaskLater(this, 15);
             }
-        }, 10);
+        }, 15);
     }
     
     @Override
@@ -103,18 +104,28 @@ public class CustomGame extends Game implements GameEventHandler
     public void onTick(){}
     
     @Override
+    public void onWindowResize(int w, int h){}
+    
+    @Override
     public void render()
     {  
-        GL11.glBegin(GL11.GL_POLYGON);
-            GL11.glColor3f(1, 0, 0);
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture);
+        
+        GL11.glBegin(GL11.GL_QUADS);
+            GL11.glTexCoord2f(0, 0);
             GL11.glVertex2f(x, y);
-            GL11.glColor3f(0, 1, 0);
+            
+            GL11.glTexCoord2f(1, 0);
             GL11.glVertex2f(x + 50, y);
-            GL11.glColor3f(0, 0, 1);
+            
+            GL11.glTexCoord2f(1, 1);
             GL11.glVertex2f(x + 50, y + 50);
-            GL11.glColor3f(1, 0, 1);
+            
+            GL11.glTexCoord2f(0, 1);
             GL11.glVertex2f(x, y + 50);
         GL11.glEnd();
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
     }
     
     private void setupInputFunctions()

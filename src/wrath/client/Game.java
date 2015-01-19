@@ -96,13 +96,11 @@ public class Game
     private double cury = 0;
     private float fps = 0;
     private boolean isRunning = false;
-    private int resWidth = 800;
-    private int resHeight = 600;
     private long window;
     private boolean windowOpen = false;
     private WindowState windowState = null;
-    private int winWidth = 800;
-    private int winHeight = 600;
+    private int wwidth = 800;
+    private int wheight = 600;
     
     private final HashMap<Integer, KeyData> keyboardMap = new HashMap<>();
     private final HashMap<Integer, Runnable> persKeyboardMap = new HashMap<>();
@@ -237,7 +235,7 @@ public class Game
         if(!windowOpen) return;
         windowOpen = false;
         
-        gameLogger.log("Closing window [(" + resWidth + "x" + resHeight + ")@(" + winWidth + "x" + winHeight + ")]");
+        gameLogger.log("Closing window [(" + wwidth + "x" + wheight + "]");
         
         winSizeStr.release();
         keyStr.release();
@@ -331,24 +329,6 @@ public class Game
     }
     
     /**
-     * Gets the height of the rendering resolution.
-     * @return Returns the height of the rendering resolution.
-     */
-    public int getResolutionHeight()
-    {
-        return resHeight;
-    }
-    
-    /**
-     * Gets the width of the rendering resolution.
-     * @return Returns the width of the rendering resolution.
-     */
-    public int getResolutionWidth()
-    {
-        return resWidth;
-    }
-    
-    /**
      * Gets the standardized {@link wrath.common.scheduler.Scheduler} for the game.
      * @return Returns the scheduler for the game.
      */
@@ -385,12 +365,12 @@ public class Game
     }
     
     /**
-     * Returns the height of the window.
-     * @return Returns the height of the window.
+     * Returns the wheight of the window.
+     * @return Returns the wheight of the window.
      */
-    public int getWindowHeight()
+    public int getHeight()
     {
-        return winHeight;
+        return wheight;
     }
     
     /**
@@ -403,12 +383,12 @@ public class Game
     }
     
     /**
-     * Returns the width of the window.
-     * @return Returns the width of the window.
+     * Returns the wwidth of the window.
+     * @return Returns the wwidth of the window.
      */
-    public int getWindowWidth()
+    public int getWidth()
     {
-        return winWidth;
+        return wwidth;
     }
     
     /**
@@ -460,80 +440,48 @@ public class Game
         else if(wstatestr.equalsIgnoreCase("windowed_undecorated")) windowState = WindowState.WINDOWED_UNDECORATED;
         else if(wstatestr.equalsIgnoreCase("fullscreen_windowed")) windowState = WindowState.FULLSCREEN_WINDOWED;
         else if(wstatestr.equalsIgnoreCase("fullscreen")) windowState = WindowState.FULLSCREEN;
-        
-        resWidth = gameConfig.getInt("ResolutionWidth", 800);
-        resHeight = gameConfig.getInt("ResolutionHeight", 600);
-        
+
         if(windowState == WindowState.FULLSCREEN)
         {
             ByteBuffer videomode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
-            winWidth = GLFWvidmode.width(videomode);
-            winHeight = GLFWvidmode.height(videomode);
+            wwidth = GLFWvidmode.width(videomode);
+            wheight = GLFWvidmode.height(videomode);
             
-            if(gameConfig.getBoolean("ResolutionIsWindowSize", true))
-            {
-                resWidth = winWidth;
-                resHeight = winHeight;
-            }
-            
-            window = GLFW.glfwCreateWindow(winWidth, winHeight, TITLE, GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL); 
+            window = GLFW.glfwCreateWindow(wwidth, wheight, TITLE, GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL); 
         }
         else if(windowState == WindowState.FULLSCREEN_WINDOWED)
         {
             ByteBuffer videomode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
-            winWidth = GLFWvidmode.width(videomode);
-            winHeight = GLFWvidmode.height(videomode);
-            
-            if(gameConfig.getBoolean("ResolutionIsWindowSize", true))
-            {
-                resWidth = winWidth;
-                resHeight = winHeight;
-            }
+            wwidth = GLFWvidmode.width(videomode);
+            wheight = GLFWvidmode.height(videomode);
             
             GLFW.glfwWindowHint(GLFW.GLFW_DECORATED, GL11.GL_FALSE);
-            window = GLFW.glfwCreateWindow(winWidth, winHeight, TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
+            window = GLFW.glfwCreateWindow(wwidth, wheight, TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
         }
         else if(windowState == WindowState.WINDOWED)
         {
-            if(!gameConfig.getBoolean("ResolutionIsWindowSize", true))
-            {
-                winWidth = gameConfig.getInt("WindowWidth", 800);
-                winHeight = gameConfig.getInt("WindowHeight", 600);
-                window = GLFW.glfwCreateWindow(winWidth, winHeight, TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
-            }
-            else
-            {
-                winWidth = resWidth;
-                winHeight = resHeight;
-                window = GLFW.glfwCreateWindow(winWidth, winHeight, TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
-            }
+            wwidth = gameConfig.getInt("Width", 800);
+            wheight = gameConfig.getInt("Height", 600);
+            window = GLFW.glfwCreateWindow(wwidth, wheight, TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
+
         }
         else if(windowState == WindowState.WINDOWED_UNDECORATED)
         {
             GLFW.glfwWindowHint(GLFW.GLFW_DECORATED, GL11.GL_FALSE);
-            
-            if(!gameConfig.getBoolean("ResolutionIsWindowSize", true))
-            {
-                winWidth = gameConfig.getInt("WindowWidth", 800);
-                winHeight = gameConfig.getInt("WindowHeight", 600);
-                window = GLFW.glfwCreateWindow(winWidth, winHeight, TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
-            }
-            else
-            {
-                winWidth = resWidth;
-                winHeight = resHeight;
-                window = GLFW.glfwCreateWindow(winWidth, winHeight, TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
-            }
+
+            wwidth = gameConfig.getInt("Width", 800);
+            wheight = gameConfig.getInt("Height", 600);
+            window = GLFW.glfwCreateWindow(wwidth, wheight, TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
         }
         
         if(window == MemoryUtil.NULL)
         {
-            Logger.getErrorLogger().log("Could not initialize window! Window Info[(" + resWidth + "x" + resHeight + ")@(" + winWidth + "x" + winHeight + ")]");
+            Logger.getErrorLogger().log("Could not initialize window! Window Info[" + wwidth + "x" + wheight + "]");
             ClientUtils.throwInternalError("Window failed to initialize!", false);
             stopImpl();
         }
         
-        gameLogger.log("Opened window [(" + resWidth + "x" + resHeight + ")@(" + winWidth + "x" + winHeight + ")]");
+        gameLogger.log("Opened window [" + wwidth + "x" + wheight + "]");
         
         GLFW.glfwSetKeyCallback(window, (keyStr = new GLFWKeyCallback()
         {
@@ -573,7 +521,7 @@ public class Game
         }));
         
         GLFW.glfwMakeContextCurrent(window);
-        if(gameConfig.getBoolean("DisplayVsync", true)) GLFW.glfwSwapInterval(1);
+        if(gameConfig.getBoolean("DisplayVsync", false)) GLFW.glfwSwapInterval(1);
         else GLFW.glfwSwapInterval(0);
         GLFW.glfwShowWindow(window);
         GLContext.createFromCurrent();
@@ -585,28 +533,15 @@ public class Game
             @Override
             public void invoke(long window, int width, int height) 
             {
-                if(width <= 0 || height <= 0) return;
+                if(wwidth <= 0 || wheight <= 0) return;
                 
-                GL11.glViewport(0, 0, width, height);
-                winWidth = width;
-                winHeight = height;
+                wwidth = width;
+                wheight = height;
                 
-                gameConfig.setProperty("WindowWidth", width + "");
-                gameConfig.setProperty("WindowHeight", height + "");
-                
-                if(gameConfig.getBoolean("ResolutionIsWindowSize", true))
-                {
-                    GL11.glMatrixMode(GL11.GL_PROJECTION);
-                    GL11.glLoadIdentity();
-                    
-                    resWidth = winWidth;
-                    resHeight = winHeight;
-                    if(MODE == RenderMode.Mode2D) GL11.glOrtho(0, 100, 100, 0, 1, -1);
-                    //TODO: Make 3D!    else GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
-                    
-                    gameConfig.setProperty("ResolutionWidth", width + "");
-                    gameConfig.setProperty("ResolutionHeight", height + "");
-                }
+                gameConfig.setProperty("Width", wwidth + "");
+                gameConfig.setProperty("Height", wheight + "");
+                GL11.glViewport(0, 0, wwidth, wheight);
+                if(gameHandler != null) gameHandler.onWindowResize(width, height);
             }
         }));
         
@@ -624,7 +559,7 @@ public class Game
         if(cursor != -1) GLFW.glfwSetCursor(window, cursor);
         
         GL11.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        GL11.glViewport(0, 0, winWidth, winHeight);
+        GL11.glViewport(0, 0, wwidth, wheight);
         GL11.glMatrixMode(GL11.GL_PROJECTION);
         GL11.glLoadIdentity();
         if(MODE == RenderMode.Mode2D) GL11.glOrtho(0, 100, 100, 0, 1, -1);
@@ -772,26 +707,26 @@ public class Game
     {
         File saveTo = new File("etc/screenshots/" + saveToName + "." + format.name().toLowerCase());
         
-        int width = this.resWidth;
-        int height = this.resHeight;
+        int wwidth = this.wwidth;
+        int wheight = this.wheight;
                 
         GL11.glReadBuffer(GL11.GL_FRONT);
-        ByteBuffer buffer = BufferUtils.createByteBuffer(resWidth * resHeight * 4);
-        GL11.glReadPixels(0, 0, width, height, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
+        ByteBuffer buffer = BufferUtils.createByteBuffer(wwidth * wheight * 4);
+        GL11.glReadPixels(0, 0, wwidth, wheight, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
  
         Thread t = new Thread(() -> 
         {
-            BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            BufferedImage image = new BufferedImage(wwidth, wheight, BufferedImage.TYPE_INT_ARGB);
         
-            for(int x = 0; x < width; x++)
+            for(int x = 0; x < wwidth; x++)
             {
-                for(int y = 0; y < height; y++)
+                for(int y = 0; y < wheight; y++)
                 {
-                    int i = (x + (width * y)) * 4;
+                    int i = (x + (wwidth * y)) * 4;
                     int r = buffer.get(i) & 0xFF;
                     int g = buffer.get(i + 1) & 0xFF;
                     int b = buffer.get(i + 2) & 0xFF;
-                    image.setRGB(x, height - (y + 1), (0xFF << 24) | (r << 16) | (g << 8) | b);
+                    image.setRGB(x, wheight - (y + 1), (0xFF << 24) | (r << 16) | (g << 8) | b);
                 }
             }
         
@@ -844,62 +779,19 @@ public class Game
     }
     
     /**
-     * Sets the rendering resolution as well as the window size of the window.
-     * @param width The width, in pixels, of the resolution.
-     * @param height The height, in pixels, of the resolution.
-     */
-    public void setResolution(int width, int height)
-    {
-        resWidth = width;
-        resHeight = height;
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glLoadIdentity();
-        if(MODE == RenderMode.Mode2D) GL11.glOrtho(0, 100, 100, 0, 1, -1);
-        //TODO: Make 3D!    else GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
-        
-        gameConfig.setProperty("ResolutionWidth", width + "");
-        gameConfig.setProperty("ResolutionHeight", height + "");
-        
-        if(gameConfig.getBoolean("ResolutionIsWindowSize", true))
-        {
-            winWidth = resWidth;
-            winHeight = resHeight;
-            GLFW.glfwSetWindowSize(window, width, height);
-            GL11.glViewport(0, 0, width, height);
-            
-            gameConfig.setProperty("WindowWidth", width + "");
-            gameConfig.setProperty("WindowHeight", height + "");
-        }
-
-    }
-    
-    /**
      * Changes the size of the window.
-     * @param width New width of the window, measured in pixels.
-     * @param height New height of the window, measures in pixels.
+     * @param wwidth New wwidth of the window, measured in pixels.
+     * @param wheight New wheight of the window, measures in pixels.
      */
-    public void setWindowResolution(int width, int height)
+    public void setResolution(int wwidth, int wheight)
     {
-        winWidth = width;
-        winHeight = height;
-        GLFW.glfwSetWindowSize(window, width, height);
-        GL11.glViewport(0, 0, width, height);
+        this.wwidth = wwidth;
+        this.wheight = wheight;
+        GLFW.glfwSetWindowSize(window, wwidth, wheight);
+        GL11.glViewport(0, 0, wwidth, wheight);
         
-        gameConfig.setProperty("WindowWidth", width + "");
-        gameConfig.setProperty("WindowHeight", height + "");
-        
-        if(gameConfig.getBoolean("ResolutionIsWindowSize", true))
-        {
-            resWidth = winWidth;
-            resHeight = winHeight;
-            GL11.glMatrixMode(GL11.GL_PROJECTION);
-            GL11.glLoadIdentity();
-            if(MODE == RenderMode.Mode2D) GL11.glOrtho(0, 100, 100, 0, 1, -1);
-            //TODO: Make 3D!    else GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
-            
-            gameConfig.setProperty("ResolutionWidth", width + "");
-            gameConfig.setProperty("ResolutionHeight", height + "");
-        }
+        gameConfig.setProperty("Width", wwidth + "");
+        gameConfig.setProperty("Height", wheight + "");
     }
     
     /**
