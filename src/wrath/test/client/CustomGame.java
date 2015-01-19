@@ -17,12 +17,12 @@
  */
 package wrath.test.client;
 
-import java.io.File;
 import org.lwjgl.opengl.GL11;
 import wrath.client.handlers.GameEventHandler;
 import wrath.client.Game;
 import wrath.client.input.Key;
 import wrath.client.input.Key.KeyAction;
+import wrath.common.scheduler.Task;
 
 /**
  * Example game for testing the engine.
@@ -31,6 +31,8 @@ import wrath.client.input.Key.KeyAction;
  */
 public class CustomGame extends Game implements GameEventHandler
 {   
+    int x = 0,y = 0,stage=0;
+    
     public CustomGame(String[] args)
     {
         super("Test Client", "INDEV", 30, RenderMode.Mode2D);
@@ -47,7 +49,6 @@ public class CustomGame extends Game implements GameEventHandler
     @Override
     public void onGameOpen()
     {   
-        setFont(new File("assets/fonts/font_white.png"));
         setupInputFunctions();
         
         addKeyboardFunction(Key.KEY_ENTER, Key.MOD_ALT, KeyAction.KEY_PRESS, "toggle_fullscreen");
@@ -59,6 +60,40 @@ public class CustomGame extends Game implements GameEventHandler
         
         setCursor(Key.CURSOR_CROSSHAIR);
         setCursorEnabled(false);
+        
+        getScheduler().runTaskLater(new Task()
+        {
+            @Override
+            public void run()
+            {
+                if(stage == 0)
+                {
+                    x = 50;
+                    y = 0;
+                    stage++;
+                }
+                else if(stage == 1)
+                {
+                    x = 0;
+                    y = 50;
+                    stage++;
+                }
+                else if(stage == 2)
+                {
+                    x = 50;
+                    y = 50;
+                    stage++;
+                }
+                else if(stage == 3)
+                {
+                    x = 0;
+                    y = 0;
+                    stage = 0;
+                }
+                
+                getScheduler().runTaskLater(this, 10);
+            }
+        }, 10);
     }
     
     @Override
@@ -70,15 +105,17 @@ public class CustomGame extends Game implements GameEventHandler
     @Override
     public void render()
     {
-        renderString("FPS: " + getFPS(), 16, -1.0f, 0.42f, 0.2f, 0.2f);
+        //renderString("FPS: " + getFPS(), 16, 100, 100, 10f, 10f);
         
-        GL11.glBegin(GL11.GL_TRIANGLES);
-        GL11.glColor3f(1.0f, 0.0f, 0.0f);
-        GL11.glVertex3f(-0.6f, -0.4f, 0.0f);
-        GL11.glColor3f(0.0f, 1.0f, 0.0f);
-        GL11.glVertex3f(0.6f, -0.4f, 0.0f);
-        GL11.glColor3f(0.0f, 0.0f, 1.0f);
-        GL11.glVertex3f(0.0f, 0.6f, 0.0f);
+        GL11.glBegin(GL11.GL_POLYGON);
+            GL11.glColor3f(1, 0, 0);
+            GL11.glVertex2f(x, y);
+            GL11.glColor3f(0, 1, 0);
+            GL11.glVertex2f(x + 50, y);
+            GL11.glColor3f(0, 0, 1);
+            GL11.glVertex2f(x + 50, y + 50);
+            GL11.glColor3f(1, 0, 1);
+            GL11.glVertex2f(x, y + 50);
         GL11.glEnd();
     }
     

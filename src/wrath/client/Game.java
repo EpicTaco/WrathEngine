@@ -33,7 +33,6 @@ import wrath.client.input.KeyData;
 import wrath.client.handlers.GameEventHandler;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -54,7 +53,6 @@ import org.lwjgl.openal.ALContext;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLContext;
 import org.lwjgl.system.MemoryUtil;
-import org.newdawn.slick.opengl.PNGDecoder;
 import wrath.client.input.Key.KeyAction;
 import wrath.common.scheduler.Scheduler;
 import wrath.util.Config;
@@ -96,7 +94,6 @@ public class Game
     private long cursor = -1;
     private double curx = 0;
     private double cury = 0;
-    private int font;
     private float fps = 0;
     private boolean isRunning = false;
     private int resWidth = 800;
@@ -106,7 +103,6 @@ public class Game
     private WindowState windowState = null;
     private int winWidth = 800;
     private int winHeight = 600;
-    private float ratio = resWidth / resHeight;
     
     private final HashMap<Integer, KeyData> keyboardMap = new HashMap<>();
     private final HashMap<Integer, Runnable> persKeyboardMap = new HashMap<>();
@@ -249,7 +245,6 @@ public class Game
         charStr.release();
         curStr.release();
         AL.destroy(audiocontext);
-        if(cursor != -1) GLFW.glfwDestroyCursor(cursor);
         GLFW.glfwDestroyWindow(window);
     }
     
@@ -333,16 +328,6 @@ public class Game
     public RenderMode getRenderMode()
     {
         return MODE;
-    }
-    
-    /**
-     * Returns the resolution ratio for (primarily) use with glOrtho().
-     * Calculated as resolution_width/resolution_height.
-     * @return Returns the rendering ratio.
-     */
-    public float getRenderingRatio()
-    {
-        return ratio;
     }
     
     /**
@@ -616,8 +601,7 @@ public class Game
                     
                     resWidth = winWidth;
                     resHeight = winHeight;
-                    ratio = resWidth / resHeight;
-                    if(MODE == RenderMode.Mode2D) GL11.glOrtho(-ratio, ratio, -1.f, 1.f, 1.f,- 1.f);
+                    if(MODE == RenderMode.Mode2D) GL11.glOrtho(0, 100, 100, 0, 1, -1);
                     //TODO: Make 3D!    else GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
                     
                     gameConfig.setProperty("ResolutionWidth", width + "");
@@ -643,9 +627,8 @@ public class Game
         GL11.glViewport(0, 0, winWidth, winHeight);
         GL11.glMatrixMode(GL11.GL_PROJECTION);
         GL11.glLoadIdentity();
-        ratio = resWidth / resHeight;
-        if(MODE == RenderMode.Mode2D) GL11.glOrtho(-ratio, ratio, -1.f, 1.f, 1.f,- 1.f);
-        //TODO: Make 3D!    else GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
+        if(MODE == RenderMode.Mode2D) GL11.glOrtho(0, 100, 100, 0, 1, -1);
+        //TODO: Make 3D!    else GL11.glOrtho(-ratio, ratio, -1.f, 1.f, 1.f, -1.f);
         GL11.glMatrixMode(GL11.GL_MODELVIEW);
         GL11.glLoadIdentity();
         
@@ -770,59 +753,6 @@ public class Game
      * Override-able method that is called as much as possible to issue rendering commands.
      */
     protected void render(){}
-    
-    /**
-     * Renders text using a font bitmap.
-     * @param string the string to render
-     * @param gridSize the dimensions of the bitmap grid (e.g. 16 -> 16x16 grid;
-     * 8 -> 8x8 grid)
-     * @param x the x-coordinate of the bottom-left corner of where the string
-     * starts rendering
-     * @param y the y-coordinate of the bottom-left corner of where the string
-     * starts rendering
-     * @param characterWidth the width of the character
-     * @param characterHeight the height of the character
-     */
-    public void renderString(String string, int gridSize, float x, float y, float characterWidth, float characterHeight) 
-    {
-        GL11.glPushAttrib(GL11.GL_TEXTURE_BIT | GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT);
-        GL11.glEnable(GL11.GL_CULL_FACE);
-        GL11.glEnable(GL11.GL_TEXTURE_2D);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, font);
-
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-
-        GL11.glEnable(GL11.GL_BLEND);
-        GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ONE);
-
-        GL11.glPushMatrix();
-
-        GL11.glTranslatef(x, y, 0);
-        GL11.glBegin(GL11.GL_QUADS);
-
-        for (int i = 0; i < string.length(); i++) 
-        {
-            int asciiCode = (int) string.charAt(i);
-
-            final float cellSize = 1.0f / gridSize;
-
-            float cellX = ((int) asciiCode % gridSize) * cellSize;
-
-            float cellY = ((int) asciiCode / gridSize) * cellSize;
-            GL11.glTexCoord2f(cellX, cellY + cellSize);
-            GL11.glVertex2f(i * characterWidth / 6, y);
-            GL11.glTexCoord2f(cellX + cellSize, cellY + cellSize);
-            GL11.glVertex2f(i * characterWidth / 6 + characterWidth / 3, y);
-            GL11.glTexCoord2f(cellX + cellSize, cellY);
-            GL11.glVertex2f(i * characterWidth / 6 + characterWidth / 3, y + characterHeight / 1.5f);
-            GL11.glTexCoord2f(cellX, cellY);
-            GL11.glVertex2f(i * characterWidth / 6, y + characterHeight);
-        }
-        GL11.glEnd();
-        GL11.glPopMatrix();
-        GL11.glPopAttrib();
-    }
 
     /**
      * Takes a screen-shot and saves it to the file specified as a PNG.
@@ -905,31 +835,6 @@ public class Game
     }
     
     /**
-     * Sets the font to render all text.
-     * Must be used after {@link wrath.client.Game#initWindow() }.
-     * @param fontFile The file to load the font from.
-     */
-    public void setFont(File fontFile)
-    {
-        //TODO: Attempt to use ClientUtil getByteBufferFromImage()
-        try
-        {
-            font = GL11.glGenTextures();
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, font);
-            PNGDecoder dec = new PNGDecoder(new FileInputStream(fontFile));
-            ByteBuffer buf = BufferUtils.createByteBuffer(4 * dec.getHeight() * dec.getWidth());
-            dec.decode(buf, dec.getWidth() * 4, PNGDecoder.RGBA);
-            buf.flip();
-            GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, dec.getWidth(), dec.getHeight(), 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buf);
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
-        }
-        catch(IOException e)
-        {
-            Logger.getErrorLogger().log("Could not load font from '" + fontFile.getName() + "'! I/O Error occured!");
-        }
-    }
-    
-    /**
      * Adds a {@link wrath.client.GameEventHandler} to the client.
      * @param handler The GameEventHandler the client should report to.
      */
@@ -947,10 +852,9 @@ public class Game
     {
         resWidth = width;
         resHeight = height;
-        ratio = resWidth / resHeight;
         GL11.glMatrixMode(GL11.GL_PROJECTION);
         GL11.glLoadIdentity();
-        if(MODE == RenderMode.Mode2D) GL11.glOrtho(-ratio, ratio, -1.f, 1.f, 1.f,- 1.f);
+        if(MODE == RenderMode.Mode2D) GL11.glOrtho(0, 100, 100, 0, 1, -1);
         //TODO: Make 3D!    else GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
         
         gameConfig.setProperty("ResolutionWidth", width + "");
@@ -988,10 +892,9 @@ public class Game
         {
             resWidth = winWidth;
             resHeight = winHeight;
-            ratio = resWidth / resHeight;
             GL11.glMatrixMode(GL11.GL_PROJECTION);
             GL11.glLoadIdentity();
-            if(MODE == RenderMode.Mode2D) GL11.glOrtho(-ratio, ratio, -1.f, 1.f, 1.f,- 1.f);
+            if(MODE == RenderMode.Mode2D) GL11.glOrtho(0, 100, 100, 0, 1, -1);
             //TODO: Make 3D!    else GL11.glOrtho(0.0f, resWidth, resHeight, 0.0f, 0.0f, 1.0f);
             
             gameConfig.setProperty("ResolutionWidth", width + "");
@@ -1081,6 +984,7 @@ public class Game
     {
         try{
         destroyWindow();
+        if(cursor != -1) GLFW.glfwDestroyCursor(cursor);
         GLFW.glfwTerminate();
         
         gameConfig.save();
