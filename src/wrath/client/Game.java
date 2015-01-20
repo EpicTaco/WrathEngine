@@ -696,6 +696,7 @@ public class Game
 
     private void renderBackground()
     {
+        if(br == 1 && bb == 1 && bg == 1 && ba == 0 && background == 0) return;
         GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, background);
         GL11.glColor4f(br, bg, bb, ba);
@@ -776,7 +777,7 @@ public class Game
      */
     public void setBackgroundImage(File imageFile)
     {
-        background = ClientUtils.get2DTexture(ClientUtils.loadImageFromFile(imageFile));
+        setBackgroundImage(ClientUtils.loadImageFromFile(imageFile));
     }
     
     /**
@@ -785,12 +786,12 @@ public class Game
      */
     public void setBackgroundImage(BufferedImage image)
     {
-        background = ClientUtils.get2DTexture(image);
+        setBackgroundImage(ClientUtils.get2DTexture(image));
     }
     
     /**
      * Changes the static background image.
-     * @param texture The texture ID of the background image.
+     * @param texture The texture ID of the background image, 0 is clear.
      */
     public void setBackgroundImage(int texture)
     {
