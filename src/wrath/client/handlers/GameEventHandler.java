@@ -54,6 +54,11 @@ public interface GameEventHandler
     public void onTick();
     
     /**
+     * Called when the window is opened.
+     */
+    public void onWindowOpen();
+    
+    /**
      * Called when the window is resized.
      * @param newWidth The new width of the window.
      * @param newHeight The new height of the window.

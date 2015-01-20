@@ -18,13 +18,10 @@
 package wrath.test.client;
 
 import java.io.File;
-import org.lwjgl.opengl.GL11;
-import wrath.client.ClientUtils;
 import wrath.client.handlers.GameEventHandler;
 import wrath.client.Game;
 import wrath.client.input.Key;
 import wrath.client.input.Key.KeyAction;
-import wrath.common.scheduler.Task;
 
 /**
  * Example game for testing the engine.
@@ -50,8 +47,7 @@ public class CustomGame extends Game implements GameEventHandler
     
     @Override
     public void onGameOpen()
-    {   
-        texture = ClientUtils.get2DTexture(new File("assets/textures/wood.png"));
+    {
         setupInputFunctions();
         
         addKeyboardFunction(Key.KEY_ENTER, Key.MOD_ALT, KeyAction.KEY_PRESS, "toggle_fullscreen");
@@ -63,38 +59,6 @@ public class CustomGame extends Game implements GameEventHandler
         
         setCursor(Key.CURSOR_CROSSHAIR);
         setCursorEnabled(false);
-        
-        this.getScheduler().runTaskLater(new Task()
-        {
-            @Override
-            public void run()
-            {
-                if(stage == 1)
-                {
-                    x = 50;
-                    stage++;
-                }
-                else if(stage == 2)
-                {
-                    x = 0;
-                    y = 50;
-                    stage++;
-                }
-                else if(stage == 3)
-                {
-                    x = 50;
-                    y = 50;
-                    stage++;
-                }
-                else if(stage == 4)
-                {
-                    x = 0;
-                    y = 0;
-                    stage = 1;
-                }
-                getScheduler().runTaskLater(this, 15);
-            }
-        }, 15);
     }
     
     @Override
@@ -107,25 +71,14 @@ public class CustomGame extends Game implements GameEventHandler
     public void onWindowResize(int w, int h){}
     
     @Override
+    public void onWindowOpen()
+    {
+        setBackgroundImage(new File("assets/textures/background.jpg"));
+    }
+    
+    @Override
     public void render()
-    {  
-        GL11.glEnable(GL11.GL_TEXTURE_2D);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture);
-        
-        GL11.glBegin(GL11.GL_QUADS);
-            GL11.glTexCoord2f(0, 0);
-            GL11.glVertex2f(x, y);
-            
-            GL11.glTexCoord2f(1, 0);
-            GL11.glVertex2f(x + 50, y);
-            
-            GL11.glTexCoord2f(1, 1);
-            GL11.glVertex2f(x + 50, y + 50);
-            
-            GL11.glTexCoord2f(0, 1);
-            GL11.glVertex2f(x, y + 50);
-        GL11.glEnd();
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+    {
     }
     
     private void setupInputFunctions()

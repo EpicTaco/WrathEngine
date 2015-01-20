@@ -91,6 +91,8 @@ public class Game
     private GLFWFramebufferSizeCallback winSizeStr;
     
     private ALContext audiocontext;
+    private int background = 0;
+    private float br=1,bg=1,bb=1,ba=0;
     private long cursor = -1;
     private double curx = 0;
     private double cury = 0;
@@ -562,10 +564,12 @@ public class Game
         GL11.glViewport(0, 0, wwidth, wheight);
         GL11.glMatrixMode(GL11.GL_PROJECTION);
         GL11.glLoadIdentity();
-        if(MODE == RenderMode.Mode2D) GL11.glOrtho(0, 100, 100, 0, 1, -1);
+        if(MODE == RenderMode.Mode2D) GL11.glOrtho(-1, 1, 1, -1, 1, -1);
         //TODO: Make 3D!    else GL11.glOrtho(-ratio, ratio, -1.f, 1.f, 1.f, -1.f);
         GL11.glMatrixMode(GL11.GL_MODELVIEW);
         GL11.glLoadIdentity();
+        
+        if(gameHandler != null) gameHandler.onWindowOpen();
         
         windowOpen = true;
     }
@@ -640,6 +644,7 @@ public class Game
             if(windowOpen)
             {
                 GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+                renderBackground();
                 render();
                 GL11.glFlush();
                 fpsBuf++;
@@ -689,6 +694,30 @@ public class Game
      */
     protected void render(){}
 
+    private void renderBackground()
+    {
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, background);
+        GL11.glColor4f(br, bg, bb, ba);
+        GL11.glBegin(GL11.GL_QUADS);
+        {
+            GL11.glTexCoord2f(0, 0);
+            GL11.glVertex2f(-1, -1);
+            
+            GL11.glTexCoord2f(1, 0);
+            GL11.glVertex2f(1, -1);
+            
+            GL11.glTexCoord2f(1, 1);
+            GL11.glVertex2f(1, 1);
+            
+            GL11.glTexCoord2f(0, 1);
+            GL11.glVertex2f(-1, 1);
+        }
+        GL11.glEnd();
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+        GL11.glColor4f(1, 1, 1, 0);
+    }
+    
     /**
      * Takes a screen-shot and saves it to the file specified as a PNG.
      * @param saveToName The name of the file to save the screen-shot to (excluding file extension).
@@ -706,9 +735,6 @@ public class Game
     public void screenShot(String saveToName, ClientUtils.ImageFormat format)
     {
         File saveTo = new File("etc/screenshots/" + saveToName + "." + format.name().toLowerCase());
-        
-        int wwidth = this.wwidth;
-        int wheight = this.wheight;
                 
         GL11.glReadBuffer(GL11.GL_FRONT);
         ByteBuffer buffer = BufferUtils.createByteBuffer(wwidth * wheight * 4);
@@ -742,6 +768,60 @@ public class Game
         });
         
         t.start();
+    }
+    
+    /**
+     * Changes the static background image.
+     * @param imageFile The file to load the background texture from.
+     */
+    public void setBackgroundImage(File imageFile)
+    {
+        background = ClientUtils.get2DTexture(ClientUtils.loadImageFromFile(imageFile));
+    }
+    
+    /**
+     * Changes the static background image.
+     * @param image The image to load the background texture from.
+     */
+    public void setBackgroundImage(BufferedImage image)
+    {
+        background = ClientUtils.get2DTexture(image);
+    }
+    
+    /**
+     * Changes the static background image.
+     * @param texture The texture ID of the background image.
+     */
+    public void setBackgroundImage(int texture)
+    {
+        background = texture;
+    }
+    
+    /**
+     * Sets the RGBA configuration of the background image.
+     * @param red The red value, max 1.0.
+     * @param green The green value, max 1.0.
+     * @param blue The blue value, max 1.0.
+     * @param alpha The transparency, 1.0 being opaque.
+     */
+    public void setBackgroundRGBA(float red, float green, float blue, float alpha)
+    {
+        br = red;
+        bg = green;
+        bb = blue;
+        ba = alpha;
+    }
+    
+    /**
+     * Resets the background to a state where it is not rendered.
+     */
+    public void setBackgroundToClear()
+    {
+        br = 1;
+        bg = 1;
+        bb = 1;
+        ba = 0;
+        background = 0;
     }
     
     /**
