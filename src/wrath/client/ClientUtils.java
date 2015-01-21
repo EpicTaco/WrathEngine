@@ -117,12 +117,14 @@ public class ClientUtils
     }
     
     /**
-     * Loads a Slick-Utils/LWJGL Texture from an image.
+     * Loads a LWJGL Texture from an image.
      * @param image The {@link java.awt.image.BufferedImage} version of the Texture.
      * @return Returns the LWJGL texture id.
      */
     public static int get2DTexture(BufferedImage image)
     {
+        if(image == null) return 0;
+        
         int[] pixels = new int[image.getWidth() * image.getHeight()];
         image.getRGB(0, 0, image.getWidth(), image.getHeight(), pixels, 0, image.getWidth());
 
@@ -158,6 +160,8 @@ public class ClientUtils
      */
     public static BufferedImage loadImageFromFile(File file)
     {
+        if(file == null) return null;
+        
         BufferedImage ret = null;
         
         try

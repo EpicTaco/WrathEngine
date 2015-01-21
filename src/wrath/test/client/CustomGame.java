@@ -73,7 +73,7 @@ public class CustomGame extends Game implements GameEventHandler
     @Override
     public void onWindowOpen()
     {
-        setBackgroundImage(new File("assets/textures/background.jpg"));
+        setBackgroundImage(new File("assets/textures/background.png"));
     }
     
     @Override
