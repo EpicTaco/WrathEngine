@@ -18,25 +18,39 @@
 package wrath.test.client;
 
 import java.io.File;
-import wrath.client.handlers.GameEventHandler;
 import wrath.client.Game;
-import wrath.client.input.Key;
-import wrath.client.input.Key.KeyAction;
-
+import wrath.client.Game.RenderMode;
+import wrath.client.handlers.GameEventHandler;
 /**
  * Example game for testing the engine.
  * Extends {@link wrath.client.Game} class.
  * @author Trent Spears
  */
 public class CustomGame extends Game implements GameEventHandler
-{   
-    int x=0,y=0,stage=1,texture=-1;
+{
+    private final TempWorld world;
     
     public CustomGame(String[] args)
     {
         super("Test Client", "INDEV", 30, RenderMode.Mode2D);
+        
+        File worldFile = new File("etc/world.dat");
+        if(worldFile.exists()) world = TempWorld.load(worldFile);
+        else world = new TempWorld(16, worldFile);
+                
         setGameEventHandler(this);
         start(args);
+    }
+    
+    @Override
+    public void render()
+    {
+        world.drawWorld();
+    }
+    
+    public static void main(String[] args)
+    {
+        new CustomGame(args);
     }
     
     @Override
@@ -46,23 +60,13 @@ public class CustomGame extends Game implements GameEventHandler
     public void onCursorMove(double x, double y){}
     
     @Override
-    public void onGameOpen()
-    {
-        setupInputFunctions();
-        
-        addKeyboardFunction(Key.KEY_ENTER, Key.MOD_ALT, KeyAction.KEY_PRESS, "toggle_fullscreen");
-        addKeyboardFunction(Key.KEY_END, Key.MOD_NONE, KeyAction.KEY_PRESS, "stop");
-        addKeyboardFunction(Key.KEY_F12, Key.MOD_NONE, KeyAction.KEY_PRESS, "screenshot");
-        addKeyboardFunction(Key.KEY_F10, Key.MOD_ALT, KeyAction.KEY_PRESS, "cursor_toggle");
-        addKeyboardFunction(Key.KEY_SPACE, Key.MOD_SHIFT, KeyAction.KEY_PRESS, () -> {System.out.println(getFPS());});
-        addMouseFunction(Key.MOUSE_BUTTON_1, Key.MOD_NONE, KeyAction.KEY_HOLD_DOWN, () -> {System.out.println("test");});
-        
-        setCursor(Key.CURSOR_CROSSHAIR);
-        setCursorEnabled(false);
-    }
+    public void onGameOpen(){}
     
     @Override
-    public void onGameClose(){}
+    public void onGameClose()
+    {
+        world.save();
+    }
     
     @Override
     public void onTick(){}
@@ -73,42 +77,6 @@ public class CustomGame extends Game implements GameEventHandler
     @Override
     public void onWindowOpen()
     {
-        setBackgroundImage(new File("assets/textures/background.png"));
-    }
-    
-    @Override
-    public void render()
-    {
-    }
-    
-    private void setupInputFunctions()
-    {
-        addSavedFunction("stop", this::stop);
-
-        addSavedFunction("cursor_toggle", () -> 
-        {
-            setCursorEnabled(!isCursorEnabled());
-        });
-        
-        addSavedFunction("screenshot", () -> 
-        {
-            screenShot("screenie" + System.nanoTime()/1000000000);
-        });
-        
-        addSavedFunction("get_fps", () -> 
-        {
-            getLogger().log("Recorded FPS: " + getFPS());
-        });
-        
-        addSavedFunction("toggle_fullscreen", () -> 
-        {
-            if(getWindowState() == WindowState.WINDOWED) setWindowState(WindowState.FULLSCREEN_WINDOWED);
-            else setWindowState(WindowState.WINDOWED);
-        });
-    }
-    
-    public static void main(String[] args)
-    {
-        new CustomGame(args);
+        setCursorEnabled(true);
     }
 }
