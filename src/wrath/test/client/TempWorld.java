@@ -39,6 +39,7 @@ public class TempWorld implements Serializable
             GRASS = 1,
             STONE = 2;
     
+    private final double csize;
     private final File file;
     private final int[][] grid;
     private final int size;
@@ -53,10 +54,8 @@ public class TempWorld implements Serializable
             for(int y = 0; y < dimension; y++) grid[x][y] = AIR;
         
         file = save;
-        
         lines = new double[size];
-        double csize = (double) 1.9 / size;
-        System.out.println(csize);
+        csize = (double) 2 / size;
         
         for(int x = 0; x < size; x++)
         {
@@ -66,6 +65,24 @@ public class TempWorld implements Serializable
     
     public void drawWorld()
     {
+        GL11.glBegin(GL11.GL_QUADS);
+        for(int x = 0; x < size; x++)
+            for(int y = 0; y < size; y++)
+            {
+                int id = grid[x][y];
+                if(id == AIR) GL11.glColor4f(0, .3f, .8f, 0);
+                else if(id == GRASS) GL11.glColor4f(0, .8f, .3f, 0);
+                else if(id == STONE) GL11.glColor4f(.8f, .8f, .8f, 0);
+                
+                
+                GL11.glVertex2d(x * csize - 1, y * csize - 1);
+                GL11.glVertex2d(((x * csize) + csize) - 1, y * csize - 1);
+                GL11.glVertex2d(((x * csize) + csize) - 1, (y * csize + csize) - 1);
+                GL11.glVertex2d(x * csize - 1, (y * csize + csize) - 1);
+                
+            }
+        GL11.glEnd();
+        
         GL11.glColor4f(1, 1, 1, 0);
         
         GL11.glBegin(GL11.GL_LINES);
@@ -78,17 +95,6 @@ public class TempWorld implements Serializable
             GL11.glVertex2d(1, c);
         }
         GL11.glEnd();
-        
-        double csizem = (2/size) + .05;
-        for(int x = 0; x < size; x++)
-            for(int y = 0; y < size; y++)
-            {
-                int id = grid[x][y];
-                if(id == AIR) GL11.glColor4f(0, .3f, .8f, 0);
-                else if(id == GRASS) GL11.glColor4f(0, .8f, .3f, 0);
-                else if(id == STONE) GL11.glColor4f(.8f, .8f, .8f, 0);
-                //TODO: Render tiles
-            }
         
     }
     

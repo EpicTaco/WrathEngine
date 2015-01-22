@@ -37,7 +37,7 @@ public class CustomGame extends Game implements GameEventHandler
         File worldFile = new File("etc/world.dat");
         if(worldFile.exists()) world = TempWorld.load(worldFile);
         else world = new TempWorld(16, worldFile);
-                
+        
         setGameEventHandler(this);
         start(args);
     }
@@ -60,7 +60,10 @@ public class CustomGame extends Game implements GameEventHandler
     public void onCursorMove(double x, double y){}
     
     @Override
-    public void onGameOpen(){}
+    public void onGameOpen()
+    {
+        setWindowState(Game.WindowState.FULLSCREEN_WINDOWED);
+    }
     
     @Override
     public void onGameClose()
