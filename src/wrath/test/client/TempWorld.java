@@ -103,6 +103,16 @@ public class TempWorld implements Serializable
         return grid[x][y];
     }
     
+    public int getXBound(float screenx, float screeny)
+    {
+        
+    }
+    
+    public int getYBound(float screenx, float screeny)
+    {
+        
+    }
+    
     public void setTile(int x, int y, int tile)
     {
         grid[x][y] = tile;

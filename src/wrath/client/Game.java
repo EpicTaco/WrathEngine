@@ -53,6 +53,7 @@ import org.lwjgl.openal.ALContext;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLContext;
 import org.lwjgl.system.MemoryUtil;
+import wrath.client.input.Key;
 import wrath.client.input.Key.KeyAction;
 import wrath.common.scheduler.Scheduler;
 import wrath.util.Config;
@@ -134,6 +135,27 @@ public class Game
     /**
      * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
      * @param key The {@link wrath.client.input.Key} to respond to.
+     * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
+     */
+    public void addKeyboardFunction(int key, Runnable event)
+    {
+        addKeyboardFunction(key, Key.MOD_NONE, KeyAction.KEY_PRESS, event);
+    }
+    
+    /**
+     * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
+     * @param key The {@link wrath.client.input.Key} to respond to.
+     * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
+     * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
+     */
+    public void addKeyboardFunction(int key, KeyAction action, Runnable event)
+    {
+        addKeyboardFunction(key, Key.MOD_NONE, action, event);
+    }
+    
+    /**
+     * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
+     * @param key The {@link wrath.client.input.Key} to respond to.
      * @param keyMod The {@link wrath.client.input.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
      * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
      * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
@@ -147,6 +169,27 @@ public class Game
                 event.run();
             }, key, keyMod));
         else keyboardMap.put(key, new KeyData(action, event, key, keyMod));
+    }
+    
+    /**
+     * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
+     * @param key The key to respond to.
+     * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
+     */
+    public void addKeyboardFunction(int key, String functionId)
+    {
+        addKeyboardFunction(key, Key.MOD_NONE, KeyAction.KEY_PRESS, functionId);
+    }
+    
+    /**
+     * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
+     * @param key The key to respond to.
+     * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
+     * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
+     */
+    public void addKeyboardFunction(int key, KeyAction action, String functionId)
+    {
+        addKeyboardFunction(key, Key.MOD_NONE, action, functionId);
     }
     
     /**
@@ -173,6 +216,27 @@ public class Game
     /**
      * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
      * @param key The key to respond to.
+     * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
+     */
+    public void addMouseFunction(int key, Runnable event)
+    {
+        addMouseFunction(key, Key.MOD_NONE, KeyAction.KEY_PRESS, event);
+    }
+    
+    /**
+     * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
+     * @param key The key to respond to.
+     * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
+     * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
+     */
+    public void addMouseFunction(int key, KeyAction action, Runnable event)
+    {
+        addMouseFunction(key, Key.MOD_NONE, action, event);
+    }
+    
+    /**
+     * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
+     * @param key The key to respond to.
      * @param keyMod The {@link wrath.client.input.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
      * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
      * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
@@ -186,6 +250,27 @@ public class Game
                 event.run();
             }, key, keyMod));
         else mouseMap.put(key, new KeyData(action, event, key, keyMod));
+    }
+    
+    /**
+     * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
+     * @param key The key to respond to.
+     * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
+     */
+    public void addMouseFunction(int key, String functionId)
+    {
+        addMouseFunction(key, Key.MOD_NONE, KeyAction.KEY_PRESS, functionId);
+    }
+    
+    /**
+     * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
+     * @param key The key to respond to.
+     * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
+     * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
+     */
+    public void addMouseFunction(int key, KeyAction action, String functionId)
+    {
+        addMouseFunction(key, Key.MOD_NONE, action, functionId);
     }
     
     /**

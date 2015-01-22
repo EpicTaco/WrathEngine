@@ -21,6 +21,8 @@ import java.io.File;
 import wrath.client.Game;
 import wrath.client.Game.RenderMode;
 import wrath.client.handlers.GameEventHandler;
+import wrath.client.input.Key;
+import wrath.client.input.Key.KeyAction;
 /**
  * Example game for testing the engine.
  * Extends {@link wrath.client.Game} class.
@@ -62,6 +64,17 @@ public class CustomGame extends Game implements GameEventHandler
     @Override
     public void onGameOpen()
     {
+        addKeyboardFunction(Key.KEY_ESCAPE, () ->
+        {
+            stop();
+        });
+        
+        addMouseFunction(Key.MOUSE_BUTTON_1, () ->
+        {
+            double x = getCursorX();
+            double y = getCursorY();
+            
+        });
         setWindowState(Game.WindowState.FULLSCREEN_WINDOWED);
     }
     
