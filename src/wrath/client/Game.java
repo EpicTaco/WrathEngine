@@ -348,7 +348,7 @@ public class Game
      */
     public double getCursorX()
     {
-        return curx;
+        return (2/(double)wwidth * curx) - 1.0;
     }
     
     /**
@@ -357,7 +357,7 @@ public class Game
      */
     public double getCursorY()
     {
-        return cury;
+        return (2/(double)wheight * cury) - 1.0;
     }
     
     /**
@@ -968,8 +968,11 @@ public class Game
     public void setWindowState(WindowState state)
     {
         gameConfig.setProperty("WindowState", state.toString().toUpperCase());
-        destroyWindow();
-        initWindow();
+        if(windowOpen)
+        {
+            destroyWindow();
+            initWindow();
+        }
         gameConfig.save();
     }
     

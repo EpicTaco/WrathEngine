@@ -22,7 +22,6 @@ import wrath.client.Game;
 import wrath.client.Game.RenderMode;
 import wrath.client.handlers.GameEventHandler;
 import wrath.client.input.Key;
-import wrath.client.input.Key.KeyAction;
 /**
  * Example game for testing the engine.
  * Extends {@link wrath.client.Game} class.
@@ -38,9 +37,10 @@ public class CustomGame extends Game implements GameEventHandler
         
         File worldFile = new File("etc/world.dat");
         if(worldFile.exists()) world = TempWorld.load(worldFile);
-        else world = new TempWorld(16, worldFile);
+        else world = new TempWorld(32, worldFile);
         
         setGameEventHandler(this);
+        setWindowState(Game.WindowState.WINDOWED);
         start(args);
     }
     
@@ -69,13 +69,28 @@ public class CustomGame extends Game implements GameEventHandler
             stop();
         });
         
+        addKeyboardFunction(Key.KEY_F3, () ->
+        {
+            System.out.println(getFPS());
+        });
+        
         addMouseFunction(Key.MOUSE_BUTTON_1, () ->
         {
-            double x = getCursorX();
-            double y = getCursorY();
-            
+            int[] tile = world.getBounds(getCursorX(), getCursorY());
+            if(tile.length >= 2) world.setTile(tile[0], tile[1], TempWorld.GRASS);
         });
-        setWindowState(Game.WindowState.FULLSCREEN_WINDOWED);
+        
+        addMouseFunction(Key.MOUSE_BUTTON_2, () ->
+        {
+            int[] tile = world.getBounds(getCursorX(), getCursorY());
+            if(tile.length >= 2) world.setTile(tile[0], tile[1], TempWorld.STONE);
+        });
+        
+        addMouseFunction(Key.MOUSE_BUTTON_3, () ->
+        {
+            int[] tile = world.getBounds(getCursorX(), getCursorY());
+            if(tile.length >= 2) world.setTile(tile[0], tile[1], TempWorld.AIR);
+        });
     }
     
     @Override

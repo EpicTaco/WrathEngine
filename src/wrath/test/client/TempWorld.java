@@ -39,24 +39,30 @@ public class TempWorld implements Serializable
             GRASS = 1,
             STONE = 2;
     
-    private final double csize;
+    private transient double csize;
     private final File file;
-    private final int[][] grid;
-    private final int size;
+    private final Tile[][] grid;
+    private transient int size;
     
-    private final double[] lines;
+    private transient double[] lines;
     
     public TempWorld(int dimension, File save)
     {
         size = dimension;
-        grid = new int[dimension][dimension];
-        for(int x = 0; x<dimension; x++)
-            for(int y = 0; y < dimension; y++) grid[x][y] = AIR;
+        grid = new Tile[dimension][dimension];
+        calculate();
+        for(int x = 0; x< dimension; x++)
+            for(int y = 0; y < dimension; y++) grid[x][y] = new Tile(x, y);
         
         file = save;
-        lines = new double[size];
+    }
+    
+    private void calculate()
+    {
+        size = grid.length;
         csize = (double) 2 / size;
         
+        lines = new double[size];
         for(int x = 0; x < size; x++)
         {
             lines[x] = (csize * (x+1)) - 1;
@@ -69,7 +75,7 @@ public class TempWorld implements Serializable
         for(int x = 0; x < size; x++)
             for(int y = 0; y < size; y++)
             {
-                int id = grid[x][y];
+                int id = grid[x][y].id;
                 if(id == AIR) GL11.glColor4f(0, .3f, .8f, 0);
                 else if(id == GRASS) GL11.glColor4f(0, .8f, .3f, 0);
                 else if(id == STONE) GL11.glColor4f(.8f, .8f, .8f, 0);
@@ -100,22 +106,33 @@ public class TempWorld implements Serializable
     
     public int getTile(int x, int y)
     {
-        return grid[x][y];
+        return grid[x][y].id;
     }
     
-    public int getXBound(float screenx, float screeny)
+    public int[] getBounds(double screenx, double screeny)
     {
+        if(screenx > 1 || screenx < -1 || screeny > 1 || screeny < -1) return new int[0];
         
-    }
-    
-    public int getYBound(float screenx, float screeny)
-    {
+        for(int x = 0; x < size; x++)
+            for(int y = 0; y < size; y++)
+            {
+                Tile t = grid[x][y];
+                if(screenx < t.x || screeny < t.y) continue;
+                else
+                {
+                    if(screenx >= t.x + csize || screeny >= t.y + csize) continue;
+                    else return new int[]{x,y};
+                }
+            }
         
+        return new int[0];
     }
     
-    public void setTile(int x, int y, int tile)
+
+    
+    public void setTile(int x, int y, int tileId)
     {
-        grid[x][y] = tile;
+        grid[x][y].id = tileId;
     }
     
     public void save()
@@ -176,6 +193,20 @@ public class TempWorld implements Serializable
             Logger.getErrorLogger().log("Could not close TempWorld streams! I/O Error!");
         }
         
+        if(ret != null) ret.calculate();
+        
         return ret;
+    }
+    
+    private class Tile implements Serializable
+    {
+        public Tile(int arrx, int arry)
+        {
+            x = (double) arrx * csize - 1.0;
+            y = (double) arry * csize - 1.0;
+        }
+        
+        public final double x,y;
+        public int id = AIR;
     }
 }
