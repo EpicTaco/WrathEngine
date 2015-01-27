@@ -15,14 +15,13 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package wrath.client.handlers;
+package wrath.common.world;
 
 /**
- * Interface to handle general {@link wrath.client.World} events.
+ * Interface to handle general {@link wrath.common.world.World} events.
  * To be implemented by the game developer to receive events.
  * @author Trent Spears
  */
 public interface WorldEventHandler 
 {
-    
 }
