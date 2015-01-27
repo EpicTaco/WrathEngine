@@ -184,12 +184,11 @@ public class ClientUtils
     {   
         if(Desktop.isDesktopSupported())
         {
-            Desktop desktop = Desktop.getDesktop();
-            if(desktop.isSupported(Desktop.Action.BROWSE))
+            if(Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
             {
                 try 
                 {
-                    desktop.browse(URI.create(url));
+                    Desktop.getDesktop().browse(URI.create(url));
                 }
                 catch(IOException e)
                 {

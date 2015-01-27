@@ -37,7 +37,7 @@ public class CustomGame extends Game implements GameEventHandler
         
         File worldFile = new File("etc/world.dat");
         if(worldFile.exists()) world = TempWorld.load(worldFile);
-        else world = new TempWorld(32, worldFile);
+        else world = new TempWorld(64, worldFile);
         
         setGameEventHandler(this);
         setWindowState(Game.WindowState.WINDOWED);

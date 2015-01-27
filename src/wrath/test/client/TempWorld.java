@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import org.lwjgl.opengl.GL11;
 import wrath.util.Logger;
 
@@ -128,8 +130,6 @@ public class TempWorld implements Serializable
         return new int[0];
     }
     
-
-    
     public void setTile(int x, int y, int tileId)
     {
         grid[x][y].id = tileId;
@@ -138,29 +138,32 @@ public class TempWorld implements Serializable
     public void save()
     {
         FileOutputStream fos = null;
+        GZIPOutputStream gout = null;
         ObjectOutputStream out = null;
         
         try
         {
-            out = new ObjectOutputStream((fos = new FileOutputStream(file)));
+            out = new ObjectOutputStream((gout = new GZIPOutputStream((fos = new FileOutputStream(file)))));
             out.writeObject(this);
+            gout.finish();
             out.flush();
         }
         catch(IOException e)
         {
-            Logger.getErrorLogger().log("Could not save TempWorld! I/O Error!");
+            Logger.getErrorLogger().log("Could not save World! I/O Error!");
         }
         
-        if(out == null || fos == null) return;
+        if(out == null || fos == null || gout == null) return;
         
         try
         {
             out.close();
+            gout.close();
             fos.close();
         }
         catch(IOException e)
         {
-            Logger.getErrorLogger().log("Could not close TempWorld streams! I/O Error!");
+            Logger.getErrorLogger().log("Could not close World streams! I/O Error!");
         }
     }
     
@@ -168,32 +171,34 @@ public class TempWorld implements Serializable
     {
         TempWorld ret = null;
         FileInputStream fis = null;
-        ObjectInputStream in = null;
+        GZIPInputStream in = null;
+        ObjectInputStream is = null;
         
         try
         {
-            in = new ObjectInputStream((fis = new FileInputStream(file)));
-            Object genObj = in.readObject();
+            is = new ObjectInputStream((in = new GZIPInputStream(new FileInputStream(file))));
+            Object genObj = is.readObject();
             if(genObj instanceof TempWorld) ret = (TempWorld) genObj;
         }
         catch(IOException | ClassNotFoundException e)
         {
-            Logger.getErrorLogger().log("Could not load TempWorld! I/O Error!");
+            Logger.getErrorLogger().log("Could not load World! I/O Error!");
         }
         
-        if(in == null || fis == null) return null;
+        if(ret != null) ret.calculate();
+        
+        if(in == null || fis == null || is == null) return ret;
         
         try
         {
+            is.close();
             in.close();
             fis.close();
         }
         catch(IOException e)
         {
-            Logger.getErrorLogger().log("Could not close TempWorld streams! I/O Error!");
+            Logger.getErrorLogger().log("Could not close World streams! I/O Error!");
         }
-        
-        if(ret != null) ret.calculate();
         
         return ret;
     }
