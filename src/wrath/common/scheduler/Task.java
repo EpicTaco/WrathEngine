@@ -20,7 +20,7 @@ package wrath.common.scheduler;
 
 /**
  * Class to extend and override run(), used with Scheduler.
- * @author Epictaco
+ * @author Trent Spears
  */
 public class Task
 {   

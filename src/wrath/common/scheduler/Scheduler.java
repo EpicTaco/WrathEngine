@@ -23,7 +23,7 @@ import java.util.HashMap;
 
 /**
  * Built in scheduler to schedule tasks within the internal loop.
- * @author Epictaco
+ * @author Trent Spears
  */
 public class Scheduler
 {

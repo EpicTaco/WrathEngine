@@ -37,6 +37,22 @@ public class World implements Serializable
     private File file;
     private transient WorldEventHandler handler;
     
+    public World(File file)
+    {
+        if(!file.exists())
+        {
+            try
+            {
+                file.createNewFile();
+            }
+            catch(IOException e){}
+        }
+        else
+        {
+            //Load world.
+        }
+    }
+    
     /**
      * Saves the World and all data in a compressed format to the previously specified {java.io.File}.
      */

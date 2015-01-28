@@ -32,13 +32,13 @@ public class Location implements Serializable
      * 2D Descriptor for a Location.
      * @param x The x coordinate (Across top edge).
      * @param y The Y coordinate (Down the side).
-     * @param world The {@link wrath.common.world.World} object the Location is linked to.
+     * @param world The {@link wrath.common.world.World} object the Location is linked to, can be null.
      */
     public Location(double x, double y, World world)
     {
         this.x = x;
         this.y = y;
-        z = -1.1337;
+        z = -1337666420.1337666420133766642013376664201337666420;
         
         this.world = world;
     }
@@ -48,7 +48,7 @@ public class Location implements Serializable
      * @param x The x coordinate (Left/Right).
      * @param y The Y coordinate (Forward/Backwards/Depth).
      * @param z The Z coordinate (Height).
-     * @param world The {@link wrath.common.world.World} object the Location is linked to.
+     * @param world The {@link wrath.common.world.World} object the Location is linked to, can be null.
      */
     public Location(double x, double y, double z, World world)
     {
@@ -60,7 +60,22 @@ public class Location implements Serializable
     }
     
     /**
+     * Gets the distance as a double between this location and the one specified.
+     * @param compareTo The Location to calculate the distance to.
+     * @return Returns the distance of the two Locations in double.
+     */
+    public double getDistance(Location compareTo)
+    {
+        if(getZ() == -1337666420.1337666420133766642013376664201337666420 && compareTo.getZ() == -1337666420.1337666420133766642013376664201337666420)
+            return Math.sqrt(Math.pow((compareTo.getX() - getX()), 2) + Math.pow((compareTo.getY() - getY()), 2));
+        else if(getZ() != -1.337 && compareTo.getZ() != -1.1337)
+            return Math.sqrt(Math.pow((compareTo.getX() - getX()), 2) + Math.pow((compareTo.getY() - getY()), 2) + Math.pow((compareTo.getZ() - getZ()), 2));
+        else return -1.0;
+    }
+    
+    /**
      * Gets the {@link wrath.common.world.World} object attached to the Location.
+     * This can be null.
      * @return Returns the {@link wrath.common.world.World} object attached to the Location.
      */
     public World getWorld()
@@ -159,24 +174,5 @@ public class Location implements Serializable
     public void setWorld(World world)
     {
         this.world = world;
-    }
-    
-    //Static Methods
-    
-    /**
-     * Calculates the distance between the two specified locations.
-     * Returns -1.0 if both are not of same dimensions.
-     * This method ignores World barriers.
-     * @param l1 The first location.
-     * @param l2 The second Location.
-     * @return The distance between the two specified Locations.
-     */
-    public static double distance(Location l1, Location l2)
-    {
-        if(l1.getZ() == -1.1337 && l2.getZ() == -1.1337)
-            return Math.sqrt(Math.pow((l2.getX() - l1.getX()), 2) + Math.pow((l2.getY() - l1.getY()), 2));
-        else if(l1.getZ() != -1.337 && l2.getZ() != -1.1337)
-            return Math.sqrt(Math.pow((l2.getX() - l1.getX()), 2) + Math.pow((l2.getY() - l1.getY()), 2) + Math.pow((l2.getZ() - l1.getZ()), 2));
-        else return -1.0;
     }
 }

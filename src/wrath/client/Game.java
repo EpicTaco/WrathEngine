@@ -61,7 +61,7 @@ import wrath.util.Logger;
 
 /**
  * The entry point and base of the game. Make a class extending this and overriding at least render() method.
- * @author EpicTaco
+ * @author Trent Spears
  */
 public class Game 
 {

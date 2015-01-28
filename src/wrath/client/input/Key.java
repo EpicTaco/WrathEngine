@@ -21,7 +21,7 @@ import org.lwjgl.glfw.GLFW;
 
 /**
  * Standard list of Keyboard and Mouse keys.
- * @author EpicTaco
+ * @author Trent Spears
  */
 public class Key
 {
