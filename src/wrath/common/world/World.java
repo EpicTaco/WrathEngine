@@ -47,10 +47,6 @@ public class World implements Serializable
             }
             catch(IOException e){}
         }
-        else
-        {
-            //Load world.
-        }
     }
     
     /**

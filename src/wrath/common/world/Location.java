@@ -60,6 +60,39 @@ public class Location implements Serializable
     }
     
     /**
+     * Adds specified amount to the X coordinate and returns the new value of X.
+     * @param sub The amount to remove from the X coordinate.
+     * @return Returns the new value of the X coordinate.
+     */
+    public double decrementX(double sub)
+    {
+        x-=sub;
+        return x;
+    }
+    
+    /**
+     * Adds specified amount to the Y coordinate and returns the new value of Y.
+     * @param sub The amount to remove from the Y coordinate.
+     * @return Returns the new value of the Y coordinate.
+     */
+    public double decrementY(double sub)
+    {
+        y-=sub;
+        return y;
+    }
+    
+    /**
+     * Adds specified amount to the Z coordinate and returns the new value of Z.
+     * @param sub The amount to remove from the Z coordinate.
+     * @return Returns the new value of the Z coordinate.
+     */
+    public double decrementZ(double sub)
+    {
+        z-=sub;
+        return z;
+    }
+    
+    /**
      * Gets the distance as a double between this location and the one specified.
      * @param compareTo The Location to calculate the distance to.
      * @return Returns the distance of the two Locations in double.
@@ -68,7 +101,7 @@ public class Location implements Serializable
     {
         if(getZ() == -1337666420.1337666420133766642013376664201337666420 && compareTo.getZ() == -1337666420.1337666420133766642013376664201337666420)
             return Math.sqrt(Math.pow((compareTo.getX() - getX()), 2) + Math.pow((compareTo.getY() - getY()), 2));
-        else if(getZ() != -1.337 && compareTo.getZ() != -1.1337)
+        else if(getZ() != -1337666420.1337666420133766642013376664201337666420 || compareTo.getZ() != -1337666420.1337666420133766642013376664201337666420)
             return Math.sqrt(Math.pow((compareTo.getX() - getX()), 2) + Math.pow((compareTo.getY() - getY()), 2) + Math.pow((compareTo.getZ() - getZ()), 2));
         else return -1.0;
     }
