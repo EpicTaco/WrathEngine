@@ -1,0 +1,17 @@
+Things to add:
+- Work on Savable Key Binds:
+	|-- Planning on using addSavedFunction() String ids with a map and exporting the map to a file...
+	|-- Combine addKeyboardFunction() methods and addMouseFunction() methods.
+
+- TEXT RENDERING (Pain in the ass, let me tell you)
+	|-- Research the dark depths of font conversions and micro-graphic opertions to make this possible.
+
+- Audio
+	|-- Research OpenAL w/ LWJGL 3.0
+
+- Rendering Pipeline
+	|-- Make the outline of the pipeline first, then add graphic functions later.
+	    This step is to just lay the foundation.
+
+- Native World/Player Systems
+	|-- This is also just the foundation, no operations will be available yet.

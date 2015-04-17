@@ -29,6 +29,8 @@
  */
 package wrath.client;
 
+import java.awt.Font;
+import java.awt.FontFormatException;
 import wrath.client.input.KeyData;
 import wrath.client.handlers.GameEventHandler;
 import java.awt.image.BufferedImage;
@@ -92,24 +94,10 @@ public class Game
     private GLFWFramebufferSizeCallback winSizeStr;
     
     private ALContext audiocontext;
-    private int background = 0;
-    private float br=1,bg=1,bb=1,ba=0;
-    private long cursor = -1;
-    private double curx = 0;
-    private double cury = 0;
-    private float fps = 0;
     private boolean isRunning = false;
-    private long window;
-    private boolean windowOpen = false;
-    private WindowState windowState = null;
-    private int wwidth = 800;
-    private int wheight = 600;
     
-    private final HashMap<Integer, KeyData> keyboardMap = new HashMap<>();
-    private final HashMap<Integer, Runnable> persKeyboardMap = new HashMap<>();
-    private final HashMap<Integer, KeyData> mouseMap = new HashMap<>();
-    private final HashMap<Integer, Runnable> persMouseMap = new HashMap<>();
-    private final HashMap<String, Runnable> savedFuncMap = new HashMap<>();
+    private final WindowManager winManager = new WindowManager();
+    private final InputManager inpManager = new InputManager();
     
     /**
      * Constructor.
@@ -133,231 +121,12 @@ public class Game
     }
     
     /**
-     * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
-     * @param key The {@link wrath.client.input.Key} to respond to.
-     * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
-     */
-    public void addKeyboardFunction(int key, Runnable event)
-    {
-        addKeyboardFunction(key, Key.MOD_NONE, KeyAction.KEY_PRESS, event);
-    }
-    
-    /**
-     * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
-     * @param key The {@link wrath.client.input.Key} to respond to.
-     * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
-     * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
-     */
-    public void addKeyboardFunction(int key, KeyAction action, Runnable event)
-    {
-        addKeyboardFunction(key, Key.MOD_NONE, action, event);
-    }
-    
-    /**
-     * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
-     * @param key The {@link wrath.client.input.Key} to respond to.
-     * @param keyMod The {@link wrath.client.input.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
-     * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
-     * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
-     */
-    public void addKeyboardFunction(int key, int keyMod, KeyAction action, Runnable event)
-    {
-        if(action == KeyAction.KEY_HOLD_DOWN)
-            keyboardMap.put(key, new KeyData(KeyAction.KEY_PRESS, () -> 
-            {
-                persKeyboardMap.put(key, event);
-                event.run();
-            }, key, keyMod));
-        else keyboardMap.put(key, new KeyData(action, event, key, keyMod));
-    }
-    
-    /**
-     * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
-     * @param key The key to respond to.
-     * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
-     */
-    public void addKeyboardFunction(int key, String functionId)
-    {
-        addKeyboardFunction(key, Key.MOD_NONE, KeyAction.KEY_PRESS, functionId);
-    }
-    
-    /**
-     * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
-     * @param key The key to respond to.
-     * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
-     * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
-     */
-    public void addKeyboardFunction(int key, KeyAction action, String functionId)
-    {
-        addKeyboardFunction(key, Key.MOD_NONE, action, functionId);
-    }
-    
-    /**
-     * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
-     * @param key The key to respond to.
-     * @param keyMod The {@link wrath.client.input.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
-     * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
-     * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
-     */
-    public void addKeyboardFunction(int key, int keyMod, KeyAction action, String functionId)
-    {
-        if(!savedFuncMap.containsKey(functionId)) return;
-        
-        Runnable event = savedFuncMap.get(functionId);
-        if(action == KeyAction.KEY_HOLD_DOWN)
-            keyboardMap.put(key, new KeyData(KeyAction.KEY_PRESS, () -> 
-            {
-                persKeyboardMap.put(key, event);
-                event.run();
-            }, key, keyMod));
-        else keyboardMap.put(key, new KeyData(action, event, key, keyMod));
-    }
-    
-    /**
-     * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
-     * @param key The key to respond to.
-     * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
-     */
-    public void addMouseFunction(int key, Runnable event)
-    {
-        addMouseFunction(key, Key.MOD_NONE, KeyAction.KEY_PRESS, event);
-    }
-    
-    /**
-     * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
-     * @param key The key to respond to.
-     * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
-     * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
-     */
-    public void addMouseFunction(int key, KeyAction action, Runnable event)
-    {
-        addMouseFunction(key, Key.MOD_NONE, action, event);
-    }
-    
-    /**
-     * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
-     * @param key The key to respond to.
-     * @param keyMod The {@link wrath.client.input.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
-     * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
-     * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
-     */
-    public void addMouseFunction(int key, int keyMod, KeyAction action, Runnable event)
-    {
-        if(action == KeyAction.KEY_HOLD_DOWN)
-            mouseMap.put(key, new KeyData(action, () -> 
-            {
-                persMouseMap.put(key, event);
-                event.run();
-            }, key, keyMod));
-        else mouseMap.put(key, new KeyData(action, event, key, keyMod));
-    }
-    
-    /**
-     * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
-     * @param key The key to respond to.
-     * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
-     */
-    public void addMouseFunction(int key, String functionId)
-    {
-        addMouseFunction(key, Key.MOD_NONE, KeyAction.KEY_PRESS, functionId);
-    }
-    
-    /**
-     * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
-     * @param key The key to respond to.
-     * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
-     * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
-     */
-    public void addMouseFunction(int key, KeyAction action, String functionId)
-    {
-        addMouseFunction(key, Key.MOD_NONE, action, functionId);
-    }
-    
-    /**
-     * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
-     * @param key The key to respond to.
-     * @param keyMod The {@link wrath.client.input.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
-     * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
-     * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
-     */
-    public void addMouseFunction(int key, int keyMod, KeyAction action, String functionId)
-    {
-        if(!savedFuncMap.containsKey(functionId)) return;
-        
-        Runnable event = savedFuncMap.get(functionId);
-        if(action == KeyAction.KEY_HOLD_DOWN)
-            mouseMap.put(key, new KeyData(action, () -> 
-            {
-                persMouseMap.put(key, event);
-                event.run();
-            }, key, keyMod));
-        else mouseMap.put(key, new KeyData(action, event, key, keyMod));
-    }
-    
-    /**
-     * Adds a listener to a specified String ID to be added later to a Keyboard or mouse function.
-     * @param id The String ID of the saved function.
-     * @param event The event to be saved.
-     */
-    public void addSavedFunction(String id, Runnable event)
-    {
-        savedFuncMap.put(id, event);
-    }
-    
-    /**
-     * Centers the window in the middle of the designated primary monitor.
-     * DO NOT use this while in any kind of full-screen mode.
-     */
-    public void centerWindow()
-    {
-        ByteBuffer vidmode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
-        GLFW.glfwSetWindowPos(window, GLFWvidmode.width(vidmode) / 5, GLFWvidmode.height(vidmode) / 5);
-    }
-    
-    /**
-     * Destroys and deallocates all GLFW/window resources.
-     */
-    public void destroyWindow()
-    {
-        if(!windowOpen) return;
-        windowOpen = false;
-        
-        gameLogger.log("Closing window [(" + wwidth + "x" + wheight + "]");
-        
-        winSizeStr.release();
-        keyStr.release();
-        mkeyStr.release();
-        charStr.release();
-        curStr.release();
-        AL.destroy(audiocontext);
-        GLFW.glfwDestroyWindow(window);
-    }
-    
-    /**
      * Gets the {@link wrath.util.Config} object of the game.
      * @return Returns the configuration object of the game.
      */
     public Config getConfig()
     {
         return gameConfig;
-    }
-    
-    /**
-     * Gets the X position of the cursor.
-     * @return Returns the X position of the cursor.
-     */
-    public double getCursorX()
-    {
-        return (2/(double)wwidth * curx) - 1.0;
-    }
-    
-    /**
-     * Gets the Y position of the cursor.
-     * @return Returns the Y position of the cursor.
-     */
-    public double getCursorY()
-    {
-        return (2/(double)wheight * cury) - 1.0;
     }
     
     /**
@@ -368,15 +137,6 @@ public class Game
     public Logger getErrorLogger()
     {
         return Logger.getErrorLogger();
-    }
-    
-    /**
-     * Gets the last recorded FPS count.
-     * @return Returns the last FPS count.
-     */
-    public float getFPS()
-    {
-        return fps;
     }
     
     /**
@@ -435,6 +195,8 @@ public class Game
     
     /**
      * Gets the amount of times the game's logic will update in one second.
+     * Recommended to not be over 60 or under 10.
+     * If it is over 60 and VSync is on, the ticks will be called to 60 FPS.
      * @return Returns the Ticks-per-second of the game's logic.
      */
     public double getTPS()
@@ -452,211 +214,21 @@ public class Game
     }
     
     /**
-     * Returns the wheight of the window.
-     * @return Returns the wheight of the window.
+     * Gets the {@link wrath.client.Game.InputManager} linked to this {@link wrath.client.Game} instance.
+     * @return Returns the {@link wrath.client.Game.InputManager} linked to this {@link wrath.client.Game} instance.
      */
-    public int getHeight()
+    public InputManager getInputManager()
     {
-        return wheight;
+        return inpManager;
     }
     
     /**
-     * Gets the GLFW Window ID.
-     * @return Returns the {@link org.lwjgl.glfw.GLFW} window ID.
+     * Gets the {@link wrath.client.Game.WindowManager} linked to this {@link wrath.client.Game} instance.
+     * @return Returns the {@link wrath.client.Game.WindowManager} linked to this {@link wrath.client.Game} instance.
      */
-    public long getWindowID()
+    public WindowManager getWindowManager()
     {
-        return window;
-    }
-    
-    /**
-     * Returns the wwidth of the window.
-     * @return Returns the wwidth of the window.
-     */
-    public int getWidth()
-    {
-        return wwidth;
-    }
-    
-    /**
-     * Gets the current state of the window as of {@link wrath.client.Game.WindowState}.
-     * @return Returns the current state of the window.
-     */
-    public WindowState getWindowState()
-    {
-        return windowState;
-    }
-    
-    /**
-     * Returns whether or not the cursor is enabled.
-     * @return Returns true if the cursor is enabled, otherwise false.
-     */
-    public boolean isCursorEnabled()
-    {
-        return GLFW.glfwGetInputMode(window, GLFW.GLFW_CURSOR) == GLFW.GLFW_CURSOR_NORMAL;
-    }
-    
-    /**
-     * Tells whether or not the window is open.
-     * @return Returns true if the window is open, otherwise false.
-     */
-    public boolean isWindowOpen()
-    {
-        return windowOpen;
-    }
-    
-    /**
-     * Method to start the display.
-     * Made independent from start() so window options can be adjusted without restarting game.
-     */
-    public void initWindow()
-    {
-        if(windowOpen) return;
-        
-        GLFW.glfwDefaultWindowHints();
-        GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GL11.GL_FALSE);
-        GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, ClientUtils.getLWJGLBoolean(gameConfig.getBoolean("WindowResizable", true)));
-        GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, ClientUtils.getLWJGLBoolean(gameConfig.getBoolean("APIForwardCompatMode", false)));
-        GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_DEBUG_CONTEXT, ClientUtils.getLWJGLBoolean(gameConfig.getBoolean("DebugMode", false)));
-        GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, gameConfig.getInt("DisplaySamples", 0));
-        GLFW.glfwWindowHint(GLFW.GLFW_REFRESH_RATE, gameConfig.getInt("DisplayRefreshRate", 0));
-
-        String wstatestr = gameConfig.getString("WindowState", "Windowed");
-        
-        if(wstatestr.equalsIgnoreCase("windowed")) windowState = WindowState.WINDOWED;
-        else if(wstatestr.equalsIgnoreCase("windowed_undecorated")) windowState = WindowState.WINDOWED_UNDECORATED;
-        else if(wstatestr.equalsIgnoreCase("fullscreen_windowed")) windowState = WindowState.FULLSCREEN_WINDOWED;
-        else if(wstatestr.equalsIgnoreCase("fullscreen")) windowState = WindowState.FULLSCREEN;
-
-        if(windowState == WindowState.FULLSCREEN)
-        {
-            ByteBuffer videomode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
-            wwidth = GLFWvidmode.width(videomode);
-            wheight = GLFWvidmode.height(videomode);
-            
-            window = GLFW.glfwCreateWindow(wwidth, wheight, TITLE, GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL); 
-        }
-        else if(windowState == WindowState.FULLSCREEN_WINDOWED)
-        {
-            ByteBuffer videomode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
-            wwidth = GLFWvidmode.width(videomode);
-            wheight = GLFWvidmode.height(videomode);
-            
-            GLFW.glfwWindowHint(GLFW.GLFW_DECORATED, GL11.GL_FALSE);
-            window = GLFW.glfwCreateWindow(wwidth, wheight, TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
-        }
-        else if(windowState == WindowState.WINDOWED)
-        {
-            wwidth = gameConfig.getInt("Width", 800);
-            wheight = gameConfig.getInt("Height", 600);
-            window = GLFW.glfwCreateWindow(wwidth, wheight, TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
-
-        }
-        else if(windowState == WindowState.WINDOWED_UNDECORATED)
-        {
-            GLFW.glfwWindowHint(GLFW.GLFW_DECORATED, GL11.GL_FALSE);
-
-            wwidth = gameConfig.getInt("Width", 800);
-            wheight = gameConfig.getInt("Height", 600);
-            window = GLFW.glfwCreateWindow(wwidth, wheight, TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
-        }
-        
-        if(window == MemoryUtil.NULL)
-        {
-            Logger.getErrorLogger().log("Could not initialize window! Window Info[" + wwidth + "x" + wheight + "]");
-            ClientUtils.throwInternalError("Window failed to initialize!", false);
-            stopImpl();
-        }
-        
-        gameLogger.log("Opened window [" + wwidth + "x" + wheight + "]");
-        
-        GLFW.glfwSetKeyCallback(window, (keyStr = new GLFWKeyCallback()
-        {
-            @Override
-            public void invoke(long window, int key, int scancode, int action, int mods)
-            {
-                if(persKeyboardMap.containsKey(key) && action == GLFW.GLFW_RELEASE) persKeyboardMap.remove(key);
-                else if(keyboardMap.containsKey(key))
-                {
-                    KeyData dat = keyboardMap.get(key);
-                    if(dat.getRawAction() == action && (dat.getKeyMod() == -1 || mods == dat.getKeyMod())) dat.execute();
-                }
-            }
-        }));
-        
-        GLFW.glfwSetMouseButtonCallback(window, (mkeyStr = new GLFWMouseButtonCallback() 
-        {
-            @Override
-            public void invoke(long window, int button, int action, int mods) 
-            {
-                if(persMouseMap.containsKey(button) && action == GLFW.GLFW_RELEASE) persMouseMap.remove(button);
-                else if(mouseMap.containsKey(button))
-                {
-                    KeyData dat = mouseMap.get(button);
-                    if(dat.getRawAction() == action && (dat.getKeyMod() == -1 || mods == dat.getKeyMod())) dat.execute();
-                }
-            }
-        }));
-        
-        GLFW.glfwSetCharCallback(window, (charStr = new GLFWCharCallback() 
-        {
-            @Override
-            public void invoke(long window, int codepoint) 
-            {
-                if(gameHandler != null) gameHandler.onCharInput((char) codepoint);
-            }
-        }));
-        
-        GLFW.glfwMakeContextCurrent(window);
-        if(gameConfig.getBoolean("DisplayVsync", false)) GLFW.glfwSwapInterval(1);
-        else GLFW.glfwSwapInterval(0);
-        GLFW.glfwShowWindow(window);
-        GLContext.createFromCurrent();
-        audiocontext = ALContext.create();
-        audiocontext.makeCurrent();
-        
-        GLFW.glfwSetFramebufferSizeCallback(window,(winSizeStr = new GLFWFramebufferSizeCallback() 
-        {
-            @Override
-            public void invoke(long window, int width, int height) 
-            {
-                if(wwidth <= 0 || wheight <= 0) return;
-                
-                wwidth = width;
-                wheight = height;
-                
-                gameConfig.setProperty("Width", wwidth + "");
-                gameConfig.setProperty("Height", wheight + "");
-                GL11.glViewport(0, 0, wwidth, wheight);
-                if(gameHandler != null) gameHandler.onWindowResize(width, height);
-            }
-        }));
-        
-        GLFW.glfwSetCursorPosCallback(window, (curStr = new GLFWCursorPosCallback()
-        {
-            @Override
-            public void invoke(long window, double x, double y)
-            {
-                curx = x;
-                cury = y;
-                if(gameHandler != null) gameHandler.onCursorMove(x, y);
-            }
-        }));
-        
-        if(cursor != -1) GLFW.glfwSetCursor(window, cursor);
-        
-        GL11.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        GL11.glViewport(0, 0, wwidth, wheight);
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glLoadIdentity();
-        if(MODE == RenderMode.Mode2D) GL11.glOrtho(-1, 1, 1, -1, 1, -1);
-        //TODO: Make 3D!    else GL11.glOrtho(-ratio, ratio, -1.f, 1.f, 1.f, -1.f);
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        GL11.glLoadIdentity();
-        
-        if(gameHandler != null) gameHandler.onWindowOpen();
-        
-        windowOpen = true;
+        return winManager;
     }
     
     /**
@@ -689,7 +261,7 @@ public class Game
         double delta = 0.0;
         long now;
         
-        while(isRunning && (!windowOpen || GLFW.glfwWindowShouldClose(window) != GL11.GL_TRUE))
+        while(isRunning && (!winManager.windowOpen || GLFW.glfwWindowShouldClose(winManager.window) != GL11.GL_TRUE))
         {
             now = System.nanoTime();
             delta += (now - last) / conv;
@@ -701,23 +273,14 @@ public class Game
                 
                 if(INPUT_CHECK_TICKS == 1 || inpCount >= INPUT_CHECK_TICKS)
                 {
-                    persKeyboardMap.entrySet().stream().map((pairs) -> (Runnable) pairs.getValue()).forEach((ev) -> 
-                    {
-                        ev.run();
-                    });
-
-                    persMouseMap.entrySet().stream().map((pairs) -> (Runnable) pairs.getValue()).forEach((ev) -> 
-                    {
-                        ev.run();
-                    });
-                    
+                    inpManager.onPersistentInput();
                     inpCount -= INPUT_CHECK_TICKS;
                 }
                 else inpCount++;
                 
                 if(fpsCount >= TPS)
                 {
-                    fps = fpsBuf;
+                    winManager.fps = fpsBuf;
                     fpsBuf = 0;
                     fpsCount-=TPS;
                 }
@@ -726,24 +289,22 @@ public class Game
                 delta--;
             }
             
-            if(windowOpen)
+            if(winManager.windowOpen)
             {
                 GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-                renderBackground();
+                winManager.renderBackground();
                 render();
                 GL11.glFlush();
-                fpsBuf++;
-                GLFW.glfwSwapBuffers(window);
+                GLFW.glfwSwapBuffers(winManager.window);
             
                 GLFW.glfwPollEvents();
+                fpsBuf++;
             }
         }
         
         stop();
         stopImpl();
     }
-    
-    
     
     /**
      * Private method that takes care of all background processes before onTick() is called.
@@ -755,186 +316,10 @@ public class Game
     }
     
     /**
-     * Un-binds all functions bound to the specified key on the keyboard.
-     * @param key The key to un-bind all functions on.
-     */
-    public void removeKeyboardFunction(int key)
-    {
-        if(keyboardMap.containsKey(key))
-            keyboardMap.remove(key);
-    }
-    
-    /**
-     * Un-binds all functions bound to the specified key on the mouse.
-     * @param key The key to un-bind all functions on.
-     */
-    public void removeMouseFunction(int key)
-    {
-        if(mouseMap.containsKey(key))
-            mouseMap.remove(key);
-    }
-    
-    /**
      * Override-able method that is called as much as possible to issue rendering commands.
      */
-    protected void render(){}
+    protected void render(){} //TODO: Add Rendering Pipeline (kind of a biggie)
 
-    private void renderBackground()
-    {
-        if(br == 1 && bb == 1 && bg == 1 && ba == 0 && background == 0) return;
-        GL11.glEnable(GL11.GL_TEXTURE_2D);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, background);
-        GL11.glColor4f(br, bg, bb, ba);
-        GL11.glBegin(GL11.GL_QUADS);
-        {
-            GL11.glTexCoord2f(0, 0);
-            GL11.glVertex2f(-1, -1);
-            
-            GL11.glTexCoord2f(1, 0);
-            GL11.glVertex2f(1, -1);
-            
-            GL11.glTexCoord2f(1, 1);
-            GL11.glVertex2f(1, 1);
-            
-            GL11.glTexCoord2f(0, 1);
-            GL11.glVertex2f(-1, 1);
-        }
-        GL11.glEnd();
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
-        GL11.glColor4f(1, 1, 1, 0);
-    }
-    
-    /**
-     * Takes a screen-shot and saves it to the file specified as a PNG.
-     * @param saveToName The name of the file to save the screen-shot to (excluding file extension).
-     */
-    public void screenShot(String saveToName)
-    {
-        screenShot(saveToName, ClientUtils.ImageFormat.PNG);
-    }
-    
-    /**
-     * Takes a screen-shot and saves it to the file specified.
-     * @param saveToName The name of the file to save the screen-shot to (excluding file extension).
-     * @param format The format to save the image as.
-     */
-    public void screenShot(String saveToName, ClientUtils.ImageFormat format)
-    {
-        File saveTo = new File("etc/screenshots/" + saveToName + "." + format.name().toLowerCase());
-                
-        GL11.glReadBuffer(GL11.GL_FRONT);
-        ByteBuffer buffer = BufferUtils.createByteBuffer(wwidth * wheight * 4);
-        GL11.glReadPixels(0, 0, wwidth, wheight, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
- 
-        Thread t = new Thread(() -> 
-        {
-            BufferedImage image = new BufferedImage(wwidth, wheight, BufferedImage.TYPE_INT_ARGB);
-        
-            for(int x = 0; x < wwidth; x++)
-            {
-                for(int y = 0; y < wheight; y++)
-                {
-                    int i = (x + (wwidth * y)) * 4;
-                    int r = buffer.get(i) & 0xFF;
-                    int g = buffer.get(i + 1) & 0xFF;
-                    int b = buffer.get(i + 2) & 0xFF;
-                    image.setRGB(x, wheight - (y + 1), (0xFF << 24) | (r << 16) | (g << 8) | b);
-                }
-            }
-        
-            try
-            {
-                ImageIO.write(image, format.name(), saveTo);
-                gameLogger.log("Saved screenshot '" + saveTo.getName() + "'!");
-            }
-            catch(IOException e)
-            {
-                Logger.getErrorLogger().log("Could not save Screenshot to '" + saveTo.getName() + "'! I/O Error has occured!");
-            } 
-        });
-        
-        t.start();
-    }
-    
-    /**
-     * Changes the static background image.
-     * @param imageFile The file to load the background texture from.
-     */
-    public void setBackgroundImage(File imageFile)
-    {
-        setBackgroundImage(ClientUtils.loadImageFromFile(imageFile));
-    }
-    
-    /**
-     * Changes the static background image.
-     * @param image The image to load the background texture from.
-     */
-    public void setBackgroundImage(BufferedImage image)
-    {
-        setBackgroundImage(ClientUtils.get2DTexture(image));
-    }
-    
-    /**
-     * Changes the static background image.
-     * @param texture The texture ID of the background image, 0 is clear.
-     */
-    public void setBackgroundImage(int texture)
-    {
-        background = texture;
-    }
-    
-    /**
-     * Sets the RGBA configuration of the background image.
-     * @param red The red value, max 1.0.
-     * @param green The green value, max 1.0.
-     * @param blue The blue value, max 1.0.
-     * @param alpha The transparency, 1.0 being opaque.
-     */
-    public void setBackgroundRGBA(float red, float green, float blue, float alpha)
-    {
-        br = red;
-        bg = green;
-        bb = blue;
-        ba = alpha;
-    }
-    
-    /**
-     * Resets the background to a state where it is not rendered.
-     */
-    public void setBackgroundToClear()
-    {
-        br = 1;
-        bg = 1;
-        bb = 1;
-        ba = 0;
-        background = 0;
-    }
-    
-    /**
-     * Changes the cursor from a list of standard cursors located in {@link wrath.client.input.Key}.
-     * @param cursormode The {@link wrath.client.input.Key} Cursor to switch to.
-     */
-    public void setCursor(int cursormode)
-    {
-        if(cursor != -1)
-        {
-            GLFW.glfwDestroyCursor(cursor);
-            cursor = -1;
-        }
-        cursor = GLFW.glfwCreateStandardCursor(cursormode);
-        GLFW.glfwSetCursor(window, cursor);
-    }
-    
-    /**
-     * Enables or disables the cursor.
-     * @param cursorEnabled Whether the cursor should be enabled or disabled.
-     */
-    public void setCursorEnabled(boolean cursorEnabled)
-    {
-        if(cursorEnabled) GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
-        else GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
-    }
-    
     /**
      * Adds a {@link wrath.client.GameEventHandler} to the client.
      * @param handler The GameEventHandler the client should report to.
@@ -942,38 +327,6 @@ public class Game
     public void setGameEventHandler(GameEventHandler handler)
     {
         gameHandler = handler;
-    }
-    
-    /**
-     * Changes the size of the window.
-     * @param wwidth New wwidth of the window, measured in pixels.
-     * @param wheight New wheight of the window, measures in pixels.
-     */
-    public void setResolution(int wwidth, int wheight)
-    {
-        this.wwidth = wwidth;
-        this.wheight = wheight;
-        GLFW.glfwSetWindowSize(window, wwidth, wheight);
-        GL11.glViewport(0, 0, wwidth, wheight);
-        
-        gameConfig.setProperty("Width", wwidth + "");
-        gameConfig.setProperty("Height", wheight + "");
-    }
-    
-    /**
-     * Changes the state of the window.
-     * This method will require the window to restart, and this will be done via {@link wrath.client.Game#destroyWindow() } and {@link wrath.client.Game#initWindow() }.
-     * @param state The state to set the window to.
-     */
-    public void setWindowState(WindowState state)
-    {
-        gameConfig.setProperty("WindowState", state.toString().toUpperCase());
-        if(windowOpen)
-        {
-            destroyWindow();
-            initWindow();
-        }
-        gameConfig.save();
     }
     
     /**
@@ -1020,7 +373,7 @@ public class Game
             return;
         }
         
-        initWindow();
+        winManager.openWindow();
         
         if(gameHandler != null) gameHandler.onGameOpen();
         loop();
@@ -1044,8 +397,8 @@ public class Game
     private void stopImpl()
     {
         try{
-        destroyWindow();
-        if(cursor != -1) GLFW.glfwDestroyCursor(cursor);
+        winManager.destroyWindow();
+        if(inpManager.cursor != -1) GLFW.glfwDestroyCursor(inpManager.cursor);
         GLFW.glfwTerminate();
         
         gameConfig.save();
@@ -1055,5 +408,761 @@ public class Game
         }catch(Exception e){}
         
         System.exit(0);
+    }
+    
+    /**
+     * Class to manage all input operations.
+     * Used to organize code and clean up the {@link wrath.client.Game} class.
+     */
+    public class InputManager
+    {
+        private final HashMap<String, Integer> keyboardDefaultsMap = new HashMap<>();
+        private final HashMap<String, Integer> mouseDefaultsMap = new HashMap<>();
+        
+        private final HashMap<Integer, KeyData> keyboardMap = new HashMap<>();
+        private final HashMap<Integer, Runnable> persKeyboardMap = new HashMap<>();
+        private final HashMap<Integer, KeyData> mouseMap = new HashMap<>();
+        private final HashMap<Integer, Runnable> persMouseMap = new HashMap<>();
+        private final HashMap<String, Runnable> savedFuncMap = new HashMap<>();
+        
+        private long cursor = -1;
+        private double curx = 0;
+        private double cury = 0;
+        
+        /**
+        * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
+        * @param key The {@link wrath.client.input.Key} to respond to.
+        * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
+        */
+        public void addKeyboardFunction(int key, Runnable event)
+        {
+            addKeyboardFunction(key, Key.MOD_NONE, KeyAction.KEY_PRESS, event);
+        }
+    
+        /**
+        * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
+        * @param key The {@link wrath.client.input.Key} to respond to.
+        * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
+        * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
+        */
+        public void addKeyboardFunction(int key, KeyAction action, Runnable event)
+        {
+            addKeyboardFunction(key, Key.MOD_NONE, action, event);
+        }
+    
+        /**
+         * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
+        * @param key The {@link wrath.client.input.Key} to respond to.
+        * @param keyMod The {@link wrath.client.input.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
+        * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
+        * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
+        */
+        public void addKeyboardFunction(int key, int keyMod, KeyAction action, Runnable event)
+        {
+            if(action == KeyAction.KEY_HOLD_DOWN)
+            keyboardMap.put(key, new KeyData(KeyAction.KEY_PRESS, () -> 
+            {
+                persKeyboardMap.put(key, event);
+                event.run();
+            }, key, keyMod));
+            else keyboardMap.put(key, new KeyData(action, event, key, keyMod));
+        }
+        
+        /**
+        * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
+        * @param key The key to respond to.
+        * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
+        */
+        public void addKeyboardFunction(int key, String functionId)
+        {
+            addKeyboardFunction(key, Key.MOD_NONE, KeyAction.KEY_PRESS, functionId);
+        }
+    
+        /**
+        * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
+        * @param key The key to respond to.
+        * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
+        * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
+         */
+        public void addKeyboardFunction(int key, KeyAction action, String functionId)
+        {
+            addKeyboardFunction(key, Key.MOD_NONE, action, functionId);
+        }
+    
+        /**
+        * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
+        * @param key The key to respond to.
+        * @param keyMod The {@link wrath.client.input.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
+        * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
+        * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
+        */
+        public void addKeyboardFunction(int key, int keyMod, KeyAction action, String functionId)
+        {
+            if(!savedFuncMap.containsKey(functionId)) return;
+        
+            Runnable event = savedFuncMap.get(functionId);
+            if(action == KeyAction.KEY_HOLD_DOWN)
+            keyboardMap.put(key, new KeyData(KeyAction.KEY_PRESS, () -> 
+            {
+                persKeyboardMap.put(key, event);
+                event.run();
+            }, key, keyMod));
+            else keyboardMap.put(key, new KeyData(action, event, key, keyMod));
+        }
+    
+        /**
+        * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
+        * @param key The key to respond to.
+        * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
+        */
+        public void addMouseFunction(int key, Runnable event)
+        {
+            addMouseFunction(key, Key.MOD_NONE, KeyAction.KEY_PRESS, event);
+        }
+    
+        /**
+        * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
+        * @param key The key to respond to.
+        * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
+        * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
+        */
+        public void addMouseFunction(int key, KeyAction action, Runnable event)
+        {
+            addMouseFunction(key, Key.MOD_NONE, action, event);
+        }
+    
+        /**
+        * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
+        * @param key The key to respond to.
+        * @param keyMod The {@link wrath.client.input.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
+        * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
+        * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
+        */
+        public void addMouseFunction(int key, int keyMod, KeyAction action, Runnable event)
+        {
+            if(action == KeyAction.KEY_HOLD_DOWN)
+            mouseMap.put(key, new KeyData(action, () -> 
+            {
+                persMouseMap.put(key, event);
+                event.run();
+            }, key, keyMod));
+            else mouseMap.put(key, new KeyData(action, event, key, keyMod));
+        }
+    
+        /**
+        * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
+        * @param key The key to respond to.
+        * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
+        */
+        public void addMouseFunction(int key, String functionId)
+        {
+            addMouseFunction(key, Key.MOD_NONE, KeyAction.KEY_PRESS, functionId);
+        }
+    
+        /**
+        * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
+        * @param key The key to respond to.
+        * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
+        * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
+        */
+        public void addMouseFunction(int key, KeyAction action, String functionId)
+        {
+            addMouseFunction(key, Key.MOD_NONE, action, functionId);
+        }
+    
+        /**
+        * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
+        * @param key The key to respond to.
+        * @param keyMod The {@link wrath.client.input.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
+        * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
+        * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
+        */
+        public void addMouseFunction(int key, int keyMod, KeyAction action, String functionId)
+        {
+            if(!savedFuncMap.containsKey(functionId)) return;
+        
+            Runnable event = savedFuncMap.get(functionId);
+            if(action == KeyAction.KEY_HOLD_DOWN)
+            mouseMap.put(key, new KeyData(action, () -> 
+            {
+                persMouseMap.put(key, event);
+                event.run();
+            }, key, keyMod));
+            else mouseMap.put(key, new KeyData(action, event, key, keyMod));
+        }
+    
+        /**
+        * Adds a listener to a specified String ID to be added later to a Keyboard or mouse function.
+        * @param id The String ID of the saved function.
+        * @param event The event to be saved.
+        */
+        public void addSavedFunction(String id, Runnable event)
+        {
+            savedFuncMap.put(id, event);
+        }
+        
+        /**
+        * Gets the X position of the cursor.
+        * @return Returns the X position of the cursor.
+        */
+        public double getCursorX()
+        {
+            return (2/(double)winManager.width * curx) - 1.0;
+        }
+    
+        /**
+        * Gets the Y position of the cursor.
+        * @return Returns the Y position of the cursor.
+        */
+        public double getCursorY()
+        {
+            return (2/(double)winManager.height * cury) - 1.0;
+        }
+        
+        /**
+         * Used by the {@link wrath.client.Game} class to initialize all of the GLFW input callbacks.
+         */
+        protected void initInputStreams()
+        {
+            GLFW.glfwSetKeyCallback(winManager.window, (keyStr = new GLFWKeyCallback()
+            {
+                @Override
+                public void invoke(long window, int key, int scancode, int action, int mods)
+                {
+                    if(persKeyboardMap.containsKey(key) && action == GLFW.GLFW_RELEASE) persKeyboardMap.remove(key);
+                    else if(keyboardMap.containsKey(key))
+                    {
+                        KeyData dat = keyboardMap.get(key);
+                        if(dat.getRawAction() == action && (dat.getKeyMod() == -1 || mods == dat.getKeyMod())) dat.execute();
+                    }
+                }
+            }));
+        
+            GLFW.glfwSetMouseButtonCallback(winManager.window, (mkeyStr = new GLFWMouseButtonCallback() 
+            {
+                @Override
+                public void invoke(long window, int button, int action, int mods) 
+                {
+                    if(persMouseMap.containsKey(button) && action == GLFW.GLFW_RELEASE) persMouseMap.remove(button);
+                    else if(mouseMap.containsKey(button))
+                    {
+                        KeyData dat = mouseMap.get(button);
+                        if(dat.getRawAction() == action && (dat.getKeyMod() == -1 || mods == dat.getKeyMod())) dat.execute();
+                    }
+                }
+            }));
+        }
+        
+        /**
+         * Returns whether or not the cursor is enabled.
+         * @return Returns true if the cursor is enabled, otherwise false.
+         */
+        public boolean isCursorEnabled()
+        {
+            return GLFW.glfwGetInputMode(winManager.window, GLFW.GLFW_CURSOR) == GLFW.GLFW_CURSOR_NORMAL;
+        }
+        
+        /**
+         * Used by the {@link wrath.client.Game} class to run tasks assigned to persistent keys.
+         */
+        protected void onPersistentInput()
+        {
+            persKeyboardMap.entrySet().stream().map((pairs) -> (Runnable) pairs.getValue()).forEach((ev) -> 
+            {
+                ev.run();
+            });
+
+            persMouseMap.entrySet().stream().map((pairs) -> (Runnable) pairs.getValue()).forEach((ev) -> 
+            {
+                ev.run();
+            });
+        }
+        
+        /**
+        * Un-binds all functions bound to the specified key on the keyboard.
+        * @param key The key to un-bind all functions on.
+        */
+        public void removeKeyboardFunction(int key)
+        {
+            if(keyboardMap.containsKey(key))
+                keyboardMap.remove(key);
+        }
+    
+        /**
+        * Un-binds all functions bound to the specified key on the mouse.
+        * @param key The key to un-bind all functions on.
+        */
+        public void removeMouseFunction(int key)
+        {
+            if(mouseMap.containsKey(key))
+                mouseMap.remove(key);
+        }
+        
+        /**
+         * Changes the cursor from a list of standard cursors located in
+         * {@link wrath.client.input.Key}.
+         *
+         * @param cursormode The {@link wrath.client.input.Key} Cursor to switch
+         * to.
+         */
+        public void setCursor(int cursormode)
+        {
+            if(cursor != -1) 
+            {
+                GLFW.glfwDestroyCursor(cursor);
+                cursor = -1;
+            }
+            cursor = GLFW.glfwCreateStandardCursor(cursormode);
+            GLFW.glfwSetCursor(winManager.window, cursor);
+        }
+
+        /**
+         * Enables or disables the cursor.
+         *
+         * @param cursorEnabled Whether the cursor should be enabled or
+         * disabled.
+         */
+        public void setCursorEnabled(boolean cursorEnabled)
+        {
+            if(cursorEnabled) 
+            {
+                GLFW.glfwSetInputMode(winManager.window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
+            }
+            else 
+            {
+                GLFW.glfwSetInputMode(winManager.window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
+            }
+        }
+    }
+    
+    public class WindowManager
+    {
+
+        private int background = 0;
+        private float br = 1, bg = 1, bb = 1, ba = 0;
+        private Font font = new Font("Times New Roman", Font.PLAIN, 16);
+        private float fps = 0;
+        private long window;
+        private boolean windowOpen = false;
+        private WindowState windowState = null;
+
+        private int width = 800;
+        private int height = 600;
+
+        /**
+        * Centers the window in the middle of the designated primary monitor.
+        * DO NOT use this while in any kind of full-screen mode.
+        */
+        public void centerWindow()
+        {
+            ByteBuffer vidmode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
+            GLFW.glfwSetWindowPos(window, GLFWvidmode.width(vidmode) / 5, GLFWvidmode.height(vidmode) / 5);
+        }
+    
+        /**
+        * Destroys and deallocates all GLFW/window resources.
+        */
+        public void destroyWindow()
+        {
+            if(!windowOpen) return;
+            windowOpen = false;
+        
+            gameLogger.log("Closing window [(" + width + "x" + height + "]");
+        
+            winSizeStr.release();
+            keyStr.release();
+            mkeyStr.release();
+            charStr.release();
+            curStr.release();
+            AL.destroy(audiocontext);
+            GLFW.glfwDestroyWindow(window);
+        }
+        
+        /**
+        * Gets the default global font.
+        * @return The current global font.
+        * @see java.awt.Font
+        */
+        public Font getFont()
+        {
+            return font;
+        }
+    
+        /**
+        * Gets the last recorded Frames-Per-Second count.
+        * @return Returns the last FPS count.
+        */
+        public float getFPS()
+        {
+            return fps;
+        }
+        
+        /**
+         * Gets the GLFW Window ID.
+         * @return Returns the {@link org.lwjgl.glfw.GLFW} window ID.
+         */
+        public long getWindowID()
+        {
+            return window;
+        }
+
+        /**
+         * Returns the width of the window.
+         * @return Returns the width of the window.
+         */
+        public int getWidth()
+        {
+            return width;
+        }
+
+        /**
+         * Gets the current state of the window as of
+         * {@link wrath.client.Game.WindowState}.
+         * @return Returns the current state of the window.
+         */
+        public WindowState getWindowState()
+        {
+            return windowState;
+        }
+
+        /**
+         * Tells whether or not the window is open.
+         * @return Returns true if the window is open, otherwise false.
+         */
+        public boolean isWindowOpen()
+        {
+            return windowOpen;
+        }
+
+        /**
+         * Method to start the display. Made independent from start() so window
+         * options can be adjusted without restarting game.
+         */
+        public void openWindow()
+        {
+            if(windowOpen) return;
+
+            GLFW.glfwDefaultWindowHints();
+            GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GL11.GL_FALSE);
+            GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, ClientUtils.getLWJGLBoolean(gameConfig.getBoolean("WindowResizable", true)));
+            GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, ClientUtils.getLWJGLBoolean(gameConfig.getBoolean("APIForwardCompatMode", false)));
+            GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_DEBUG_CONTEXT, ClientUtils.getLWJGLBoolean(gameConfig.getBoolean("DebugMode", false)));
+            GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, gameConfig.getInt("DisplaySamples", 0));
+            GLFW.glfwWindowHint(GLFW.GLFW_REFRESH_RATE, gameConfig.getInt("DisplayRefreshRate", 0));
+
+            String wstatestr = gameConfig.getString("WindowState", "Windowed");
+
+            if(wstatestr.equalsIgnoreCase("windowed")) windowState = WindowState.WINDOWED;
+            else if(wstatestr.equalsIgnoreCase("windowed_undecorated")) windowState = WindowState.WINDOWED_UNDECORATED;
+            else if(wstatestr.equalsIgnoreCase("fullscreen_windowed")) windowState = WindowState.FULLSCREEN_WINDOWED;
+            else if(wstatestr.equalsIgnoreCase("fullscreen")) windowState = WindowState.FULLSCREEN;
+            
+
+            if(windowState == WindowState.FULLSCREEN) 
+            {
+                ByteBuffer videomode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
+                width = GLFWvidmode.width(videomode);
+                height = GLFWvidmode.height(videomode);
+
+                window = GLFW.glfwCreateWindow(width, height, TITLE, GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL);
+            }
+            else if(windowState == WindowState.FULLSCREEN_WINDOWED) 
+            {
+                ByteBuffer videomode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
+                width = GLFWvidmode.width(videomode);
+                height = GLFWvidmode.height(videomode);
+
+                GLFW.glfwWindowHint(GLFW.GLFW_DECORATED, GL11.GL_FALSE);
+                window = GLFW.glfwCreateWindow(width, height, TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
+            }
+            else if(windowState == WindowState.WINDOWED) 
+            {
+                width = gameConfig.getInt("Width", 800);
+                height = gameConfig.getInt("Height", 600);
+                window = GLFW.glfwCreateWindow(width, height, TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
+
+            }
+            else if(windowState == WindowState.WINDOWED_UNDECORATED) 
+            {
+                GLFW.glfwWindowHint(GLFW.GLFW_DECORATED, GL11.GL_FALSE);
+
+                width = gameConfig.getInt("Width", 800);
+                height = gameConfig.getInt("Height", 600);
+                window = GLFW.glfwCreateWindow(width, height, TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
+            }
+
+            if(window == MemoryUtil.NULL) 
+            {
+                Logger.getErrorLogger().log("Could not initialize window! Window Info[" + width + "x" + height + "]");
+                ClientUtils.throwInternalError("Window failed to initialize!", false);
+                stopImpl();
+            }
+
+            gameLogger.log("Opened window [" + width + "x" + height + "]");
+
+            inpManager.initInputStreams();
+
+            GLFW.glfwSetCharCallback(window, (charStr = new GLFWCharCallback()
+            {
+                @Override
+                public void invoke(long window, int codepoint)
+                {
+                    if(gameHandler != null) gameHandler.onCharInput((char) codepoint);
+                }
+            }));
+
+            GLFW.glfwMakeContextCurrent(window);
+            if(gameConfig.getBoolean("DisplayVsync", false)) GLFW.glfwSwapInterval(1);
+            else GLFW.glfwSwapInterval(0);
+            
+            GLFW.glfwShowWindow(window);
+            GLContext.createFromCurrent();
+            audiocontext = ALContext.create();
+            audiocontext.makeCurrent();
+
+            GLFW.glfwSetFramebufferSizeCallback(window, (winSizeStr = new GLFWFramebufferSizeCallback()
+            {
+                @Override
+                public void invoke(long window, int width, int height)
+                {
+                    if(width <= 0 || height <= 0) return;
+
+                    winManager.width = width;
+                    winManager.height = height;
+
+                    gameConfig.setProperty("Width", width + "");
+                    gameConfig.setProperty("Height", height + "");
+                    GL11.glViewport(0, 0, width, height);
+                    if(gameHandler != null) gameHandler.onWindowResize(width, height);
+                  
+                }
+            }));
+
+            GLFW.glfwSetCursorPosCallback(window, (curStr = new GLFWCursorPosCallback()
+            {
+                @Override
+                public void invoke(long window, double x, double y)
+                {
+                    inpManager.curx = x;
+                    inpManager.cury = y;
+                    if(gameHandler != null) gameHandler.onCursorMove(inpManager.getCursorX(), inpManager.getCursorY());
+                }
+            }));
+
+            if(inpManager.cursor != -1) GLFW.glfwSetCursor(window, inpManager.cursor);
+
+            GL11.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+            GL11.glViewport(0, 0, width, height);
+            GL11.glMatrixMode(GL11.GL_PROJECTION);
+            GL11.glLoadIdentity();
+            if(MODE == RenderMode.Mode2D) GL11.glOrtho(-1, 1, 1, -1, 1, -1);
+            //TODO: Make 3D!    else GL11.glOrtho(-ratio, ratio, -1.f, 1.f, 1.f, -1.f);
+            GL11.glMatrixMode(GL11.GL_MODELVIEW);
+            GL11.glLoadIdentity();
+
+            if(gameHandler != null) gameHandler.onWindowOpen();
+
+            windowOpen = true;
+        }
+        
+        /**
+         * Used to render user-set background.
+         */
+        private void renderBackground()
+        {
+            if(br == 1 && bb == 1 && bg == 1 && ba == 0 && background == 0) return;
+           
+            GL11.glEnable(GL11.GL_TEXTURE_2D);
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, background);
+            GL11.glColor4f(br, bg, bb, ba);
+            GL11.glBegin(GL11.GL_QUADS);
+            {
+                GL11.glTexCoord2f(0, 0);
+                GL11.glVertex2f(-1, -1);
+
+                GL11.glTexCoord2f(1, 0);
+                GL11.glVertex2f(1, -1);
+
+                GL11.glTexCoord2f(1, 1);
+                GL11.glVertex2f(1, 1);
+
+                GL11.glTexCoord2f(0, 1);
+                GL11.glVertex2f(-1, 1);
+            }
+            GL11.glEnd();
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+            GL11.glColor4f(1, 1, 1, 0);
+        }
+
+        /**
+         * Takes a screen-shot and saves it to the file specified as a PNG.
+         * @param saveToName The name of the file to save the screen-shot to
+         * (excluding file extension).
+         */
+        public void screenShot(String saveToName)
+        {
+            screenShot(saveToName, ClientUtils.ImageFormat.PNG);
+        }
+
+        /**
+         * Takes a screen-shot and saves it to the file specified.
+         * @param saveToName The name of the file to save the screen-shot to
+         * (excluding file extension).
+         * @param format The format to save the image as.
+         */
+        public void screenShot(String saveToName, ClientUtils.ImageFormat format)
+        {
+            File saveTo = new File("etc/screenshots/" + saveToName + "." + format.name().toLowerCase());
+
+            GL11.glReadBuffer(GL11.GL_FRONT);
+            ByteBuffer buffer = BufferUtils.createByteBuffer(width * height * 4);
+            GL11.glReadPixels(0, 0, width, height, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
+
+            Thread t = new Thread(() -> 
+            {
+                BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+
+                for (int x = 0; x < width; x++) 
+                {
+                    for (int y = 0; y < height; y++) 
+                    {
+                        int i = (x + (width * y)) * 4;
+                        int r = buffer.get(i) & 0xFF;
+                        int g = buffer.get(i + 1) & 0xFF;
+                        int b = buffer.get(i + 2) & 0xFF;
+                        image.setRGB(x, height - (y + 1), (0xFF << 24) | (r << 16) | (g << 8) | b);
+                    }
+                }
+
+                try 
+                {
+                    ImageIO.write(image, format.name(), saveTo);
+                    gameLogger.log("Saved screenshot '" + saveTo.getName() + "'!");
+                }
+                catch (IOException e) 
+                {
+                    Logger.getErrorLogger().log("Could not save Screenshot to '" + saveTo.getName() + "'! I/O Error has occured!");
+                }
+            });
+
+            t.start();
+        }
+
+        /**
+         * Changes the static background image.
+         * @param imageFile The file to load the background texture from.
+         */
+        public void setBackgroundImage(File imageFile)
+        {
+            setBackgroundImage(ClientUtils.loadImageFromFile(imageFile));
+        }
+
+        /**
+         * Changes the static background image.
+         * @param image The image to load the background texture from.
+         */
+        public void setBackgroundImage(BufferedImage image)
+        {
+            setBackgroundImage(ClientUtils.get2DTexture(image));
+        }
+
+        /**
+         * Changes the static background image.
+         * @param texture The texture ID of the background image, 0 is clear.
+         */
+        public void setBackgroundImage(int texture)
+        {
+            background = texture;
+        }
+
+        /**
+         * Sets the RGBA configuration of the background image.
+         * @param red The red value, max 1.0.
+         * @param green The green value, max 1.0.
+         * @param blue The blue value, max 1.0.
+         * @param alpha The transparency, 1.0 being opaque.
+         */
+        public void setBackgroundRGBA(float red, float green, float blue, float alpha)
+        {
+            br = red;
+            bg = green;
+            bb = blue;
+            ba = alpha;
+        }
+
+        /**
+         * Resets the background to a state where it is not rendered.
+         */
+        public void setBackgroundToClear()
+        {
+            br = 1;
+            bg = 1;
+            bb = 1;
+            ba = 0;
+            background = 0;
+        }
+
+        /**
+         * Sets the game's global font.
+         *
+         * @param font The {@link java.awt.Font} to derive from.
+         */
+        public void setFont(Font font)
+        {
+            this.font = font;
+        }
+
+        /**
+         * Sets the game's global font.
+         *
+         * @param fontLocation The file containing the font.
+         */
+        public void setFont(File fontLocation)
+        {
+            try 
+            {
+                font = Font.createFont(Font.TRUETYPE_FONT, fontLocation);
+            }
+            catch(FontFormatException e) 
+            {
+                Logger.getErrorLogger().log("Could not load font from '" + fontLocation.getAbsolutePath() + "'! Invalid Format!");
+            }
+            catch(IOException e) 
+            {
+                Logger.getErrorLogger().log("Could not load font from '" + fontLocation.getAbsolutePath() + "'! I/O Error!");
+            }
+        }
+        
+        /**
+        * Changes the size of the window.
+        * @param width New width of the window, measured in pixels.
+        * @param height New height of the window, measures in pixels.
+        */
+        public void setResolution(int width, int height)
+        {
+            this.width = width;
+            this.height = height;
+            GLFW.glfwSetWindowSize(window, width, height);
+            GL11.glViewport(0, 0, width, height);
+        
+            gameConfig.setProperty("Width", width + "");
+            gameConfig.setProperty("Height", height + "");
+        }
+    
+        /**
+        * Changes the state of the window.
+        * This method will require the window to restart, and this will be done via {@link wrath.client.Game#destroyWindow() } and {@link wrath.client.Game#initWindow() }.
+        * @param state The state to set the window to.
+        */
+        public void setWindowState(WindowState state)
+        {
+            gameConfig.setProperty("WindowState", state.toString().toUpperCase());
+            if(windowOpen)
+            {
+                destroyWindow();
+                openWindow();
+            }
+            gameConfig.save();
+        }
     }
 }

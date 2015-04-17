@@ -40,7 +40,7 @@ public class CustomGame extends Game implements GameEventHandler
         else world = new TempWorld(64, worldFile);
         
         setGameEventHandler(this);
-        setWindowState(Game.WindowState.WINDOWED);
+        getWindowManager().setWindowState(Game.WindowState.WINDOWED);
         start(args);
     }
     
@@ -64,31 +64,31 @@ public class CustomGame extends Game implements GameEventHandler
     @Override
     public void onGameOpen()
     {
-        addKeyboardFunction(Key.KEY_ESCAPE, () ->
+        getInputManager().addSavedFunction("stop", () ->
         {
             stop();
         });
         
-        addKeyboardFunction(Key.KEY_F3, () ->
+        getInputManager().addSavedFunction("showfps", () ->
         {
-            System.out.println(getFPS());
+            System.out.println(getWindowManager().getFPS());
         });
         
-        addMouseFunction(Key.MOUSE_BUTTON_1, () ->
+        getInputManager().addSavedFunction("setgrass", () ->
         {
-            int[] tile = world.getBounds(getCursorX(), getCursorY());
+            int[] tile = world.getBounds(getInputManager().getCursorX(), getInputManager().getCursorY());
             if(tile.length >= 2) world.setTile(tile[0], tile[1], TempWorld.GRASS);
         });
         
-        addMouseFunction(Key.MOUSE_BUTTON_2, () ->
+        getInputManager().addSavedFunction("setstone", () ->
         {
-            int[] tile = world.getBounds(getCursorX(), getCursorY());
+            int[] tile = world.getBounds(getInputManager().getCursorX(), getInputManager().getCursorY());
             if(tile.length >= 2) world.setTile(tile[0], tile[1], TempWorld.STONE);
         });
         
-        addMouseFunction(Key.MOUSE_BUTTON_3, () ->
+        getInputManager().addSavedFunction("setair", () ->
         {
-            int[] tile = world.getBounds(getCursorX(), getCursorY());
+            int[] tile = world.getBounds(getInputManager().getCursorX(), getInputManager().getCursorY());
             if(tile.length >= 2) world.setTile(tile[0], tile[1], TempWorld.AIR);
         });
     }
@@ -108,6 +108,6 @@ public class CustomGame extends Game implements GameEventHandler
     @Override
     public void onWindowOpen()
     {
-        setCursorEnabled(true);
+        getInputManager().setCursorEnabled(true);
     }
 }
