@@ -21,7 +21,7 @@ import java.io.File;
 import wrath.client.Game;
 import wrath.client.Game.RenderMode;
 import wrath.client.handlers.GameEventHandler;
-import wrath.client.input.Key;
+
 /**
  * Example game for testing the engine.
  * Extends {@link wrath.client.Game} class.

@@ -149,6 +149,15 @@ public class Game
     }
     
     /**
+     * Gets the {@link wrath.client.Game.InputManager} linked to this {@link wrath.client.Game} instance.
+     * @return Returns the {@link wrath.client.Game.InputManager} linked to this {@link wrath.client.Game} instance.
+     */
+    public InputManager getInputManager()
+    {
+        return inpManager;
+    }
+    
+    /**
      * Gets the standard {@link wrath.util.Logger} for the game.
      * @return Returns the standard {@link wrath.util.Logger} for the game.
      */
@@ -211,15 +220,6 @@ public class Game
     public String getVersion()
     {
         return VERSION;
-    }
-    
-    /**
-     * Gets the {@link wrath.client.Game.InputManager} linked to this {@link wrath.client.Game} instance.
-     * @return Returns the {@link wrath.client.Game.InputManager} linked to this {@link wrath.client.Game} instance.
-     */
-    public InputManager getInputManager()
-    {
-        return inpManager;
     }
     
     /**
@@ -292,8 +292,9 @@ public class Game
             if(winManager.windowOpen)
             {
                 GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-                winManager.renderBackground();
+                winManager.getBackground().renderBackground();
                 render();
+                winManager.getGUI().renderGUI();
                 GL11.glFlush();
                 GLFW.glfwSwapBuffers(winManager.window);
             
@@ -408,6 +409,144 @@ public class Game
         }catch(Exception e){}
         
         System.exit(0);
+    }
+    
+    /**
+     * Class to define the background of the game.
+     */
+    public class Background
+    {
+        private int backTexture = 0;
+        private float br = 1, bg = 1, bb = 1, ba = 0;
+        private boolean def = true;
+        
+        /**
+         * Used to render user-set background.
+         */
+        private void renderBackground()
+        {
+            if(def) return;
+           
+            GL11.glEnable(GL11.GL_TEXTURE_2D);
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, backTexture);
+            GL11.glColor4f(br, bg, bb, ba);
+            GL11.glBegin(GL11.GL_QUADS);
+            {
+                GL11.glTexCoord2f(0, 0);
+                GL11.glVertex2f(-1, -1);
+
+                GL11.glTexCoord2f(1, 0);
+                GL11.glVertex2f(1, -1);
+
+                GL11.glTexCoord2f(1, 1);
+                GL11.glVertex2f(1, 1);
+
+                GL11.glTexCoord2f(0, 1);
+                GL11.glVertex2f(-1, 1);
+            }
+            GL11.glEnd();
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+            GL11.glColor4f(1, 1, 1, 0);
+        }
+        
+        /**
+         * Gets the RGBA Values of the background color in an array format.
+         * Element 0 of the array is the R (red) value, scaled 0.0 (no red) to 1.0 (pure red).
+         * Element 1 of the array is the G (green) value, scaled 0.0 (no green) to 1.0 (pure green).
+         * Element 2 of the array is the B (blue) value, scaled 0.0 (no blue) to 1.0 (pure blue).
+         * Element 3 of the array is the A (alpha transparency) value, scaled 0.0 (opaque) to 1.0 (transparent).
+         * @return 
+         */
+        public float[] getBackgroundRGBA()
+        {
+            return new float[]{br, bg, bb, ba};
+        }
+        
+        /**
+         * Gets the OpenGL Texture ID of the background image.
+         * @return Returns the OpenGL Texture ID of the background image.
+         */
+        public int getBackgroundTextureID()
+        {
+            return backTexture;
+        }
+        
+        /**
+         * Changes the static background image.
+         * @param imageFile The file to load the background texture from.
+         */
+        public void setBackgroundImage(File imageFile)
+        {
+            setBackgroundImage(ClientUtils.loadImageFromFile(imageFile));
+        }
+
+        /**
+         * Changes the static background image.
+         * @param image The image to load the background texture from.
+         * @return Returns the OpenGL Texture ID number for the background image being set.
+         */
+        public int setBackgroundImage(BufferedImage image)
+        {
+            int tex = ClientUtils.get2DTexture(image);
+            setBackgroundImage(tex);
+            return tex;
+        }
+
+        /**
+         * Changes the static background image.
+         * @param texture The texture ID of the background image, 0 is clear.
+         */
+        public void setBackgroundImage(int texture)
+        {
+            def = br == 1 && bg == 1 && bb == 1 && ba == 0 && texture == 0;
+            
+            backTexture = texture;
+        }
+
+        /**
+         * Sets the RGBA configuration of the background image.
+         * @param red The red value, max 1.0.
+         * @param green The green value, max 1.0.
+         * @param blue The blue value, max 1.0.
+         * @param alpha The transparency, 1.0 being opaque.
+         */
+        public void setBackgroundRGBA(float red, float green, float blue, float alpha)
+        {
+            def = red == 1 && green == 1 && blue == 1 && alpha == 0 && backTexture == 0;
+            
+            br = red;
+            bg = green;
+            bb = blue;
+            ba = alpha;
+        }
+
+        /**
+         * Resets the background to a state where it is not rendered.
+         */
+        public void setBackgroundToDefault()
+        {
+            def = true;
+            br = 1;
+            bg = 1;
+            bb = 1;
+            ba = 0;
+            backTexture = 0;
+        }
+    }
+    
+    /**
+     * Class to define Graphical User Interface (GUI) of the game.
+     * This *will* include method to control pop-ups, sub-windows, etc.
+     */
+    public class GUI
+    {
+        /**
+         * Method to render the GUI defined by the class.
+         */
+        private void renderGUI()
+        {
+            //This is just the outline of what is to come.
+        }
     }
     
     /**
@@ -701,7 +840,6 @@ public class Game
         /**
          * Changes the cursor from a list of standard cursors located in
          * {@link wrath.client.input.Key}.
-         *
          * @param cursormode The {@link wrath.client.input.Key} Cursor to switch
          * to.
          */
@@ -718,7 +856,6 @@ public class Game
 
         /**
          * Enables or disables the cursor.
-         *
          * @param cursorEnabled Whether the cursor should be enabled or
          * disabled.
          */
@@ -737,14 +874,14 @@ public class Game
     
     public class WindowManager
     {
-
-        private int background = 0;
-        private float br = 1, bg = 1, bb = 1, ba = 0;
         private Font font = new Font("Times New Roman", Font.PLAIN, 16);
         private float fps = 0;
         private long window;
         private boolean windowOpen = false;
         private WindowState windowState = null;
+        
+        private final Background back = new Background();
+        private final GUI front = new GUI();
 
         private int width = 800;
         private int height = 600;
@@ -779,6 +916,15 @@ public class Game
         }
         
         /**
+         * Gets the {@link wrath.client.Game.Background} linked to this Window.
+         * @return Returns the {@link wrath.client.Game.Background} linked to this Window.
+         */
+        public Background getBackground()
+        {
+            return back;
+        }
+        
+        /**
         * Gets the default global font.
         * @return The current global font.
         * @see java.awt.Font
@@ -795,6 +941,15 @@ public class Game
         public float getFPS()
         {
             return fps;
+        }
+        
+        /**
+         * Gets the {@link wrath.client.Game.GUI} linked to this Window.
+         * @return Returns the {@link wrath.client.Game.GUI} linked to this Window.
+         */
+        public GUI getGUI()
+        {
+            return front;
         }
         
         /**
@@ -850,7 +1005,7 @@ public class Game
             GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, gameConfig.getInt("DisplaySamples", 0));
             GLFW.glfwWindowHint(GLFW.GLFW_REFRESH_RATE, gameConfig.getInt("DisplayRefreshRate", 0));
 
-            String wstatestr = gameConfig.getString("WindowState", "Windowed");
+            String wstatestr = gameConfig.getString("WindowState", "fullscreen_windowed");
 
             if(wstatestr.equalsIgnoreCase("windowed")) windowState = WindowState.WINDOWED;
             else if(wstatestr.equalsIgnoreCase("windowed_undecorated")) windowState = WindowState.WINDOWED_UNDECORATED;
@@ -964,35 +1119,6 @@ public class Game
 
             windowOpen = true;
         }
-        
-        /**
-         * Used to render user-set background.
-         */
-        private void renderBackground()
-        {
-            if(br == 1 && bb == 1 && bg == 1 && ba == 0 && background == 0) return;
-           
-            GL11.glEnable(GL11.GL_TEXTURE_2D);
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, background);
-            GL11.glColor4f(br, bg, bb, ba);
-            GL11.glBegin(GL11.GL_QUADS);
-            {
-                GL11.glTexCoord2f(0, 0);
-                GL11.glVertex2f(-1, -1);
-
-                GL11.glTexCoord2f(1, 0);
-                GL11.glVertex2f(1, -1);
-
-                GL11.glTexCoord2f(1, 1);
-                GL11.glVertex2f(1, 1);
-
-                GL11.glTexCoord2f(0, 1);
-                GL11.glVertex2f(-1, 1);
-            }
-            GL11.glEnd();
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
-            GL11.glColor4f(1, 1, 1, 0);
-        }
 
         /**
          * Takes a screen-shot and saves it to the file specified as a PNG.
@@ -1046,60 +1172,6 @@ public class Game
             });
 
             t.start();
-        }
-
-        /**
-         * Changes the static background image.
-         * @param imageFile The file to load the background texture from.
-         */
-        public void setBackgroundImage(File imageFile)
-        {
-            setBackgroundImage(ClientUtils.loadImageFromFile(imageFile));
-        }
-
-        /**
-         * Changes the static background image.
-         * @param image The image to load the background texture from.
-         */
-        public void setBackgroundImage(BufferedImage image)
-        {
-            setBackgroundImage(ClientUtils.get2DTexture(image));
-        }
-
-        /**
-         * Changes the static background image.
-         * @param texture The texture ID of the background image, 0 is clear.
-         */
-        public void setBackgroundImage(int texture)
-        {
-            background = texture;
-        }
-
-        /**
-         * Sets the RGBA configuration of the background image.
-         * @param red The red value, max 1.0.
-         * @param green The green value, max 1.0.
-         * @param blue The blue value, max 1.0.
-         * @param alpha The transparency, 1.0 being opaque.
-         */
-        public void setBackgroundRGBA(float red, float green, float blue, float alpha)
-        {
-            br = red;
-            bg = green;
-            bb = blue;
-            ba = alpha;
-        }
-
-        /**
-         * Resets the background to a state where it is not rendered.
-         */
-        public void setBackgroundToClear()
-        {
-            br = 1;
-            bg = 1;
-            bb = 1;
-            ba = 0;
-            background = 0;
         }
 
         /**
