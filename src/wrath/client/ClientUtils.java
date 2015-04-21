@@ -72,6 +72,32 @@ public class ClientUtils
     }
     
     /**
+     * Converts a ByteBuffer (Used in OpenGL) to a BufferedImage.
+     * @param buffer The ByteBuffer that contains the image data.
+     * @param width The Width (in pixels) of the image.
+     * @param height The Height (in pixels) of the image.
+     * @return Returns the BufferedImage that contains the data from the ByteBuffer.
+     */
+    public static BufferedImage getByteBufferToImage(ByteBuffer buffer, int width, int height)
+    {
+        BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        
+        for(int x = 0; x < width; x++) 
+        {
+            for(int y = 0; y < height; y++) 
+            {
+                int i = (x + (width * y)) * 4;
+                int r = buffer.get(i) & 0xFF;
+                int g = buffer.get(i + 1) & 0xFF;
+                int b = buffer.get(i + 2) & 0xFF;
+                img.setRGB(x, height - (y + 1), (0xFF << 24) | (r << 16) | (g << 8) | b);
+            }
+        }
+        
+        return img;
+    }
+    
+    /**
      * Loads a ByteBuffer (Used in OpenGL) from most images.
      * @param image Image to convert.
      * @return Returns the ByteBuffer converting from the original image.

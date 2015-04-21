@@ -37,7 +37,10 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.logging.Level;
 import javax.imageio.ImageIO;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.LWJGLUtil;
@@ -118,6 +121,8 @@ public class Game
         
         File screenshotDir = new File("etc/screenshots");
         if(!screenshotDir.exists()) screenshotDir.mkdirs();
+        
+        KeyData.mgr = inpManager;
     }
     
     /**
@@ -377,6 +382,7 @@ public class Game
         winManager.openWindow();
         
         if(gameHandler != null) gameHandler.onGameOpen();
+        inpManager.loadKeys();
         loop();
     }
     
@@ -499,7 +505,6 @@ public class Game
         public void setBackgroundImage(int texture)
         {
             def = br == 1 && bg == 1 && bb == 1 && ba == 0 && texture == 0;
-            
             backTexture = texture;
         }
 
@@ -513,7 +518,6 @@ public class Game
         public void setBackgroundRGBA(float red, float green, float blue, float alpha)
         {
             def = red == 1 && green == 1 && blue == 1 && alpha == 0 && backTexture == 0;
-            
             br = red;
             bg = green;
             bb = blue;
@@ -555,181 +559,16 @@ public class Game
      */
     public class InputManager
     {
-        private final HashMap<String, Integer> keyboardDefaultsMap = new HashMap<>();
-        private final HashMap<String, Integer> mouseDefaultsMap = new HashMap<>();
+        private final ArrayList<KeyData> defaults = new ArrayList<>();
         
-        private final HashMap<Integer, KeyData> keyboardMap = new HashMap<>();
-        private final HashMap<Integer, Runnable> persKeyboardMap = new HashMap<>();
-        private final HashMap<Integer, KeyData> mouseMap = new HashMap<>();
-        private final HashMap<Integer, Runnable> persMouseMap = new HashMap<>();
+        private final HashMap<Integer, Runnable> persMap = new HashMap<>();
+        private final HashMap<Integer, KeyData> keyMap = new HashMap<>();
         private final HashMap<String, Runnable> savedFuncMap = new HashMap<>();
         
         private long cursor = -1;
         private double curx = 0;
         private double cury = 0;
         
-        /**
-        * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
-        * @param key The {@link wrath.client.input.Key} to respond to.
-        * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
-        */
-        public void addKeyboardFunction(int key, Runnable event)
-        {
-            addKeyboardFunction(key, Key.MOD_NONE, KeyAction.KEY_PRESS, event);
-        }
-    
-        /**
-        * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
-        * @param key The {@link wrath.client.input.Key} to respond to.
-        * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
-        * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
-        */
-        public void addKeyboardFunction(int key, KeyAction action, Runnable event)
-        {
-            addKeyboardFunction(key, Key.MOD_NONE, action, event);
-        }
-    
-        /**
-         * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
-        * @param key The {@link wrath.client.input.Key} to respond to.
-        * @param keyMod The {@link wrath.client.input.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
-        * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
-        * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
-        */
-        public void addKeyboardFunction(int key, int keyMod, KeyAction action, Runnable event)
-        {
-            if(action == KeyAction.KEY_HOLD_DOWN)
-            keyboardMap.put(key, new KeyData(KeyAction.KEY_PRESS, () -> 
-            {
-                persKeyboardMap.put(key, event);
-                event.run();
-            }, key, keyMod));
-            else keyboardMap.put(key, new KeyData(action, event, key, keyMod));
-        }
-        
-        /**
-        * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
-        * @param key The key to respond to.
-        * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
-        */
-        public void addKeyboardFunction(int key, String functionId)
-        {
-            addKeyboardFunction(key, Key.MOD_NONE, KeyAction.KEY_PRESS, functionId);
-        }
-    
-        /**
-        * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
-        * @param key The key to respond to.
-        * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
-        * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
-         */
-        public void addKeyboardFunction(int key, KeyAction action, String functionId)
-        {
-            addKeyboardFunction(key, Key.MOD_NONE, action, functionId);
-        }
-    
-        /**
-        * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
-        * @param key The key to respond to.
-        * @param keyMod The {@link wrath.client.input.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
-        * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
-        * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
-        */
-        public void addKeyboardFunction(int key, int keyMod, KeyAction action, String functionId)
-        {
-            if(!savedFuncMap.containsKey(functionId)) return;
-        
-            Runnable event = savedFuncMap.get(functionId);
-            if(action == KeyAction.KEY_HOLD_DOWN)
-            keyboardMap.put(key, new KeyData(KeyAction.KEY_PRESS, () -> 
-            {
-                persKeyboardMap.put(key, event);
-                event.run();
-            }, key, keyMod));
-            else keyboardMap.put(key, new KeyData(action, event, key, keyMod));
-        }
-    
-        /**
-        * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
-        * @param key The key to respond to.
-        * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
-        */
-        public void addMouseFunction(int key, Runnable event)
-        {
-            addMouseFunction(key, Key.MOD_NONE, KeyAction.KEY_PRESS, event);
-        }
-    
-        /**
-        * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
-        * @param key The key to respond to.
-        * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
-        * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
-        */
-        public void addMouseFunction(int key, KeyAction action, Runnable event)
-        {
-            addMouseFunction(key, Key.MOD_NONE, action, event);
-        }
-    
-        /**
-        * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
-        * @param key The key to respond to.
-        * @param keyMod The {@link wrath.client.input.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
-        * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
-        * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
-        */
-        public void addMouseFunction(int key, int keyMod, KeyAction action, Runnable event)
-        {
-            if(action == KeyAction.KEY_HOLD_DOWN)
-            mouseMap.put(key, new KeyData(action, () -> 
-            {
-                persMouseMap.put(key, event);
-                event.run();
-            }, key, keyMod));
-            else mouseMap.put(key, new KeyData(action, event, key, keyMod));
-        }
-    
-        /**
-        * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
-        * @param key The key to respond to.
-        * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
-        */
-        public void addMouseFunction(int key, String functionId)
-        {
-            addMouseFunction(key, Key.MOD_NONE, KeyAction.KEY_PRESS, functionId);
-        }
-    
-        /**
-        * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
-        * @param key The key to respond to.
-        * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
-        * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
-        */
-        public void addMouseFunction(int key, KeyAction action, String functionId)
-        {
-            addMouseFunction(key, Key.MOD_NONE, action, functionId);
-        }
-    
-        /**
-        * Adds a listener to a specified key on the {@link wrath.client.input.Key}.
-        * @param key The key to respond to.
-        * @param keyMod The {@link wrath.client.input.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
-        * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
-        * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
-        */
-        public void addMouseFunction(int key, int keyMod, KeyAction action, String functionId)
-        {
-            if(!savedFuncMap.containsKey(functionId)) return;
-        
-            Runnable event = savedFuncMap.get(functionId);
-            if(action == KeyAction.KEY_HOLD_DOWN)
-            mouseMap.put(key, new KeyData(action, () -> 
-            {
-                persMouseMap.put(key, event);
-                event.run();
-            }, key, keyMod));
-            else mouseMap.put(key, new KeyData(action, event, key, keyMod));
-        }
-    
         /**
         * Adds a listener to a specified String ID to be added later to a Keyboard or mouse function.
         * @param id The String ID of the saved function.
@@ -738,6 +577,99 @@ public class Game
         public void addSavedFunction(String id, Runnable event)
         {
             savedFuncMap.put(id, event);
+        }
+        
+        /**
+        * Binds a function to the specified key/button.
+        * @param key The {@link wrath.client.input.Key} to respond to.
+        * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
+        */
+        public void bindKey(int key, Runnable event)
+        {
+            bindKey(key, Key.MOD_NONE, KeyAction.KEY_PRESS, event);
+        }
+    
+        /**
+        * Binds a function to the specified key/button.
+        * @param key The {@link wrath.client.input.Key} to respond to.
+        * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
+        * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
+        */
+        public void bindKey(int key, KeyAction action, Runnable event)
+        {
+            bindKey(key, Key.MOD_NONE, action, event);
+        }
+    
+        /**
+        * Binds a function to the specified key/button.
+        * @param key The {@link wrath.client.input.Key} to respond to.
+        * @param keyMod The {@link wrath.client.input.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
+        * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
+        * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
+        */
+        public void bindKey(int key, int keyMod, KeyAction action, Runnable event)
+        {
+            if(action == KeyAction.KEY_HOLD_DOWN)
+            keyMap.put(key, new KeyData(KeyAction.KEY_PRESS, () -> 
+            {
+                persMap.put(key, event);
+                event.run();
+            }, key, keyMod));
+            else keyMap.put(key, new KeyData(action, event, key, keyMod));
+        }
+        
+        /**
+        * Binds a function to the specified key/button.
+        * @param key The {@link wrath.client.input.Key} to respond to.
+        * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
+        */
+        public void bindKey(int key, String functionId)
+        {
+            bindKey(key, Key.MOD_NONE, KeyAction.KEY_PRESS, functionId);
+        }
+    
+        /**
+        * Binds a function to the specified key/button.
+        * @param key The {@link wrath.client.input.Key} to respond to.
+        * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
+        * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
+         */
+        public void bindKey(int key, KeyAction action, String functionId)
+        {
+            bindKey(key, Key.MOD_NONE, action, functionId);
+        }
+    
+        /**
+        * Binds a function to the specified key/button.
+        * @param key The {@link wrath.client.input.Key} to respond to.
+        * @param keyMod The {@link wrath.client.input.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
+        * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
+        * @param functionId The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
+        */
+        public void bindKey(int key, int keyMod, KeyAction action, String functionId)
+        {
+            if(!savedFuncMap.containsKey(functionId)) return;
+        
+            Runnable event = savedFuncMap.get(functionId);
+            if(action == KeyAction.KEY_HOLD_DOWN)
+            keyMap.put(key, new KeyData(KeyAction.KEY_PRESS, () -> 
+            {
+                persMap.put(key, event);
+                event.run();
+            }, key, keyMod));
+            else keyMap.put(key, new KeyData(action, event, key, keyMod));
+        }
+    
+        /**
+         * Binds all pre-defined default keys.
+         * Note that this DOES NOT clear all user-defined bindings, refer to {@link wrath.client.Game.InputManager#unbindAllKeys()}.
+         */
+        public void bindKeysToDefaults()
+        {
+            defaults.stream().forEach((d) -> 
+            {
+                keyMap.put(d.getKey(), d);
+            });
         }
         
         /**
@@ -759,6 +691,16 @@ public class Game
         }
         
         /**
+         * Gets the Runnable associated with the saved function ID.
+         * @param functionID The function ID to reverse reference.
+         * @return Returns the Runnable event associated with the String Function ID.
+         */
+        public Runnable getSavedFunction(String functionID)
+        {
+            return savedFuncMap.get(functionID);
+        }
+        
+        /**
          * Used by the {@link wrath.client.Game} class to initialize all of the GLFW input callbacks.
          */
         protected void initInputStreams()
@@ -768,10 +710,10 @@ public class Game
                 @Override
                 public void invoke(long window, int key, int scancode, int action, int mods)
                 {
-                    if(persKeyboardMap.containsKey(key) && action == GLFW.GLFW_RELEASE) persKeyboardMap.remove(key);
-                    else if(keyboardMap.containsKey(key))
+                    if(persMap.containsKey(key) && action == GLFW.GLFW_RELEASE) persMap.remove(key);
+                    else if(keyMap.containsKey(key))
                     {
-                        KeyData dat = keyboardMap.get(key);
+                        KeyData dat = keyMap.get(key);
                         if(dat.getRawAction() == action && (dat.getKeyMod() == -1 || mods == dat.getKeyMod())) dat.execute();
                     }
                 }
@@ -782,10 +724,10 @@ public class Game
                 @Override
                 public void invoke(long window, int button, int action, int mods) 
                 {
-                    if(persMouseMap.containsKey(button) && action == GLFW.GLFW_RELEASE) persMouseMap.remove(button);
-                    else if(mouseMap.containsKey(button))
+                    if(persMap.containsKey(button) && action == GLFW.GLFW_RELEASE) persMap.remove(button);
+                    else if(keyMap.containsKey(button))
                     {
-                        KeyData dat = mouseMap.get(button);
+                        KeyData dat = keyMap.get(button);
                         if(dat.getRawAction() == action && (dat.getKeyMod() == -1 || mods == dat.getKeyMod())) dat.execute();
                     }
                 }
@@ -802,39 +744,73 @@ public class Game
         }
         
         /**
+         * Checks to see if a key has an action bound to it.
+         * @param key The {@link wrath.client.input.Key} to check binds.
+         * @return Returns true if an action is already bound to the key.
+         */
+        public boolean isKeyBound(int key)
+        {
+            return keyMap.containsKey(key);
+        }
+        
+        /**
+         * Loads pre-saved keys.
+         */
+        private void loadKeys()
+        {
+            File inpFile = new File("etc/kays.dat");
+            if(!inpFile.exists())
+            {
+                try 
+                {
+                    inpFile.createNewFile();
+                }
+                catch (IOException ex) 
+                {
+                    Logger.getErrorLogger().log("Could not create Key Bindings file!");
+                }
+                
+                bindKeysToDefaults();
+                saveKeys();
+            }
+            else
+            {
+                // Interpret keys.
+            }
+        }
+        
+        /**
          * Used by the {@link wrath.client.Game} class to run tasks assigned to persistent keys.
          */
         protected void onPersistentInput()
         {
-            persKeyboardMap.entrySet().stream().map((pairs) -> (Runnable) pairs.getValue()).forEach((ev) -> 
-            {
-                ev.run();
-            });
-
-            persMouseMap.entrySet().stream().map((pairs) -> (Runnable) pairs.getValue()).forEach((ev) -> 
+            persMap.entrySet().stream().map((pairs) -> (Runnable) pairs.getValue()).forEach((ev) -> 
             {
                 ev.run();
             });
         }
         
         /**
-        * Un-binds all functions bound to the specified key on the keyboard.
-        * @param key The key to un-bind all functions on.
-        */
-        public void removeKeyboardFunction(int key)
+         * Saves keys to 'etc/keys.dat'.
+         */
+        public void saveKeys()
         {
-            if(keyboardMap.containsKey(key))
-                keyboardMap.remove(key);
-        }
-    
-        /**
-        * Un-binds all functions bound to the specified key on the mouse.
-        * @param key The key to un-bind all functions on.
-        */
-        public void removeMouseFunction(int key)
-        {
-            if(mouseMap.containsKey(key))
-                mouseMap.remove(key);
+            File inpFile = new File("etc/kays.dat");
+            if(!inpFile.exists())
+            {
+                try 
+                {
+                    inpFile.createNewFile();
+                }
+                catch (IOException ex) 
+                {
+                    Logger.getErrorLogger().log("Could not create Key Bindings file!");
+                }
+            }
+            else
+            {
+                // Write key data.
+            }
         }
         
         /**
@@ -861,14 +837,42 @@ public class Game
          */
         public void setCursorEnabled(boolean cursorEnabled)
         {
-            if(cursorEnabled) 
+            if(cursorEnabled) GLFW.glfwSetInputMode(winManager.window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
+            else GLFW.glfwSetInputMode(winManager.window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
+        }
+        
+        /**
+         * Sets a set of default keys to saved functions.
+         * @param list The list of key data to set as default.
+         */
+        public void setDefaultBindings(Collection<KeyData> list)
+        {
+            defaults.clear();
+            defaults.addAll(list);
+        }
+        
+        /**
+         * Clears all defined key bindings.
+         * This DOES NOT set them to default, refer to {@link wrath.client.Game.InputManager#bindKeysToDefaults()}.
+         */
+        public void unbindAllKeys()
+        {
+            keyMap.clear();
+            persMap.clear();
+        }
+        
+        /**
+        * Un-binds all functions bound to the specified key/button.
+        * @param key The key to un-bind all functions on.
+        */
+        public void unbindKey(int key)
+        {
+            if(keyMap.containsKey(key))
             {
-                GLFW.glfwSetInputMode(winManager.window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
+                keyMap.remove(key);
+                if(persMap.containsKey(key)) persMap.remove(key);
             }
-            else 
-            {
-                GLFW.glfwSetInputMode(winManager.window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
-            }
+                
         }
     }
     
@@ -1005,14 +1009,8 @@ public class Game
             GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, gameConfig.getInt("DisplaySamples", 0));
             GLFW.glfwWindowHint(GLFW.GLFW_REFRESH_RATE, gameConfig.getInt("DisplayRefreshRate", 0));
 
-            String wstatestr = gameConfig.getString("WindowState", "fullscreen_windowed");
-
-            if(wstatestr.equalsIgnoreCase("windowed")) windowState = WindowState.WINDOWED;
-            else if(wstatestr.equalsIgnoreCase("windowed_undecorated")) windowState = WindowState.WINDOWED_UNDECORATED;
-            else if(wstatestr.equalsIgnoreCase("fullscreen_windowed")) windowState = WindowState.FULLSCREEN_WINDOWED;
-            else if(wstatestr.equalsIgnoreCase("fullscreen")) windowState = WindowState.FULLSCREEN;
+            windowState = WindowState.valueOf(gameConfig.getString("WindowState", "fullscreen_windowed"));
             
-
             if(windowState == WindowState.FULLSCREEN) 
             {
                 ByteBuffer videomode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
@@ -1092,7 +1090,7 @@ public class Game
                   
                 }
             }));
-
+            
             GLFW.glfwSetCursorPosCallback(window, (curStr = new GLFWCursorPosCallback()
             {
                 @Override
@@ -1146,26 +1144,13 @@ public class Game
 
             Thread t = new Thread(() -> 
             {
-                BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-
-                for (int x = 0; x < width; x++) 
-                {
-                    for (int y = 0; y < height; y++) 
-                    {
-                        int i = (x + (width * y)) * 4;
-                        int r = buffer.get(i) & 0xFF;
-                        int g = buffer.get(i + 1) & 0xFF;
-                        int b = buffer.get(i + 2) & 0xFF;
-                        image.setRGB(x, height - (y + 1), (0xFF << 24) | (r << 16) | (g << 8) | b);
-                    }
-                }
-
+                BufferedImage image = ClientUtils.getByteBufferToImage(buffer, width, height);
                 try 
                 {
                     ImageIO.write(image, format.name(), saveTo);
                     gameLogger.log("Saved screenshot '" + saveTo.getName() + "'!");
                 }
-                catch (IOException e) 
+                catch(IOException e) 
                 {
                     Logger.getErrorLogger().log("Could not save Screenshot to '" + saveTo.getName() + "'! I/O Error has occured!");
                 }

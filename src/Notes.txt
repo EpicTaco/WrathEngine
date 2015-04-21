@@ -1,8 +1,4 @@
 Things to fix/edit:
-- Separate Background and GUI from render function.
-- Take another look at the openWindow() function.
-- Inspect redundancy with texture/image flipping.
-- Combine addKeyboardFunction() methods and addMouseFunction() methods.
 - Change Background and (possibly) GUI from immediate mode.
 
 

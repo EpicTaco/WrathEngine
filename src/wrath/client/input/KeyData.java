@@ -18,6 +18,7 @@
 package wrath.client.input;
 
 import org.lwjgl.glfw.GLFW;
+import wrath.client.Game.InputManager;
 import wrath.client.input.Key.KeyAction;
 
 /**
@@ -25,8 +26,8 @@ import wrath.client.input.Key.KeyAction;
  * @author Trent Spears
  */
 public class KeyData
-{
-
+{   
+    public static InputManager mgr;
     
     private final KeyAction action;
     private final int actionRaw;
@@ -34,6 +35,13 @@ public class KeyData
     private final int key;
     private final int mod;
     
+    /**
+     * Constructor.
+     * @param action The {@link wrath.client.input.Key.KeyAction} that will trigger the event.
+     * @param event The {@link java.lang.Runnable} event that will be triggered by the Key events.
+     * @param glfwKey The GLFW key that will trigger the event. This can be found at {@link wrath.client.input.Key}.
+     * @param glfwMod The Mod keys that will trigger the event. This can be found at {@link wrath.client.input.Key}.
+     */
     public KeyData(KeyAction action, Runnable event, int glfwKey, int glfwMod)
     {
         this.action = action;
@@ -42,6 +50,25 @@ public class KeyData
             else this.actionRaw = GLFW.GLFW_PRESS;
         
         this.event = event;
+        this.key = glfwKey;
+        this.mod = glfwMod;
+    }
+    
+    /**
+     * Constructor.
+     * @param action The {@link wrath.client.input.Key.KeyAction} that will trigger the event.
+     * @param functionID The saved event ID that will be triggered by the Key events.
+     * @param glfwKey The GLFW key that will trigger the event. This can be found at {@link wrath.client.input.Key}.
+     * @param glfwMod The Mod keys that will trigger the event. This can be found at {@link wrath.client.input.Key}.
+     */
+    public KeyData(KeyAction action, String functionID, int glfwKey, int glfwMod)
+    {
+        this.action = action;
+            
+        if(action == KeyAction.KEY_RELEASE) this.actionRaw = GLFW.GLFW_RELEASE;
+            else this.actionRaw = GLFW.GLFW_PRESS;
+        
+        this.event = mgr.getSavedFunction(functionID);
         this.key = glfwKey;
         this.mod = glfwMod;
     }
