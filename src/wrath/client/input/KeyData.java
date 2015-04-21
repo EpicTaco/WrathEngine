@@ -90,7 +90,16 @@ public class KeyData
     {
         return action;
     }
-        
+       
+    /**
+     * Gets the function associated with this Key Data set.
+     * @return Returns the function associated with this Key Data set.
+     */
+    public Runnable getEvent()
+    {
+        return event;
+    }
+    
     /**
      * Gets the {@link wrath.client.input.Key}.
      * @return Returns the key id.

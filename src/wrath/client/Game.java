@@ -15,18 +15,6 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-/**
- * NOTES:
- *  - Add font rendering
- *  - Work on audio
- *  - Add an in-game structures (Item framework, Entity framework, etc)
- *  - Add physics
- *  - Add networking
- *  - Add encryption
- *  - Add external modding API
- *  - Add GUI Toolkits.
- */
 package wrath.client;
 
 import java.awt.Font;
@@ -36,11 +24,13 @@ import wrath.client.handlers.GameEventHandler;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.logging.Level;
+import java.util.Iterator;
+import java.util.Map;
 import javax.imageio.ImageIO;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.LWJGLUtil;
@@ -791,7 +781,7 @@ public class Game
         }
         
         /**
-         * Saves keys to 'etc/keys.dat'.
+         * Saves key bindings (containing saved functions) to 'etc/keys.dat'.
          */
         public void saveKeys()
         {
@@ -809,7 +799,24 @@ public class Game
             }
             else
             {
-                // Write key data.
+                try
+                {
+                    PrintWriter out = new PrintWriter(inpFile);
+                    Iterator it = keyMap.entrySet().iterator();
+                    while(it.hasNext())
+                    {
+                        Map.Entry pair = (Map.Entry) it.next();
+                        KeyData dat = (KeyData) pair.getValue();
+                        if(savedFuncMap.containsValue(dat.getEvent()))
+                        {
+                            //TODO: Obtain function name and write it to file.
+                        }
+                    }
+                }
+                catch(IOException e)
+                {
+                    Logger.getErrorLogger().log("Could not save key bindings, I/O Error Occured!");
+                }
             }
         }
         
