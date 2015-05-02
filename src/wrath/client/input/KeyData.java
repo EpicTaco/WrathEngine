@@ -18,7 +18,6 @@
 package wrath.client.input;
 
 import org.lwjgl.glfw.GLFW;
-import wrath.client.Game.InputManager;
 import wrath.client.input.Key.KeyAction;
 
 /**
@@ -27,39 +26,37 @@ import wrath.client.input.Key.KeyAction;
  */
 public class KeyData
 {   
-    public static InputManager mgr;
-    
     private final KeyAction action;
     private final int actionRaw;
-    private final Runnable event;
+    private final Runnable function;
     private final int key;
     private final int mod;
     
     /**
      * Constructor.
-     * @param action The {@link wrath.client.input.Key.KeyAction} that will trigger the event.
-     * @param event The {@link java.lang.Runnable} event that will be triggered by the Key events.
-     * @param glfwKey The GLFW key that will trigger the event. This can be found at {@link wrath.client.input.Key}.
-     * @param glfwMod The Mod keys that will trigger the event. This can be found at {@link wrath.client.input.Key}.
+     * @param action The {@link wrath.client.input.Key.KeyAction} that will trigger the function.
+     * @param function The {@link java.lang.Runnable} function that will be triggered by the Key functions.
+     * @param glfwKey The GLFW key that will trigger the function. This can be found at {@link wrath.client.input.Key}.
+     * @param glfwMod The Mod keys that will trigger the function. This can be found at {@link wrath.client.input.Key}.
      */
-    public KeyData(KeyAction action, Runnable event, int glfwKey, int glfwMod)
+    public KeyData(KeyAction action, Runnable function, int glfwKey, int glfwMod)
     {
         this.action = action;
             
         if(action == KeyAction.KEY_RELEASE) this.actionRaw = GLFW.GLFW_RELEASE;
             else this.actionRaw = GLFW.GLFW_PRESS;
         
-        this.event = event;
+        this.function = function;
         this.key = glfwKey;
         this.mod = glfwMod;
     }
     
     /**
      * Constructor.
-     * @param action The {@link wrath.client.input.Key.KeyAction} that will trigger the event.
-     * @param functionID The saved event ID that will be triggered by the Key events.
-     * @param glfwKey The GLFW key that will trigger the event. This can be found at {@link wrath.client.input.Key}.
-     * @param glfwMod The Mod keys that will trigger the event. This can be found at {@link wrath.client.input.Key}.
+     * @param action The {@link wrath.client.input.Key.KeyAction} that will trigger the function.
+     * @param functionID The saved function ID that will be triggered by the Key functions.
+     * @param glfwKey The GLFW key that will trigger the function. This can be found at {@link wrath.client.input.Key}.
+     * @param glfwMod The Mod keys that will trigger the function. This can be found at {@link wrath.client.input.Key}.
      */
     public KeyData(KeyAction action, String functionID, int glfwKey, int glfwMod)
     {
@@ -68,22 +65,22 @@ public class KeyData
         if(action == KeyAction.KEY_RELEASE) this.actionRaw = GLFW.GLFW_RELEASE;
             else this.actionRaw = GLFW.GLFW_PRESS;
         
-        this.event = mgr.getSavedFunction(functionID);
+        this.function = InputManager.getSavedFunction(functionID);
         this.key = glfwKey;
         this.mod = glfwMod;
     }
     
     /**
-     * Executes the event assigned to the key.
+     * Executes the function assigned to the key.
      */
     public void execute()
     {
-        event.run();
+        function.run();
     }
     
     /**
     * Gets the {@link wrath.client.Game.KeyAction} of the key set.
-    * This is used to determine whether to execute the event when a key is pressed, or execute the event when the key is released.
+    * This is used to determine whether to execute the function when a key is pressed, or execute the function when the key is released.
     * @return Returns the {@link wrath.client.Game.KeyAction} specified in the Constructor.
     */
     public KeyAction getAction()
@@ -97,7 +94,7 @@ public class KeyData
      */
     public Runnable getEvent()
     {
-        return event;
+        return function;
     }
     
     /**

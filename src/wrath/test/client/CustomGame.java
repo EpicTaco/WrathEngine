@@ -95,12 +95,6 @@ public class CustomGame extends Game implements GameEventHandler
             int[] tile = world.getBounds(getInputManager().getCursorX(), getInputManager().getCursorY());
             if(tile.length >= 2) world.setTile(tile[0], tile[1], TempWorld.AIR);
         });
-        
-        getInputManager().setDefaultBindings(Arrays.asList(new KeyData[]{new KeyData(KeyAction.KEY_PRESS, "stop", Key.KEY_ESCAPE, Key.MOD_NONE),
-                                                                         new KeyData(KeyAction.KEY_PRESS, "showfps", Key.KEY_F3, Key.MOD_NONE),
-                                                                         new KeyData(KeyAction.KEY_PRESS, "setgrass", Key.MOUSE_BUTTON_1, Key.MOD_NONE),
-                                                                         new KeyData(KeyAction.KEY_PRESS, "setstone", Key.MOUSE_BUTTON_2, Key.MOD_NONE),
-                                                                         new KeyData(KeyAction.KEY_PRESS, "setair", Key.MOUSE_BUTTON_3, Key.MOD_NONE)}));
     }
     
     @Override

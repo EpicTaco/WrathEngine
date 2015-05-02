@@ -3,8 +3,7 @@ Things to fix/edit:
 
 
 Things to add:
-- Work on Savable Key Binds:
-	|-- Planning on using addSavedFunction() String ids with a map and exporting the map to a file...
+- Work on Savable Key Binds.
 
 - TEXT RENDERING (Pain in the ass, let me tell you)
 	|-- Research the dark depths of font conversions and micro-graphic opertions to make this possible.
