@@ -1,0 +1,58 @@
+#This file is NOT meant to be cut/pasted into the etc/configs folder, though a copy can be made if you re-name it to 'game.cfg' and place it in the
+#etc/configs folder. This file contains all of the possible configuration options in the default engine and all of their default values.
+#Please note that any comments (denoted with a '#' at the beginning of the line) will be deleted upon saving the configuration file from within the engine.
+
+
+
+
+### Display Options ###
+
+#Set to 'true' to enable Vsync with the monitor, otherwise false.
+#Be careful with this, as if the Ticks-per-second (which cannot be set in the config) is set to over your monitor's
+#refresh rate, this can cause issues in timing and animation with the game. Only use if necessary.
+#Default is false
+DisplayVsync: false
+
+#The type of window to create. Options are: Windowed,Fullscreen,Fullscreen_Windowed and Windowed_Undecorated
+#Default is fullscreen_windowed
+WindowState: fullscreen_windowed
+
+#The Width and Height of the window's resolution, usually denoted by (WidthxHeight)
+#Default is 800
+Width: 800
+#Default is 600
+Height: 600
+
+#The rate at which to refresh the monitor's image. Measured in Hz. When set to 0, refresh rate is automatically determined.
+#Only works with fullscreen windows.
+#Default is 0
+DisplayRefreshRate: 0
+
+#Determines the number of samples to be used in the window for multi-sampling. When set to 0, sampling is disabled. 
+#Default is 0
+DisplaySamples: 0
+
+#Determines whether or not the window should be re-sizable by the user. Only applies in the Windowed WindowState.
+#Default is true
+WindowResizable: true
+
+#Determines whether or not the window should use the configured resolution in fullscreen mode instead of monitor's maximum resolution.
+#Only applies in the Fullscreen WindowState.
+#Default is false
+FullscreenUsesResolution: false
+
+
+### Other Options ###
+
+#Determines how many times the engine should check to see if a key is still held down in a second. Increasing this will increase CPU strain, but also
+#result in more accurate input handling. Value can NOT be greater than the Game's pre-defined Ticks-per-second value (which is usually 30-60).
+#Default is 10.0
+PersistentInputChecksPerSecond: 10.0
+
+#For GLFW and OpenGL libraries. Set to false as setting to true *may* cause errors.
+#Default is false
+APIForwardCompatMode: false
+
+#Set to false unless you know what you're doing. 
+#Default is false
+DebugMode: false
