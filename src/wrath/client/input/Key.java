@@ -162,7 +162,7 @@ public class Key
 		KEY_MENU          = GLFW.GLFW_KEY_MENU,
 		KEY_LAST          = KEY_MENU,
                 //Mod Keys
-                MOD_NONE          = -1,
+                MOD_NONE          = 0,
                 MOD_SHIFT         = GLFW.GLFW_MOD_SHIFT,
                 MOD_CONTROL       = GLFW.GLFW_MOD_CONTROL,
                 MOD_ALT           = GLFW.GLFW_MOD_ALT,

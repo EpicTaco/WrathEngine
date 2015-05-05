@@ -18,24 +18,29 @@
 package wrath.test.client;
 
 import java.io.File;
-import java.util.Arrays;
+import wrath.client.EntryObject;
 import wrath.client.Game;
-import wrath.client.Game.RenderMode;
-import wrath.client.handlers.GameEventHandler;
+import wrath.client.RenderMode;
+import wrath.client.events.GameEventHandler;
+import wrath.client.input.InputManager;
 import wrath.client.input.Key;
 import wrath.client.input.Key.KeyAction;
-import wrath.client.input.KeyData;
+import wrath.common.scripts.PythonScriptManager;
 
 /**
  * Example game for testing the engine.
  * Extends {@link wrath.client.Game} class.
  * @author Trent Spears
  */
-public class CustomGame extends Game implements GameEventHandler
+public class CustomGame extends Game implements GameEventHandler, EntryObject
 {
     private final TempWorld world;
+    private final PythonScriptManager scripts;
     
-    public CustomGame(String[] args)
+    /**
+     * Do not use start() in the constructor! EVER!
+     */
+    public CustomGame()
     {
         super("Test Client", "INDEV", 30, RenderMode.Mode2D);
         
@@ -43,8 +48,18 @@ public class CustomGame extends Game implements GameEventHandler
         if(worldFile.exists()) world = TempWorld.load(worldFile);
         else world = new TempWorld(64, worldFile);
         
-        setGameEventHandler(this);
-        getWindowManager().setWindowState(Game.WindowState.WINDOWED);
+        scripts = new PythonScriptManager(this);
+        
+        getEventManager().addGameEventHandler(this);
+    }
+    
+    /**
+     * This is the entry point of the game, implemented from {@link wrath.client.EntryObject}.
+     * @param args The arguments passed from the command-line.
+     */
+    @Override
+    public void init(String[] args)
+    {
         start(args);
     }
     
@@ -54,47 +69,32 @@ public class CustomGame extends Game implements GameEventHandler
         world.drawWorld();
     }
     
-    public static void main(String[] args)
-    {
-        new CustomGame(args);
-    }
-    
-    @Override
-    public void onCharInput(char c){}
-    
-    @Override
-    public void onCursorMove(double x, double y){}
-    
     @Override
     public void onGameOpen()
-    {
-        getInputManager().addSavedFunction("stop", () ->
-        {
-            stop();
-        });
-        
-        getInputManager().addSavedFunction("showfps", () ->
-        {
-            System.out.println(getWindowManager().getFPS());
-        });
-        
-        getInputManager().addSavedFunction("setgrass", () ->
+    { 
+        //Pre-defined key functions
+        InputManager.addSavedFunction("setgrass", () ->
         {
             int[] tile = world.getBounds(getInputManager().getCursorX(), getInputManager().getCursorY());
             if(tile.length >= 2) world.setTile(tile[0], tile[1], TempWorld.GRASS);
         });
         
-        getInputManager().addSavedFunction("setstone", () ->
+        InputManager.addSavedFunction("setstone", () ->
         {
             int[] tile = world.getBounds(getInputManager().getCursorX(), getInputManager().getCursorY());
             if(tile.length >= 2) world.setTile(tile[0], tile[1], TempWorld.STONE);
         });
         
-        getInputManager().addSavedFunction("setair", () ->
+        InputManager.addSavedFunction("setair", () ->
         {
             int[] tile = world.getBounds(getInputManager().getCursorX(), getInputManager().getCursorY());
             if(tile.length >= 2) world.setTile(tile[0], tile[1], TempWorld.AIR);
         });
+
+        getInputManager().bindDefaultEngineKeys();
+        getInputManager().addDefaultKeyBinding(Key.MOUSE_BUTTON_1, Key.MOD_NONE, KeyAction.KEY_HOLD_DOWN, "setgrass");
+        getInputManager().addDefaultKeyBinding(Key.MOUSE_BUTTON_2, Key.MOD_NONE, KeyAction.KEY_HOLD_DOWN, "setstone");
+        getInputManager().addDefaultKeyBinding(Key.MOUSE_BUTTON_3, Key.MOD_NONE, KeyAction.KEY_HOLD_DOWN, "setair");
     }
     
     @Override
@@ -107,7 +107,7 @@ public class CustomGame extends Game implements GameEventHandler
     public void onTick(){}
     
     @Override
-    public void onWindowResize(int w, int h){}
+    public void onResolutionChange(int ow, int oh, int w, int h){}
     
     @Override
     public void onWindowOpen()

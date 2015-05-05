@@ -15,14 +15,14 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package wrath.client.handlers;
+package wrath.client.events;
 
 /**
- * Interface to handle general {@link wrath.client.Game} events.
+ * Interface to handle general {@link wrath.client.input.InputManager} events.
  * To be implemented by the game developer to receive events.
  * @author Trent Spears
  */
-public interface GameEventHandler
+public interface InputEventHandler
 {
     /**
      * Method that is called when a key is pressed.
@@ -39,29 +39,9 @@ public interface GameEventHandler
     public void onCursorMove(double x, double y);
     
     /**
-     * Method that is called when the game is closed (as soon as the close is requested).
+     * Method that is called when the mouse scroll wheel is moved.
+     * @param xoffset Left to Right movement. Most mouses will not support this movement. 
+     * @param yoffset Standard up and down scroll wheel movement. 1.0 is one unit upwards, -1.0 is one unit downwards.
      */
-    public void onGameClose();
-    
-    /**
-     * Method that is called when the game is opened (right before the loop initializes.
-     */
-    public void onGameOpen();
-  
-    /**
-     * Method that is called every time the game's logic is supposed to update.
-     */
-    public void onTick();
-    
-    /**
-     * Called when the window is opened.
-     */
-    public void onWindowOpen();
-    
-    /**
-     * Called when the window is resized.
-     * @param newWidth The new width of the window.
-     * @param newHeight The new height of the window.
-     */
-    public void onWindowResize(int newWidth, int newHeight);
+    public void onScroll(double xoffset, double yoffset);
 }

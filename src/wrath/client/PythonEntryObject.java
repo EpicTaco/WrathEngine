@@ -15,14 +15,25 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package wrath.client.handlers;
+package wrath.client;
+
+import java.io.File;
+import wrath.common.scripts.PythonScriptManager;
+import wrath.common.scripts.ScriptManager;
 
 /**
- * Interface to handle general {@link wrath.client.Player} events.
- * To be implemented by the game developer to receive events.
+ * The class to launch the game off of a python script called 'init.py' in the engine's root folder.
  * @author Trent Spears
  */
-public interface PlayerEventHandler 
-{
-    
+public class PythonEntryObject implements EntryObject
+{   
+    @Override
+    public void init(String[] args)
+    {
+        ScriptManager.SCRIPT_CONFIG.setProperty("AutoLoadFromDirectory", false);
+        ScriptManager.SCRIPT_CONFIG.setProperty("AssignParentObject", false);
+        PythonScriptManager scripts = new PythonScriptManager(this);
+        scripts.setGlobalVariable("scriptsManager", scripts);
+        scripts.loadScript(new File("initscript"), true).executeScript();
+    }
 }

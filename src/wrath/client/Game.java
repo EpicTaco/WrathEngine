@@ -20,11 +20,12 @@ package wrath.client;
 import java.awt.Font;
 import java.awt.FontFormatException;
 import wrath.client.input.InputManager;
-import wrath.client.handlers.GameEventHandler;
+import wrath.client.events.GameEventHandler;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import javax.imageio.ImageIO;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.LWJGLUtil;
@@ -38,7 +39,10 @@ import org.lwjgl.openal.ALContext;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLContext;
 import org.lwjgl.system.MemoryUtil;
+import wrath.client.events.InputEventHandler;
+import wrath.client.events.PlayerEventHandler;
 import wrath.common.scheduler.Scheduler;
+import wrath.common.scripts.ScriptManager;
 import wrath.util.Config;
 import wrath.util.Logger;
 
@@ -47,23 +51,13 @@ import wrath.util.Logger;
  * @author Trent Spears
  */
 public class Game 
-{
-    /**
-     * Enumerator describing whether the game should be run in 2D Mode or 3D Mode.
-     */
-    public static enum RenderMode {Mode2D,Mode3D;}
-    /**
-     * Enumerator describing the display mode of the Window.
-     */
-    public static enum WindowState {FULLSCREEN, FULLSCREEN_WINDOWED, WINDOWED, WINDOWED_UNDECORATED;}
-    
+{   
     private final RenderMode MODE;
     private final String TITLE;
     private final double TPS;
     private final String VERSION;
 
     private final Config gameConfig = new Config("game");
-    private GameEventHandler gameHandler = null;
     private final Logger gameLogger = new Logger("info");
     private final Scheduler gameScheduler = new Scheduler();
     
@@ -73,8 +67,38 @@ public class Game
     private ALContext audiocontext;
     private boolean isRunning = false;
     
-    private final WindowManager winManager = new WindowManager();
+    private final EventManager evManager;
     private final InputManager inpManager;
+    private final WindowManager winManager;
+    
+    
+    /**
+     * Constructor.
+     * Describes all the essential and unmodifiable variables of the Game.
+     * @param gameTitle Title of the Game.
+     * @param version Version of the Game.
+     * @param ticksPerSecond The amount of times the logic of the game should update in one second. Recommended 30.
+     * @param renderMode Describes how to game should be rendered (2D or 3D).
+     */
+    public Game(String gameTitle, String version, double ticksPerSecond, String renderMode)
+    {
+        MODE = RenderMode.valueOf(renderMode);
+        TITLE = gameTitle;
+        VERSION = version;
+        TPS = ticksPerSecond;
+        this.evManager = new EventManager();
+        this.inpManager = new InputManager(this);
+        this.winManager = new WindowManager();
+        
+        File nativeDir = new File("assets/native");
+        if(!nativeDir.exists())
+            ClientUtils.throwInternalError("Missing assets folder! Try re-downloading!", true);
+        
+        System.setProperty("org.lwjgl.librarypath", "assets/native");
+        
+        File screenshotDir = new File("etc/screenshots");
+        if(!screenshotDir.exists()) screenshotDir.mkdirs();
+    }
     
     /**
      * Constructor.
@@ -90,7 +114,13 @@ public class Game
         TITLE = gameTitle;
         VERSION = version;
         TPS = ticksPerSecond;
+        this.evManager = new EventManager();
         this.inpManager = new InputManager(this);
+        this.winManager = new WindowManager();
+        
+        File nativeDir = new File("assets/native");
+        if(!nativeDir.exists())
+            ClientUtils.throwInternalError("Missing assets folder! Try re-downloading!", true);
         
         System.setProperty("org.lwjgl.librarypath", "assets/native");
         
@@ -118,12 +148,22 @@ public class Game
     }
     
     /**
-     * Gets the currently-registered {@link wrath.client.GameEventHandler} linked to this Game.
-     * @return Returns the Client's general GameEventHandler.
+     * Gets the {@link wrath.client.Game.EventManager} class that manages all event handlers.
+     * This class is used to control, access and change Event Handlers from the {@link wrath.client.handlers} package.
+     * @return Returns the {@link wrath.client.Game.EventManager} class that manages all event handlers.
      */
-    public GameEventHandler getGameEventHandler()
+    public EventManager getEventManager()
     {
-        return gameHandler;
+        return evManager;
+    }
+    
+    /**
+     * Gets the {@link wrath.util.Logger} associated with this Game.
+     * @return Returns the {@link wrath.util.Logger} associated with this Game.
+     */
+    public Logger getGameLogger()
+    {
+        return gameLogger;
     }
     
     /**
@@ -136,8 +176,8 @@ public class Game
     }
     
     /**
-     * Gets the standard {@link wrath.util.Logger} for the game.
-     * @return Returns the standard {@link wrath.util.Logger} for the game.
+     * Gets the standard info {@link wrath.util.Logger} for the game.
+     * @return Returns the standard info {@link wrath.util.Logger} for the game.
      */
     public Logger getLogger()
     {
@@ -182,8 +222,9 @@ public class Game
     
     /**
      * Gets the amount of times the game's logic will update in one second.
-     * Recommended to not be over 60 or under 10.
-     * If it is over 60 and VSync is on, the ticks will be called to 60 FPS.
+     * Recommended to not be over 64 or under 10.
+     * If the TPS is set over 60 and VSync is on, the ticks will be forced to 60 TPS.
+     * Unfortunately, there are not any good ways to overcome said bug, though I am looking into potential solutions.
      * @return Returns the Ticks-per-second of the game's logic.
      */
     public double getTPS()
@@ -224,12 +265,13 @@ public class Game
     private void loop()
     {
         // FPS counter.
-        int fpsBuf = 0;
+        int afpsCount = 0;
+        double fpsBuf = 0;
         int fpsCount = 0;
         
         //Input Checking
         int inpCount = 0;
-        double checksPerSec = gameConfig.getDouble("PersInputCheckPerSecond", 10.0);
+        double checksPerSec = gameConfig.getDouble("PersistentInputChecksPerSecond", 10.0);
         if(checksPerSec > TPS) checksPerSec = TPS;
         final double INPUT_CHECK_TICKS = TPS / checksPerSec;
         
@@ -245,10 +287,12 @@ public class Game
             delta += (now - last) / conv;
             last = now;
             
+            //Tick occurs
             while(delta >= 1)
             {
                 onTickPreprocessor();
                 
+                //Persistent input management
                 if(INPUT_CHECK_TICKS == 1 || inpCount >= INPUT_CHECK_TICKS)
                 {
                     inpManager.onPersistentInput();
@@ -256,17 +300,22 @@ public class Game
                 }
                 else inpCount++;
                 
-                if(fpsCount >= TPS)
-                {
-                    winManager.fps = fpsBuf;
-                    fpsBuf = 0;
-                    fpsCount-=TPS;
-                }
-                else fpsCount++;
+                //FPS Counter
+                if(winManager.windowOpen)
+                    if(fpsCount >= TPS)
+                    {
+                        afpsCount++;
+                        winManager.fps = fpsBuf;
+                        winManager.avgFps = winManager.totalFramesRendered / afpsCount;
+                        fpsBuf = 0;
+                        fpsCount-=TPS;
+                    }
+                    else fpsCount++;
                 
                 delta--;
             }
             
+            //While the window is open
             if(winManager.windowOpen)
             {
                 GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
@@ -278,6 +327,7 @@ public class Game
             
                 GLFW.glfwPollEvents();
                 fpsBuf++;
+                winManager.totalFramesRendered++;
             }
         }
         
@@ -291,29 +341,20 @@ public class Game
     private void onTickPreprocessor()
     {
         gameScheduler.onTick();
-        if(gameHandler != null) gameHandler.onTick();
+        evManager.getGameEventHandler().onTick();
     }
     
     /**
      * Override-able method that is called as much as possible to issue rendering commands.
      */
     protected void render(){} //TODO: Add Rendering Pipeline (kind of a biggie)
-
-    /**
-     * Adds a {@link wrath.client.GameEventHandler} to the client.
-     * @param handler The GameEventHandler the client should report to.
-     */
-    public void setGameEventHandler(GameEventHandler handler)
-    {
-        gameHandler = handler;
-    }
     
     /**
      * Method that is used to load the game and all of it's resources.
      */
     public void start()
     {
-        start(new String[1]);
+        start(new String[0]);
     }
     
     /**
@@ -329,7 +370,7 @@ public class Game
         for(String a : args)
         {
             String[] b = a.split("=", 2);
-            if(b.length <= 1) return;
+            if(b.length <= 1) continue;
             
             gameConfig.setProperty(b[0], b[1]);
         }
@@ -354,7 +395,7 @@ public class Game
         
         winManager.openWindow();
         
-        if(gameHandler != null) gameHandler.onGameOpen();
+        evManager.getGameEventHandler().onGameOpen();
         inpManager.loadKeys();
         loop();
     }
@@ -365,9 +406,7 @@ public class Game
     public void stop()
     {
         if(!isRunning) return;
-        
-        if(gameHandler != null) gameHandler.onGameClose();
-        
+        evManager.getGameEventHandler().onGameClose();
         isRunning = false;
     }
     
@@ -377,15 +416,18 @@ public class Game
     private void stopImpl()
     {
         try{
-        winManager.destroyWindow();
+        winManager.closeWindow();
         inpManager.closeInput(true);
         GLFW.glfwTerminate();
         
         gameConfig.save();
+        inpManager.saveKeys();
         gameLogger.log("Stopping '" + TITLE + "' Client v." + VERSION + "!");
         if(gameLogger != null && !gameLogger.isClosed()) gameLogger.close();
         errStr.release();
         }catch(Exception e){}
+        
+        ScriptManager.closeScriptManagers();
         
         System.exit(0);
     }
@@ -443,7 +485,7 @@ public class Game
         
         /**
          * Gets the OpenGL Texture ID of the background image.
-         * @return Returns the OpenGL Texture ID of the background image.
+         * @return Returns the OpenGL Texture ID of the background image, 0 if no image was set.
          */
         public int getBackgroundTextureID()
         {
@@ -453,10 +495,11 @@ public class Game
         /**
          * Changes the static background image.
          * @param imageFile The file to load the background texture from.
+         * @return Returns the OpenGL Texture ID number for the background image being set.
          */
-        public void setBackgroundImage(File imageFile)
+        public int setBackgroundImage(File imageFile)
         {
-            setBackgroundImage(ClientUtils.loadImageFromFile(imageFile));
+             return setBackgroundImage(ClientUtils.loadImageFromFile(imageFile));
         }
 
         /**
@@ -512,11 +555,91 @@ public class Game
     }
     
     /**
+     * Class to manage all event handlers from the {@link wrath.client.handlers} package.
+     */
+    public class EventManager
+    {
+        /**
+         * Constructor.
+         * Protected so multiple instances aren't made pointlessly.
+         */
+        protected EventManager(){}
+        
+        private final ArrayList<GameEventHandler> gameHandlers = new ArrayList<>();
+        private final ArrayList<InputEventHandler> inpHandlers = new ArrayList<>();
+        private final ArrayList<PlayerEventHandler> plrHandlers = new ArrayList<>();
+        
+        private final GameEventHandler ghan = new RootGameEventHandler();
+        private final InputEventHandler ihan = new RootInputEventHandler();
+        private final PlayerEventHandler phan = new RootPlayerEventHandler();
+        
+        /**
+         * Sets the {@link wrath.client.handlers.GameEventHandler} to associate with this Game.
+         * @param handler The {@link wrath.client.handlers.GameEventHandler} to add to the list of handlers that handles all of this Game's events.
+         */
+        public void addGameEventHandler(GameEventHandler handler)
+        {
+            gameHandlers.add(handler);
+        }
+        
+        /**
+         * Sets the {@link wrath.client.handlers.InputEventHandler} to associate with this Game's Input Manager.
+         * @param handler The {@link wrath.client.handlers.InputEventHandler} to add to the list of handlers that handles all of this Game's Input events.
+         */
+        public void addInputEventHandler(InputEventHandler handler)
+        {
+            inpHandlers.add(handler);
+        }
+        
+        /**
+         * Sets the {@link wrath.client.handlers.PlayerEventHandler} to associate with the player.
+         * @param handler The {@link wrath.client.handlers.PlayerEventHandler} to add to the list of handlers that handles all of the Player's events.
+         */
+        public void addPlayerEventHandler(PlayerEventHandler handler)
+        {
+            plrHandlers.add(handler);
+        }
+        
+        /**
+         * Gets the root {@link wrath.client.handlers.GameEventHandler} linked to this Game.
+         * @return Returns the root {@link wrath.client.handlers.GameEventHandler} linked to this Game.
+         */
+        public GameEventHandler getGameEventHandler()
+        {
+            return ghan;
+        }
+        
+        /**
+         * Gets the root {@link wrath.client.handlers.InputEventHandler}s linked to this Game's Input Manager.
+         * @return Returns the root {@link wrath.client.handlers.GameEventHandler} linked to this Game's Input Manager.
+         */
+        public InputEventHandler getInputEventHandler()
+        {
+            return ihan;
+        }
+        
+        /**
+         * Gets the root  {@link wrath.client.handlers.PlayerEventHandler} linked to the player.
+         * @return Returns the {@link wrath.client.handlers.GameEventHandler}s linked to the player.
+         */
+        public PlayerEventHandler getPlayerEventHandler()
+        {
+            return phan;
+        }
+    }
+    
+    /**
      * Class to define Graphical User Interface (GUI) of the game.
      * This *will* include method to control pop-ups, sub-windows, etc.
      */
     public class GUI
     {
+        /**
+         * Constructor.
+         * Protected so multiple instances aren't made pointlessly.
+         */
+        protected GUI(){}
+        
         /**
          * Method to render the GUI defined by the class.
          */
@@ -526,10 +649,102 @@ public class Game
         }
     }
     
+    private class RootGameEventHandler implements GameEventHandler
+    {
+
+        @Override
+        public void onGameClose()
+        {
+            evManager.gameHandlers.stream().forEach((handler) -> 
+            {
+                handler.onGameClose();
+            });
+        }
+
+        @Override
+        public void onGameOpen()
+        {
+            evManager.gameHandlers.stream().forEach((handler) -> 
+            {
+                handler.onGameOpen();
+            });
+        }
+
+        @Override
+        public void onTick()
+        {
+            evManager.gameHandlers.stream().forEach((handler) -> 
+            {
+                handler.onTick();
+            });
+        }
+
+        @Override
+        public void onWindowOpen()
+        {
+            evManager.gameHandlers.stream().forEach((handler) -> 
+            {
+                handler.onWindowOpen();
+            });
+        }
+
+        @Override
+        public void onResolutionChange(int oldWidth, int oldHeight, int newWidth, int newHeight)
+        {
+            evManager.gameHandlers.stream().forEach((handler) -> 
+            {
+                handler.onResolutionChange(oldWidth, oldHeight, newWidth, newHeight);
+            });
+        }
+        
+    }
+    
+    private class RootInputEventHandler implements InputEventHandler
+    {
+
+        @Override
+        public void onCharInput(char c)
+        {
+            evManager.inpHandlers.stream().forEach((handler) -> 
+            {
+                handler.onCharInput(c);
+            });
+        }
+
+        @Override
+        public void onCursorMove(double x, double y)
+        {
+            evManager.inpHandlers.stream().forEach((handler) -> 
+            {
+                handler.onCursorMove(x, y);
+            });
+        }
+
+        @Override
+        public void onScroll(double xoffset, double yoffset)
+        {
+            evManager.inpHandlers.stream().forEach((handler) -> 
+            {
+                handler.onScroll(xoffset, yoffset);
+            });
+        }
+        
+    }
+    
+    private class RootPlayerEventHandler implements PlayerEventHandler
+    {
+        
+    }
+    
+    /**
+     * Class to manage anything to do with the Game Window.
+     */
     public class WindowManager
     {
+        private double avgFps = 0;
         private Font font = new Font("Times New Roman", Font.PLAIN, 16);
-        private float fps = 0;
+        private double fps = 0;
+        private int totalFramesRendered = 0;
         private long window;
         private boolean windowOpen = false;
         private WindowState windowState = null;
@@ -541,29 +756,48 @@ public class Game
         private int height = 600;
 
         /**
+         * Constructor.
+         * Protected so multiple instances aren't made pointlessly.
+         */
+        protected WindowManager(){}
+        
+        /**
         * Centers the window in the middle of the designated primary monitor.
-        * DO NOT use this while in any kind of full-screen mode.
+        * Does not work in Fullscreen or Fulscreen_Windowed modes.
         */
         public void centerWindow()
         {
+            if(windowState == WindowState.FULLSCREEN || windowState == WindowState.FULLSCREEN_WINDOWED) return;
+            
             ByteBuffer vidmode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
-            GLFW.glfwSetWindowPos(window, GLFWvidmode.width(vidmode) / 5, GLFWvidmode.height(vidmode) / 5);
+            GLFW.glfwSetWindowPos(window, (GLFWvidmode.width(vidmode) / 2) - (width / 2), (GLFWvidmode.height(vidmode) / 2) - (height / 2));
         }
     
         /**
         * Destroys and deallocates all GLFW/window resources.
         */
-        public void destroyWindow()
+        public void closeWindow()
         {
             if(!windowOpen) return;
             windowOpen = false;
         
-            gameLogger.log("Closing window [(" + width + "x" + height + "]");
+            gameLogger.log("Closing window [" + width + "x" + height + "]");
         
             winSizeStr.release();
             inpManager.closeInput(false);
             AL.destroy(audiocontext);
             GLFW.glfwDestroyWindow(window);
+            
+            gameConfig.save();
+        }
+        
+        /**
+         * Gets the average FPS of the game while it has been running.
+         * @return Returns the average FPS of the game while it has been running.
+         */
+        public double getAverageFPS()
+        {
+            return avgFps;
         }
         
         /**
@@ -589,7 +823,7 @@ public class Game
         * Gets the last recorded Frames-Per-Second count.
         * @return Returns the last FPS count.
         */
-        public float getFPS()
+        public double getFPS()
         {
             return fps;
         }
@@ -610,6 +844,15 @@ public class Game
         public int getHeight()
         {
             return height;
+        }
+        
+        /**
+         * Gets the amount of frames the game has rendered since it launched.
+         * @return Returns the amount of frames the game has rendered since it launched.
+         */
+        public int getTotalFramesRendered()
+        {
+            return totalFramesRendered;
         }
         
         /**
@@ -650,6 +893,16 @@ public class Game
         }
 
         /**
+         * Force minimizes the window.
+         */
+        public void minimizeWindow()
+        {
+            if(!windowOpen) return;
+            
+            GLFW.glfwIconifyWindow(window);
+        }
+        
+        /**
          * Method to start the display. Made independent from start() so window
          * options can be adjusted without restarting game.
          */
@@ -665,15 +918,22 @@ public class Game
             GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, gameConfig.getInt("DisplaySamples", 0));
             GLFW.glfwWindowHint(GLFW.GLFW_REFRESH_RATE, gameConfig.getInt("DisplayRefreshRate", 0));
 
-            windowState = WindowState.valueOf(gameConfig.getString("WindowState", "fullscreen_windowed"));
+            windowState = WindowState.valueOf(gameConfig.getString("WindowState", "fullscreen_windowed").toUpperCase());
             
             if(windowState == WindowState.FULLSCREEN) 
             {
                 ByteBuffer videomode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
-                width = GLFWvidmode.width(videomode);
-                height = GLFWvidmode.height(videomode);
+                int twidth = GLFWvidmode.width(videomode);
+                int theight = GLFWvidmode.height(videomode);
+                if(!gameConfig.getBoolean("FullscreenUsesResolution", false))
+                {
+                    gameConfig.setProperty("Width", twidth + "");
+                    gameConfig.setProperty("Height", theight + "");
+                    width = twidth;
+                    height = theight;
+                }
 
-                window = GLFW.glfwCreateWindow(width, height, TITLE, GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL);
+                window = GLFW.glfwCreateWindow(twidth, theight, TITLE, GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL);
             }
             else if(windowState == WindowState.FULLSCREEN_WINDOWED) 
             {
@@ -707,7 +967,7 @@ public class Game
                 stopImpl();
             }
 
-            gameLogger.log("Opened window [" + width + "x" + height + "]");
+            gameLogger.log("Opened window [" + width + "x" + height + "] in " + windowState.toString().toUpperCase() + " mode.");
 
             inpManager.openInput();
 
@@ -727,13 +987,15 @@ public class Game
                 {
                     if(width <= 0 || height <= 0) return;
 
+                    int ow = winManager.width;
+                    int oh = winManager.height;
                     winManager.width = width;
                     winManager.height = height;
 
                     gameConfig.setProperty("Width", width + "");
                     gameConfig.setProperty("Height", height + "");
                     GL11.glViewport(0, 0, width, height);
-                    if(gameHandler != null) gameHandler.onWindowResize(width, height);
+                    evManager.getGameEventHandler().onResolutionChange(ow, oh, width, height);
                   
                 }
             }));
@@ -747,7 +1009,16 @@ public class Game
             GL11.glMatrixMode(GL11.GL_MODELVIEW);
             GL11.glLoadIdentity();
 
-            if(gameHandler != null) gameHandler.onWindowOpen();
+            if(gameConfig.getBoolean("FullscreenUsesResolution", false) && gameConfig.getString("WindowState").equalsIgnoreCase("Fullscreen"))
+            {
+                winManager.setResolution(gameConfig.getInt("Width", 800), gameConfig.getInt("Height", 600));
+                width = gameConfig.getInt("Width", 800);
+                height = gameConfig.getInt("Height", 600);
+            }
+            
+            centerWindow();
+            
+            evManager.getGameEventHandler().onWindowOpen();
 
             windowOpen = true;
         }
@@ -764,8 +1035,7 @@ public class Game
 
         /**
          * Takes a screen-shot and saves it to the file specified.
-         * @param saveToName The name of the file to save the screen-shot to
-         * (excluding file extension).
+         * @param saveToName The name of the file to save the screen-shot to (excluding file extension).
          * @param format The format to save the image as.
          */
         public void screenShot(String saveToName, ClientUtils.ImageFormat format)
@@ -850,10 +1120,9 @@ public class Game
             gameConfig.setProperty("WindowState", state.toString().toUpperCase());
             if(windowOpen)
             {
-                destroyWindow();
+                closeWindow();
                 openWindow();
             }
-            gameConfig.save();
         }
     }
 }
