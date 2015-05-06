@@ -16,6 +16,9 @@ world = None
 class EventHandler(GameEventHandler):
 	def onGameOpen(self):
 		gameObject.getInputManager().bindDefaultEngineKeys()
+		parentObject.getInputManager().addDefaultKeyBinding(Key.MOUSE_BUTTON_1, Key.MOD_NONE, KeyAction.KEY_HOLD_DOWN, "setgrass")
+		parentObject.getInputManager().addDefaultKeyBinding(Key.MOUSE_BUTTON_2, Key.MOD_NONE, KeyAction.KEY_HOLD_DOWN,"setstone")
+		parentObject.getInputManager().addDefaultKeyBinding(Key.MOUSE_BUTTON_3, Key.MOD_NONE, KeyAction.KEY_HOLD_DOWN,"setair")
 		
 	def onGameClose(self):
 		if world is not None:
@@ -32,24 +35,31 @@ class EventHandler(GameEventHandler):
 
 class CustomGame(Game):
 	def __init__(self):
-		Game.__init__(self, "Game Name", "Game Version", 30.0, RenderMode.Mode2D)
+		Game.__init__(self, "Test Client", "INDEV", 30.0, RenderMode.Mode2D)
 		self.getEventManager().addGameEventHandler(EventHandler())
 		#Setting this object to global variable 'parentObject'
 		scriptsManager.setGlobalVariable("parentObject", self)
 		
-		
 	def render(self):
 		if world is not None:
 			world.drawWorld()
+	
+	def getWorld(self):
+		if world is not None:
+			return world
+		else:
+			return None
+
+
+
+gameObject = CustomGame()
 
 if File("etc/world.dat").exists():
 	world = TempWorld.load(File("etc/world.dat"))
 else:
 	world = TempWorld(64, File("etc/world.dat"))
-
 if world is None:
-	print "TempWorld is not compatible with Python Scripts!"
-	
-gameObject = CustomGame()
+	parentObject.getGameLogger().log("TempWorld is not compatible with Python Scripts!")
+
 scriptsManager.loadScriptsFromDirectory(File("etc/scripts/autoexec"), True, True)
 gameObject.start()

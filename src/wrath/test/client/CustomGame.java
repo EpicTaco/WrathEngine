@@ -24,7 +24,7 @@ import wrath.client.RenderMode;
 import wrath.client.events.GameEventHandler;
 import wrath.client.input.InputManager;
 import wrath.client.input.Key;
-import wrath.client.input.Key.KeyAction;
+import wrath.client.input.KeyAction;
 import wrath.common.scripts.PythonScriptManager;
 
 /**

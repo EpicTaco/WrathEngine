@@ -103,7 +103,7 @@ public class InputManager
      */
     public void addDefaultKeyBinding(int key, Runnable function)
     {
-        defaults.add(new KeyData(key, Key.MOD_NONE, Key.KeyAction.KEY_PRESS, function));
+        defaults.add(new KeyData(key, Key.MOD_NONE, KeyAction.KEY_PRESS, function));
     }
     
     /**
@@ -112,7 +112,7 @@ public class InputManager
      * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
      * @param function The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
      */
-    public void addDefaultKeyBinding(int key, Key.KeyAction action, Runnable function)
+    public void addDefaultKeyBinding(int key, KeyAction action, Runnable function)
     {
         defaults.add(new KeyData(key, Key.MOD_NONE, action, function));
     }
@@ -124,7 +124,7 @@ public class InputManager
      * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
      * @param function The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
      */
-    public void addDefaultKeyBinding(int key, int keyMod, Key.KeyAction action, Runnable function)
+    public void addDefaultKeyBinding(int key, int keyMod, KeyAction action, Runnable function)
     {
         defaults.add(new KeyData(key, keyMod, action, function));
     }
@@ -136,7 +136,7 @@ public class InputManager
      */
     public void addDefaultKeyBinding(int key, String functionID)
     {
-        defaults.add(new KeyData(key, Key.MOD_NONE, Key.KeyAction.KEY_PRESS, functionID));
+        defaults.add(new KeyData(key, Key.MOD_NONE, KeyAction.KEY_PRESS, functionID));
     }
     
     /**
@@ -145,7 +145,7 @@ public class InputManager
      * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
      * @param functionID The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
      */
-    public void addDefaultKeyBinding(int key, Key.KeyAction action, String functionID)
+    public void addDefaultKeyBinding(int key, KeyAction action, String functionID)
     {
         defaults.add(new KeyData(key, Key.MOD_NONE, action, functionID));
     }
@@ -157,7 +157,7 @@ public class InputManager
      * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
      * @param functionID The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
      */
-    public void addDefaultKeyBinding(int key, int keyMod, Key.KeyAction action, String functionID)
+    public void addDefaultKeyBinding(int key, int keyMod, KeyAction action, String functionID)
     {
         defaults.add(new KeyData(key, keyMod, action, functionID));
     }
@@ -168,58 +168,58 @@ public class InputManager
      */
     public void bindDefaultEngineKeys()
     {
-        bindKey(Key.KEY_ESCAPE, Key.MOD_SHIFT, Key.KeyAction.KEY_PRESS, () ->
+        bindKey(Key.KEY_ESCAPE, Key.MOD_SHIFT, KeyAction.KEY_PRESS, () ->
         {
             game.stop();
         });
         
-        bindKey(Key.KEY_F3, Key.MOD_NONE, Key.KeyAction.KEY_PRESS, () ->
+        bindKey(Key.KEY_F3, Key.MOD_NONE, KeyAction.KEY_PRESS, () ->
         {
             game.getLogger().log("Current FPS: " + game.getWindowManager().getFPS() + ", Avg FPS: " + game.getWindowManager().getAverageFPS() + ", Total Frames: " + game.getWindowManager().getTotalFramesRendered());
         });
         
-        bindKey(Key.KEY_F12, Key.MOD_NONE, Key.KeyAction.KEY_PRESS, () ->
+        bindKey(Key.KEY_F12, Key.MOD_NONE, KeyAction.KEY_PRESS, () ->
         {
             DateFormat format = new SimpleDateFormat("MM_dd_yyyy___HHmmss");
             Calendar now = Calendar.getInstance();
             game.getWindowManager().screenShot("screenshot_" + format.format(now.getTime()), ClientUtils.ImageFormat.PNG);
         });
         
-        bindKey(Key.KEY_ENTER, Key.MOD_ALT, Key.KeyAction.KEY_PRESS, () ->
+        bindKey(Key.KEY_ENTER, Key.MOD_ALT, KeyAction.KEY_PRESS, () ->
         {
             if(game.getWindowManager().getWindowState() == WindowState.FULLSCREEN) game.getWindowManager().setWindowState(WindowState.WINDOWED);
             else game.getWindowManager().setWindowState(WindowState.FULLSCREEN);
         });
         
-        bindKey(Key.KEY_ENTER, Key.MOD_SHIFT, Key.KeyAction.KEY_PRESS, () ->
+        bindKey(Key.KEY_ENTER, Key.MOD_SHIFT, KeyAction.KEY_PRESS, () ->
         {
             game.getWindowManager().centerWindow();
         });
         
-        bindKey(Key.KEY_UP, Key.MOD_ALT, Key.KeyAction.KEY_PRESS, () ->
+        bindKey(Key.KEY_UP, Key.MOD_ALT, KeyAction.KEY_PRESS, () ->
         {
             if(game.getWindowManager().getWindowState() == WindowState.FULLSCREEN_WINDOWED) game.getWindowManager().setWindowState(WindowState.WINDOWED);
             else game.getWindowManager().setWindowState(WindowState.FULLSCREEN_WINDOWED);
         });
         
-        bindKey(Key.KEY_DOWN, Key.MOD_ALT, Key.KeyAction.KEY_PRESS, () ->
+        bindKey(Key.KEY_DOWN, Key.MOD_ALT, KeyAction.KEY_PRESS, () ->
         {
             game.getWindowManager().minimizeWindow();
         });
         
-        bindKey(Key.KEY_HOME, Key.MOD_CONTROL + Key.MOD_SHIFT, Key.KeyAction.KEY_PRESS, () ->
+        bindKey(Key.KEY_HOME, Key.MOD_CONTROL + Key.MOD_SHIFT, KeyAction.KEY_PRESS, () ->
         {
             bindKeysToDefaults();
         });
         
-        bindKey(Key.KEY_HOME, Key.MOD_CONTROL + Key.MOD_ALT + Key.MOD_SHIFT, Key.KeyAction.KEY_PRESS, () ->
+        bindKey(Key.KEY_HOME, Key.MOD_CONTROL + Key.MOD_ALT + Key.MOD_SHIFT, KeyAction.KEY_PRESS, () ->
         {
             unbindAllKeys();
             bindDefaultEngineKeys();
             bindKeysToDefaults();
         });
         
-        bindKey(Key.KEY_S, Key.MOD_CONTROL + Key.MOD_ALT, Key.KeyAction.KEY_PRESS, () ->
+        bindKey(Key.KEY_S, Key.MOD_CONTROL + Key.MOD_ALT, KeyAction.KEY_PRESS, () ->
         {
             saveKeys();
             game.getConfig().save();
@@ -233,7 +233,7 @@ public class InputManager
      */
     public void bindKey(int key, Runnable event)
     {
-        bindKey(key, Key.MOD_NONE, Key.KeyAction.KEY_PRESS, event);
+        bindKey(key, Key.MOD_NONE, KeyAction.KEY_PRESS, event);
     }
 
     /**
@@ -242,7 +242,7 @@ public class InputManager
      * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
      * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
      */
-    public void bindKey(int key, Key.KeyAction action, Runnable event)
+    public void bindKey(int key, KeyAction action, Runnable event)
     {
         bindKey(key, Key.MOD_NONE, action, event);
     }
@@ -254,7 +254,7 @@ public class InputManager
      * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
      * @param function The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
      */
-    public void bindKey(int key, int keyMod, Key.KeyAction action, Runnable function)
+    public void bindKey(int key, int keyMod, KeyAction action, Runnable function)
     {
         if(keyMap.containsKey(key))
         {
@@ -271,7 +271,7 @@ public class InputManager
      */
     public void bindKey(int key, String functionID)
     {
-        bindKey(key, Key.MOD_NONE, Key.KeyAction.KEY_PRESS, functionID);
+        bindKey(key, Key.MOD_NONE, KeyAction.KEY_PRESS, functionID);
     }
 
     /**
@@ -280,7 +280,7 @@ public class InputManager
      * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
      * @param functionID The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
      */
-    public void bindKey(int key, Key.KeyAction action, String functionID)
+    public void bindKey(int key, KeyAction action, String functionID)
     {
         bindKey(key, Key.MOD_NONE, action, functionID);
     }
@@ -292,7 +292,7 @@ public class InputManager
      * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
      * @param functionID The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
      */
-    public void bindKey(int key, int keyMod, Key.KeyAction action, String functionID)
+    public void bindKey(int key, int keyMod, KeyAction action, String functionID)
     {
         if(!savedFuncMap.containsKey(functionID)) return;
         if(keyMap.containsKey(key))
@@ -399,6 +399,12 @@ public class InputManager
             try
             {
                 //Format: 'functionID:mod:action:key'
+                if(inpFile.length() < 1)
+                {
+                    bindKeysToDefaults();
+                    return;
+                }
+                
                 game.getLogger().log("Reading key bindings from file '" + inpFile.getAbsolutePath() + "'!");
                 try(BufferedReader in = new BufferedReader(new FileReader(inpFile))) 
                 {
@@ -409,7 +415,7 @@ public class InputManager
                         lineNum++;
                         String functionID;
                         int keyMod;
-                        Key.KeyAction action;
+                        KeyAction action;
                         int key;
                         
                         String[] inputArray = inputBuffer.split(":");
@@ -432,7 +438,7 @@ public class InputManager
                             continue;
                         }
                         
-                        action = Key.KeyAction.valueOf(inputArray[2]);
+                        action = KeyAction.valueOf(inputArray[2]);
                         if(action == null)
                         {
                             game.getLogger().log("Unknown key action value '" + inputArray[2] + "' while loading key binds from file '" + inpFile.getAbsolutePath() + "'; Line " + lineNum);
@@ -634,7 +640,7 @@ public class InputManager
     {
         public static final String CUSTOM_EVENT = "__CUSTOM";
         
-        private final Key.KeyAction action;
+        private final KeyAction action;
         private final int actionRaw;
         private final Runnable function;
         private final String functionID;
@@ -644,7 +650,7 @@ public class InputManager
         /**
          * Constructor.
          *
-         * @param action The {@link wrath.client.input.Key.KeyAction} that will
+         * @param action The {@link wrath.client.input.KeyAction} that will
          * trigger the function.
          * @param function The {@link java.lang.Runnable} function that will be
          * triggered by the Key functions.
@@ -653,13 +659,13 @@ public class InputManager
          * @param glfwMod The Mod keys that will trigger the function. This can
          * be found at {@link wrath.client.input.Key}.
          */
-        public KeyData(int glfwKey, int glfwMod, Key.KeyAction action, Runnable function)
+        public KeyData(int glfwKey, int glfwMod, KeyAction action, Runnable function)
         {
             this.action = action;
-            if (action == Key.KeyAction.KEY_RELEASE)this.actionRaw = GLFW.GLFW_RELEASE;
+            if (action == KeyAction.KEY_RELEASE)this.actionRaw = GLFW.GLFW_RELEASE;
             else this.actionRaw = GLFW.GLFW_PRESS;
            
-            if(action == Key.KeyAction.KEY_HOLD_DOWN)
+            if(action == KeyAction.KEY_HOLD_DOWN)
                 this.function = () ->
                 {
                     persMap.put(glfwKey, function);
@@ -674,7 +680,7 @@ public class InputManager
         /**
          * Constructor.
          *
-         * @param action The {@link wrath.client.input.Key.KeyAction} that will
+         * @param action The {@link wrath.client.input.KeyAction} that will
          * trigger the function.
          * @param functionID The saved function ID that will be triggered by the
          * Key functions.
@@ -683,13 +689,13 @@ public class InputManager
          * @param glfwMod The Mod keys that will trigger the function. This can
          * be found at {@link wrath.client.input.Key}.
          */
-        public KeyData(int glfwKey, int glfwMod, Key.KeyAction action, String functionID)
+        public KeyData(int glfwKey, int glfwMod, KeyAction action, String functionID)
         {
             this.action = action;
-            if (action == Key.KeyAction.KEY_RELEASE) this.actionRaw = GLFW.GLFW_RELEASE;
+            if (action == KeyAction.KEY_RELEASE) this.actionRaw = GLFW.GLFW_RELEASE;
             else this.actionRaw = GLFW.GLFW_PRESS;
             
-            if(action == Key.KeyAction.KEY_HOLD_DOWN)
+            if(action == KeyAction.KEY_HOLD_DOWN)
                 this.function = () ->
                 {
                     persMap.put(glfwKey, getSavedFunction(functionID));
@@ -717,7 +723,7 @@ public class InputManager
          * @return Returns the {@link wrath.client.Game.KeyAction} specified in
          * the Constructor.
          */
-        public Key.KeyAction getAction()
+        public KeyAction getAction()
         {
             return action;
         }
@@ -787,7 +793,7 @@ public class InputManager
          */
         protected KeyList(KeyData first)
         {
-            if(first.getAction() == Key.KeyAction.KEY_RELEASE) up_list.add(first);
+            if(first.getAction() == KeyAction.KEY_RELEASE) up_list.add(first);
             else down_list.add(first);
         }
         
@@ -797,7 +803,7 @@ public class InputManager
          */
         protected void addBinding(KeyData binding)
         {
-            if(binding.getAction() == Key.KeyAction.KEY_RELEASE) up_list.add(binding);
+            if(binding.getAction() == KeyAction.KEY_RELEASE) up_list.add(binding);
             else down_list.add(binding);
         }
         

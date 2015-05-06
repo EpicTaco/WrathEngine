@@ -25,12 +25,6 @@ import org.lwjgl.glfw.GLFW;
  */
 public class Key
 {
-    
-    /**
-     * Used to differentiate between whether the action should execute when a key is pressed or released.
-     */
-    public static enum KeyAction {KEY_HOLD_DOWN, KEY_PRESS, KEY_RELEASE;}
-    
     /**
      * Private constructor, this cannot be made into an instance.
      */
