@@ -36,15 +36,20 @@ class CustomGame(Game):
 		self.getEventManager().addGameEventHandler(EventHandler())
 		#Setting this object to global variable 'parentObject'
 		scriptsManager.setGlobalVariable("parentObject", self)
-		if File("etc/world.dat").exists():
-			world = TempWorld.load(File("etc/world.dat"))
-		else:
-			world = TempWorld(64, File("etc/world.dat"))
+		
 		
 	def render(self):
 		if world is not None:
 			world.drawWorld()
-		
+
+if File("etc/world.dat").exists():
+	world = TempWorld.load(File("etc/world.dat"))
+else:
+	world = TempWorld(64, File("etc/world.dat"))
+
+if world is None:
+	print "TempWorld is not compatible with Python Scripts!"
+	
 gameObject = CustomGame()
 scriptsManager.loadScriptsFromDirectory(File("etc/scripts/autoexec"), True, True)
 gameObject.start()
