@@ -15,14 +15,16 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package wrath.client;
+package wrath.client.enums;
 
 /**
-* Enumerator describing whether the game should be run in 2D Mode or 3D Mode.
+* Enumerator describing the display mode of the Window.
 * @author Trent Spears
 */
-public enum RenderMode 
+public enum WindowState
 {
-    Mode2D,
-    Mode3D;
+    FULLSCREEN,
+    FULLSCREEN_WINDOWED,
+    WINDOWED,
+    WINDOWED_UNDECORATED;
 }

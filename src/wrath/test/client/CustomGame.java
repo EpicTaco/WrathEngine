@@ -20,7 +20,7 @@ package wrath.test.client;
 import java.io.File;
 import wrath.client.EntryObject;
 import wrath.client.Game;
-import wrath.client.RenderMode;
+import wrath.client.enums.RenderMode;
 import wrath.client.events.GameEventHandler;
 import wrath.client.input.InputManager;
 import wrath.client.input.Key;

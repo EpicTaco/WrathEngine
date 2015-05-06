@@ -37,7 +37,8 @@ import org.lwjgl.glfw.GLFWMouseButtonCallback;
 import org.lwjgl.glfw.GLFWScrollCallback;
 import wrath.client.ClientUtils;
 import wrath.client.Game;
-import wrath.client.WindowState;
+import wrath.client.enums.ImageFormat;
+import wrath.client.enums.WindowState;
 import wrath.util.Logger;
 
 /**
@@ -182,7 +183,7 @@ public class InputManager
         {
             DateFormat format = new SimpleDateFormat("MM_dd_yyyy___HHmmss");
             Calendar now = Calendar.getInstance();
-            game.getWindowManager().screenShot("screenshot_" + format.format(now.getTime()), ClientUtils.ImageFormat.PNG);
+            game.getWindowManager().screenShot("screenshot_" + format.format(now.getTime()), ImageFormat.PNG);
         });
         
         bindKey(Key.KEY_ENTER, Key.MOD_ALT, KeyAction.KEY_PRESS, () ->

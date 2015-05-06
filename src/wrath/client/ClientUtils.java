@@ -28,6 +28,7 @@ import javax.swing.JOptionPane;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
+import wrath.client.enums.PopupMessageType;
 import wrath.util.Logger;
 
 /**
@@ -37,14 +38,7 @@ import wrath.util.Logger;
  */
 public class ClientUtils
 {
-    /**
-     * Describes the format of an image.
-     */
-    public static enum ImageFormat {GIF, JPEG, PNG;}
-    /**
-     * Describes the icon and style to be displayed with pop-up messages.
-     */
-    public static enum PopupMessageType{ERROR, INFO, PLAIN, QUESTION, WARNING;}
+    
     
     /**
      * Static libraries, no constructor necessary.

@@ -17,6 +17,8 @@
  */
 package wrath.client;
 
+import wrath.client.enums.WindowState;
+import wrath.client.enums.RenderMode;
 import java.awt.Font;
 import java.awt.FontFormatException;
 import wrath.client.input.InputManager;
@@ -39,6 +41,7 @@ import org.lwjgl.openal.ALContext;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLContext;
 import org.lwjgl.system.MemoryUtil;
+import wrath.client.enums.ImageFormat;
 import wrath.client.events.InputEventHandler;
 import wrath.client.events.PlayerEventHandler;
 import wrath.common.scheduler.Scheduler;
@@ -1030,7 +1033,7 @@ public class Game
          */
         public void screenShot(String saveToName)
         {
-            screenShot(saveToName, ClientUtils.ImageFormat.PNG);
+            screenShot(saveToName, ImageFormat.PNG);
         }
 
         /**
@@ -1038,7 +1041,7 @@ public class Game
          * @param saveToName The name of the file to save the screen-shot to (excluding file extension).
          * @param format The format to save the image as.
          */
-        public void screenShot(String saveToName, ClientUtils.ImageFormat format)
+        public void screenShot(String saveToName, ImageFormat format)
         {
             File saveTo = new File("etc/screenshots/" + saveToName + "." + format.name().toLowerCase());
 
