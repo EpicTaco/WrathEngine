@@ -427,7 +427,7 @@ public class Game
         errStr.release();
         }catch(Exception e){}
         
-        ScriptManager.closeScriptManagers();
+        ScriptManager.closeScripting();
         
         System.exit(0);
     }

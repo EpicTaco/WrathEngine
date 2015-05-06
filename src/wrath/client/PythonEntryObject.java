@@ -34,6 +34,6 @@ public class PythonEntryObject implements EntryObject
         ScriptManager.SCRIPT_CONFIG.setProperty("AssignParentObject", false);
         PythonScriptManager scripts = new PythonScriptManager(this);
         scripts.setGlobalVariable("scriptsManager", scripts);
-        scripts.loadScript(new File("initscript"), true).executeScript();
+        scripts.loadScript(new File("initscript"), true, false).execute();
     }
 }
