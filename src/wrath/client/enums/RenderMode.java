@@ -23,6 +23,12 @@ package wrath.client.enums;
 */
 public enum RenderMode 
 {
+    /**
+     * Game is rendered in 2 Dimensions.
+     */
     Mode2D,
+    /**
+     * Game is rendered with depth (3 dimensions).
+     */
     Mode3D;
 }

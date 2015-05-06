@@ -23,8 +23,20 @@ package wrath.client.enums;
 */
 public enum WindowState
 {
+    /**
+     * A truly fullscreen window.
+     */
     FULLSCREEN,
+    /**
+     * A "Fullscreen" window that is really windowed, but covers the entire monitor.
+     */
     FULLSCREEN_WINDOWED,
+    /**
+     * Standard Windowed application.
+     */
     WINDOWED,
+    /**
+     * A window with no border (close widget).
+     */
     WINDOWED_UNDECORATED;
 }

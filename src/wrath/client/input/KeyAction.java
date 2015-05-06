@@ -24,7 +24,16 @@ package wrath.client.input;
  */
 public enum KeyAction
 {
+    /**
+     * Describing when a key is being held down.
+     */
     KEY_HOLD_DOWN,
+    /**
+     * Describing when a key is pressed.
+     */
     KEY_PRESS,
+    /**
+     * Describing when a key is released.
+     */
     KEY_RELEASE;
 }
