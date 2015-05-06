@@ -38,8 +38,6 @@ import wrath.util.Logger;
  */
 public class ClientUtils
 {
-    
-    
     /**
      * Static libraries, no constructor necessary.
      */
