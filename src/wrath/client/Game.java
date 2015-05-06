@@ -152,7 +152,7 @@ public class Game
     
     /**
      * Gets the {@link wrath.client.Game.EventManager} class that manages all event handlers.
-     * This class is used to control, access and change Event Handlers from the {@link wrath.client.handlers} package.
+     * This class is used to control, access and change Event Handlers from the {@link wrath.client.events} package.
      * @return Returns the {@link wrath.client.Game.EventManager} class that manages all event handlers.
      */
     public EventManager getEventManager()
@@ -170,8 +170,8 @@ public class Game
     }
     
     /**
-     * Gets the {@link wrath.client.Game.InputManager} linked to this {@link wrath.client.Game} instance.
-     * @return Returns the {@link wrath.client.Game.InputManager} linked to this {@link wrath.client.Game} instance.
+     * Gets the {@link wrath.client.input.InputManager} linked to this {@link wrath.client.Game} instance.
+     * @return Returns the {@link wrath.client.input.InputManager} linked to this {@link wrath.client.Game} instance.
      */
     public InputManager getInputManager()
     {
@@ -479,7 +479,7 @@ public class Game
          * Element 1 of the array is the G (green) value, scaled 0.0 (no green) to 1.0 (pure green).
          * Element 2 of the array is the B (blue) value, scaled 0.0 (no blue) to 1.0 (pure blue).
          * Element 3 of the array is the A (alpha transparency) value, scaled 0.0 (opaque) to 1.0 (transparent).
-         * @return 
+         * @return Returns an array of float variables describing the RGBA value of the background.
          */
         public float[] getBackgroundRGBA()
         {
@@ -558,7 +558,7 @@ public class Game
     }
     
     /**
-     * Class to manage all event handlers from the {@link wrath.client.handlers} package.
+     * Class to manage all event handlers from the {@link wrath.client.events} package.
      */
     public class EventManager
     {
@@ -577,8 +577,8 @@ public class Game
         private final PlayerEventHandler phan = new RootPlayerEventHandler();
         
         /**
-         * Sets the {@link wrath.client.handlers.GameEventHandler} to associate with this Game.
-         * @param handler The {@link wrath.client.handlers.GameEventHandler} to add to the list of handlers that handles all of this Game's events.
+         * Sets the {@link wrath.client.events.GameEventHandler} to associate with this Game.
+         * @param handler The {@link wrath.client.events.GameEventHandler} to add to the list of handlers that handles all of this Game's events.
          */
         public void addGameEventHandler(GameEventHandler handler)
         {
@@ -586,8 +586,8 @@ public class Game
         }
         
         /**
-         * Sets the {@link wrath.client.handlers.InputEventHandler} to associate with this Game's Input Manager.
-         * @param handler The {@link wrath.client.handlers.InputEventHandler} to add to the list of handlers that handles all of this Game's Input events.
+         * Sets the {@link wrath.client.events.InputEventHandler} to associate with this Game's Input Manager.
+         * @param handler The {@link wrath.client.events.InputEventHandler} to add to the list of handlers that handles all of this Game's Input events.
          */
         public void addInputEventHandler(InputEventHandler handler)
         {
@@ -595,8 +595,8 @@ public class Game
         }
         
         /**
-         * Sets the {@link wrath.client.handlers.PlayerEventHandler} to associate with the player.
-         * @param handler The {@link wrath.client.handlers.PlayerEventHandler} to add to the list of handlers that handles all of the Player's events.
+         * Sets the {@link wrath.client.events.PlayerEventHandler} to associate with the player.
+         * @param handler The {@link wrath.client.events.PlayerEventHandler} to add to the list of handlers that handles all of the Player's events.
          */
         public void addPlayerEventHandler(PlayerEventHandler handler)
         {
@@ -604,8 +604,8 @@ public class Game
         }
         
         /**
-         * Gets the root {@link wrath.client.handlers.GameEventHandler} linked to this Game.
-         * @return Returns the root {@link wrath.client.handlers.GameEventHandler} linked to this Game.
+         * Gets the root {@link wrath.client.events.GameEventHandler} linked to this Game.
+         * @return Returns the root {@link wrath.client.events.GameEventHandler} linked to this Game.
          */
         public GameEventHandler getGameEventHandler()
         {
@@ -613,8 +613,8 @@ public class Game
         }
         
         /**
-         * Gets the root {@link wrath.client.handlers.InputEventHandler}s linked to this Game's Input Manager.
-         * @return Returns the root {@link wrath.client.handlers.GameEventHandler} linked to this Game's Input Manager.
+         * Gets the root {@link wrath.client.events.InputEventHandler}s linked to this Game's Input Manager.
+         * @return Returns the root {@link wrath.client.events.GameEventHandler} linked to this Game's Input Manager.
          */
         public InputEventHandler getInputEventHandler()
         {
@@ -622,8 +622,8 @@ public class Game
         }
         
         /**
-         * Gets the root  {@link wrath.client.handlers.PlayerEventHandler} linked to the player.
-         * @return Returns the {@link wrath.client.handlers.GameEventHandler}s linked to the player.
+         * Gets the root  {@link wrath.client.events.PlayerEventHandler} linked to the player.
+         * @return Returns the {@link wrath.client.events.GameEventHandler}s linked to the player.
          */
         public PlayerEventHandler getPlayerEventHandler()
         {
@@ -878,7 +878,7 @@ public class Game
 
         /**
          * Gets the current state of the window as of
-         * {@link wrath.client.Game.WindowState}.
+         * {@link wrath.client.enums.WindowState}.
          * @return Returns the current state of the window.
          */
         public WindowState getWindowState()
@@ -1068,7 +1068,6 @@ public class Game
 
         /**
          * Sets the game's global font.
-         *
          * @param font The {@link java.awt.Font} to derive from.
          */
         public void setFont(Font font)
@@ -1078,7 +1077,6 @@ public class Game
 
         /**
          * Sets the game's global font.
-         *
          * @param fontLocation The file containing the font.
          */
         public void setFont(File fontLocation)
@@ -1115,7 +1113,7 @@ public class Game
     
         /**
         * Changes the state of the window.
-        * This method will require the window to restart, and this will be done via {@link wrath.client.Game#destroyWindow() } and {@link wrath.client.Game#initWindow() }.
+        * This method will require the window to restart, and this will be done via {@link wrath.client.Game.WindowManager#closeWindow() } and {@link wrath.client.Game.WindowManager#openWindow() }.
         * @param state The state to set the window to.
         */
         public void setWindowState(WindowState state)

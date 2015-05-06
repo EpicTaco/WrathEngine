@@ -18,7 +18,7 @@
 package wrath.client.events;
 
 /**
- * Interface to handle general {@link wrath.client.Player} events.
+ * Interface to handle general Player events.
  * To be implemented by the game developer to receive events.
  * @author Trent Spears
  */

@@ -100,7 +100,7 @@ public class InputManager
     /**
      * Sets default key binding.
      * @param key The {@link wrath.client.input.Key} to respond to.
-     * @param function The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
+     * @param function The {@link java.lang.Runnable} event to run after specified button is affected by the specified action.
      */
     public void addDefaultKeyBinding(int key, Runnable function)
     {
@@ -110,8 +110,8 @@ public class InputManager
     /**
      * Sets default key binding.
      * @param key The {@link wrath.client.input.Key} to respond to.
-     * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
-     * @param function The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
+     * @param action The {@link wrath.client.input.KeyAction} that will trigger the event.
+     * @param function The {@link java.lang.Runnable} event to run after specified button is affected by the specified action.
      */
     public void addDefaultKeyBinding(int key, KeyAction action, Runnable function)
     {
@@ -122,8 +122,8 @@ public class InputManager
      * Sets default key binding.
      * @param key The {@link wrath.client.input.Key} to respond to.
      * @param keyMod The {@link wrath.client.input.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
-     * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
-     * @param function The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
+     * @param action The {@link wrath.client.input.KeyAction} that will trigger the event.
+     * @param function The {@link java.lang.Runnable} event to run after specified button is affected by the specified action.
      */
     public void addDefaultKeyBinding(int key, int keyMod, KeyAction action, Runnable function)
     {
@@ -143,7 +143,7 @@ public class InputManager
     /**
      * Sets default key binding.
      * @param key The {@link wrath.client.input.Key} to respond to.
-     * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
+     * @param action The {@link wrath.client.input.KeyAction} that will trigger the event.
      * @param functionID The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
      */
     public void addDefaultKeyBinding(int key, KeyAction action, String functionID)
@@ -155,7 +155,7 @@ public class InputManager
      * Sets default key binding.
      * @param key The {@link wrath.client.input.Key} to respond to.
      * @param keyMod The {@link wrath.client.input.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
-     * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
+     * @param action The {@link wrath.client.input.KeyAction} that will trigger the event.
      * @param functionID The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
      */
     public void addDefaultKeyBinding(int key, int keyMod, KeyAction action, String functionID)
@@ -165,7 +165,7 @@ public class InputManager
     
     /**
      * Binds all default engine functions to keys.
-     * For further reference, refer to {@link DefaultKeybindings.txt}
+     * For further reference, refer to DefaultKeyBindings.txt in the default package.
      */
     public void bindDefaultEngineKeys()
     {
@@ -230,7 +230,7 @@ public class InputManager
     /**
      * Binds a function to the specified key/button.
      * @param key The {@link wrath.client.input.Key} to respond to.
-     * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
+     * @param event The {@link java.lang.Runnable} event to run after specified button is affected by the specified action.
      */
     public void bindKey(int key, Runnable event)
     {
@@ -240,8 +240,8 @@ public class InputManager
     /**
      * Binds a function to the specified key/button.
      * @param key The {@link wrath.client.input.Key} to respond to.
-     * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
-     * @param event The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
+     * @param action The {@link wrath.client.input.KeyAction} that will trigger the event.
+     * @param event The {@link java.lang.Runnable} event to run after specified button is affected by the specified action.
      */
     public void bindKey(int key, KeyAction action, Runnable event)
     {
@@ -252,8 +252,8 @@ public class InputManager
      * Binds a function to the specified key/button.
      * @param key The {@link wrath.client.input.Key} to respond to.
      * @param keyMod The {@link wrath.client.input.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
-     * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
-     * @param function The {@link wrath.client.KeyRunnable} event to run after specified button is affected by the specified action.
+     * @param action The {@link wrath.client.input.KeyAction} that will trigger the event.
+     * @param function The {@link java.lang.Runnable} event to run after specified button is affected by the specified action.
      */
     public void bindKey(int key, int keyMod, KeyAction action, Runnable function)
     {
@@ -278,7 +278,7 @@ public class InputManager
     /**
      * Binds a function to the specified key/button.
      * @param key The {@link wrath.client.input.Key} to respond to.
-     * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
+     * @param action The {@link wrath.client.input.KeyAction} that will trigger the event.
      * @param functionID The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
      */
     public void bindKey(int key, KeyAction action, String functionID)
@@ -290,7 +290,7 @@ public class InputManager
      * Binds a function to the specified key/button.
      * @param key The {@link wrath.client.input.Key} to respond to.
      * @param keyMod The {@link wrath.client.input.Key} MOD_x to respond to; e.g. MOD_ALT to activate when ALT is also held down, -1 for none.
-     * @param action The {@link wrath.client.Game.KeyAction} that will trigger the event.
+     * @param action The {@link wrath.client.input.KeyAction} that will trigger the event.
      * @param functionID The pre-assigned Function ID, as assigned by {@link #addSavedFunction(java.lang.String, java.lang.Runnable) }.
      */
     public void bindKey(int key, int keyMod, KeyAction action, String functionID)
@@ -307,7 +307,7 @@ public class InputManager
 
     /**
      * Binds all pre-defined default keys.
-     * Note that this DOES NOT clear all user-defined bindings, refer to {@link wrath.client.Game.InputManager#unbindAllKeys()}.
+     * Note that this DOES NOT clear all user-defined bindings, refer to {@link wrath.client.input.InputManager#unbindAllKeys()}.
      */
     public void bindKeysToDefaults()
     {
@@ -610,7 +610,7 @@ public class InputManager
 
     /**
      * Clears all defined key bindings.
-     * This DOES NOT set them to default, refer to {@link wrath.client.Game.InputManager#bindKeysToDefaults()}.
+     * This DOES NOT set them to default, refer to {@link wrath.client.input.InputManager#bindKeysToDefaults()}.
      */
     public void unbindAllKeys()
     {
@@ -717,11 +717,11 @@ public class InputManager
         }
 
         /**
-         * Gets the {@link wrath.client.Game.KeyAction} of the key set. This is
+         * Gets the {@link wrath.client.input.KeyAction} of the key set. This is
          * used to determine whether to execute the function when a key is
          * pressed, or execute the function when the key is released.
          *
-         * @return Returns the {@link wrath.client.Game.KeyAction} specified in
+         * @return Returns the {@link wrath.client.input.KeyAction} specified in
          * the Constructor.
          */
         public KeyAction getAction()

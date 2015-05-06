@@ -75,7 +75,7 @@ public abstract class ScriptManager
     
     /**
      * Compiled a script into a compiled {@link java.lang.Object} that can be executed.
-     * @param script The {@link wrath.common.scripting.Script} to compile.
+     * @param script The {@link wrath.common.scripts.Script} to compile.
      * @return Returns the compiled {@link java.lang.Object}.
      */
     public Object compileScript(Script script){return null;}
@@ -93,7 +93,7 @@ public abstract class ScriptManager
     
     /**
      * Executes an executable object into the language's interpreter.
-     * @param compiledObject The compiled {@link java.lang.Object} of a previously-compiled {@link wrath.common.scripting.Script}.
+     * @param compiledObject The compiled {@link java.lang.Object} of a previously-compiled {@link wrath.common.scripts.Script}.
      * @param dedicatedThread If true, a new {@link java.lang.Thread} is made to execute the script.
      */
     protected void executeObject(Object compiledObject, boolean dedicatedThread){}
