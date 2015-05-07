@@ -22,7 +22,7 @@ import wrath.common.scripts.PythonScriptManager;
 import wrath.common.scripts.ScriptManager;
 
 /**
- * The class to launch the game off of a python script called 'initscript' in the engine's root folder.
+ * The class to launch the game off of a python script called 'initscript.py' in the 'assets' folder.
  * @author Trent Spears
  */
 public class PythonEntryObject implements EntryObject
@@ -33,7 +33,6 @@ public class PythonEntryObject implements EntryObject
         ScriptManager.SCRIPT_CONFIG.setProperty("AutoLoadFromDirectory", false);
         ScriptManager.SCRIPT_CONFIG.setProperty("AssignParentObject", false);
         PythonScriptManager scripts = new PythonScriptManager(this);
-        scripts.setGlobalVariable("scriptsManager", scripts);
-        scripts.loadScript(new File("initscript"), true, false).execute();
+        scripts.loadScript(new File("assets/initscript.py"), true, false).execute();
     }
 }

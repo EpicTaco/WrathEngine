@@ -40,8 +40,9 @@ public class PythonScriptManager extends ScriptManager
     public PythonScriptManager(Object parentObject)
     {
         super(parentObject, ".py");
-        if(getScriptConfig().getBoolean("AssignParentObject", true)) 
+        if(getScriptConfig().getBoolean("AssignParentObject", true))
             inter.set("parentObject", parentObject);
+        inter.set("scriptsManager", this);
     }
 
     @Override

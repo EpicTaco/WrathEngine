@@ -47,8 +47,8 @@ public abstract class ScriptManager
     }
     
     /**
-     * Gets the {@link wrath.util.Config} associated with this Script Manager.
-     * @return Returns the {@link wrath.util.Config} associated with this Script Manager.
+     * Gets the {@link wrath.util.Config} associated with all Script Managers.
+     * @return Returns the {@link wrath.util.Config} associated with all Script Managers.
      */
     public static Config getScriptConfig()
     {
@@ -56,8 +56,8 @@ public abstract class ScriptManager
     }
     
     /**
-     * Gets the {@link wrath.util.Logger} associated with this Script Manager.
-     * @return Returns the {@link wrath.util.Logger} associated with this Script Manager.
+     * Gets the {@link wrath.util.Logger} associated with all Script Managers.
+     * @return Returns the {@link wrath.util.Logger} associated with all Script Managers.
      */
     public static Logger getScriptLogger()
     {

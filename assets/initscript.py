@@ -2,7 +2,7 @@
 #It should also be noted that a global variable named 'parentObject' must be assigned to said Game class for
 #additional scripts to work. Variable 'scriptsManager' is pre-defined for you (Java Object PythonScriptManager).
 #Consult documentation on that class for more information, or take a look at our Wiki on our Github page!
-#Github Wiki Page: http://www.github.com/epictaco/wrathengine/wiki
+#Github Wiki Page: https://github.com/EpicTaco/WrathEngine/wiki/Scripting/
 
 #  Wrath Engine Scripting
 #  Copyright (C) 2015  Trent Spears
