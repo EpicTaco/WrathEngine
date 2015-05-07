@@ -41,18 +41,14 @@ public class PythonScriptManager extends ScriptManager
     public PythonScriptManager(Object parentObject)
     {
         super(parentObject, ".py");
-        if (getScriptConfig().getBoolean("AssignParentObject", true)) 
+        if(getScriptConfig().getBoolean("AssignParentObject", true)) 
             inter.set("parentObject", parentObject);
-        
-        if (getScriptConfig().getBoolean("AutoLoadFromDirectory", true)) 
-            loadScriptsFromDirectory(new File(getScriptConfig().getString("AutoLoadDirectory", "etc/scripts/autoexec")), true, true);
-        
     }
 
     @Override
     public void close()
     {
-        this.inter.close();
+        inter.close();
     }
 
     @Override

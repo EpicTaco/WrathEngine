@@ -62,6 +62,8 @@ public abstract class ScriptManager
         this.parentObject = parentObject;
         this.rootHandler = new RootScriptEventHandler();
         mgrList.add(this);
+        
+        autoLoadScripts();
     }
     
     /**
@@ -71,6 +73,12 @@ public abstract class ScriptManager
     public void addScriptEventHandler(ScriptEventHandler handler)
     {
         handlers.add(handler);
+    }
+    
+    private void autoLoadScripts()
+    {
+        if(SCRIPT_CONFIG.getBoolean("AutoLoadFromDirectory", true)) 
+            loadScriptsFromDirectory(new File(SCRIPT_CONFIG.getString("AutoLoadDirectory", "etc/scripts/autoexec")), true, true);
     }
     
     /**
