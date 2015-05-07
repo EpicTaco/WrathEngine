@@ -74,35 +74,6 @@ public class Game
     private final InputManager inpManager;
     private final WindowManager winManager;
     
-    
-    /**
-     * Constructor.
-     * Describes all the essential and unmodifiable variables of the Game.
-     * @param gameTitle Title of the Game.
-     * @param version Version of the Game.
-     * @param ticksPerSecond The amount of times the logic of the game should update in one second. Recommended 30.
-     * @param renderMode Describes how to game should be rendered (2D or 3D).
-     */
-    public Game(String gameTitle, String version, double ticksPerSecond, String renderMode)
-    {
-        MODE = RenderMode.valueOf(renderMode);
-        TITLE = gameTitle;
-        VERSION = version;
-        TPS = ticksPerSecond;
-        this.evManager = new EventManager();
-        this.inpManager = new InputManager(this);
-        this.winManager = new WindowManager();
-        
-        File nativeDir = new File("assets/native");
-        if(!nativeDir.exists())
-            ClientUtils.throwInternalError("Missing assets folder! Try re-downloading!", true);
-        
-        System.setProperty("org.lwjgl.librarypath", "assets/native");
-        
-        File screenshotDir = new File("etc/screenshots");
-        if(!screenshotDir.exists()) screenshotDir.mkdirs();
-    }
-    
     /**
      * Constructor.
      * Describes all the essential and unmodifiable variables of the Game.
@@ -158,15 +129,6 @@ public class Game
     public EventManager getEventManager()
     {
         return evManager;
-    }
-    
-    /**
-     * Gets the {@link wrath.util.Logger} associated with this Game.
-     * @return Returns the {@link wrath.util.Logger} associated with this Game.
-     */
-    public Logger getGameLogger()
-    {
-        return gameLogger;
     }
     
     /**
@@ -572,12 +534,12 @@ public class Game
         private final ArrayList<InputEventHandler> inpHandlers = new ArrayList<>();
         private final ArrayList<PlayerEventHandler> plrHandlers = new ArrayList<>();
         
-        private final GameEventHandler ghan = new RootGameEventHandler();
-        private final InputEventHandler ihan = new RootInputEventHandler();
-        private final PlayerEventHandler phan = new RootPlayerEventHandler();
+        private final RootGameEventHandler ghan = new RootGameEventHandler();
+        private final RootInputEventHandler ihan = new RootInputEventHandler();
+        private final RootPlayerEventHandler phan = new RootPlayerEventHandler();
         
         /**
-         * Sets the {@link wrath.client.events.GameEventHandler} to associate with this Game.
+         * Adds a {@link wrath.client.events.GameEventHandler} to associate with this Game.
          * @param handler The {@link wrath.client.events.GameEventHandler} to add to the list of handlers that handles all of this Game's events.
          */
         public void addGameEventHandler(GameEventHandler handler)
@@ -586,7 +548,7 @@ public class Game
         }
         
         /**
-         * Sets the {@link wrath.client.events.InputEventHandler} to associate with this Game's Input Manager.
+         * Adds a {@link wrath.client.events.InputEventHandler} to associate with this Game's Input Manager.
          * @param handler The {@link wrath.client.events.InputEventHandler} to add to the list of handlers that handles all of this Game's Input events.
          */
         public void addInputEventHandler(InputEventHandler handler)
@@ -595,7 +557,7 @@ public class Game
         }
         
         /**
-         * Sets the {@link wrath.client.events.PlayerEventHandler} to associate with the player.
+         * Adds a {@link wrath.client.events.PlayerEventHandler} to associate with the player.
          * @param handler The {@link wrath.client.events.PlayerEventHandler} to add to the list of handlers that handles all of the Player's events.
          */
         public void addPlayerEventHandler(PlayerEventHandler handler)
@@ -622,7 +584,7 @@ public class Game
         }
         
         /**
-         * Gets the root  {@link wrath.client.events.PlayerEventHandler} linked to the player.
+         * Gets the root {@link wrath.client.events.PlayerEventHandler} linked to the player.
          * @return Returns the {@link wrath.client.events.GameEventHandler}s linked to the player.
          */
         public PlayerEventHandler getPlayerEventHandler()

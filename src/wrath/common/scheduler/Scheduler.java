@@ -26,8 +26,33 @@ import java.util.HashMap;
  */
 public class Scheduler
 {
+    private final ArrayList<SchedulerEventHandler> handlerList = new ArrayList<>();
     private final HashMap<Long, TaskList> map = new HashMap<>();
+    private final RootSchedulerEventHandler rootHandler = new RootSchedulerEventHandler();
     private long ticks = 0;
+    
+    /**
+     * Adds a {@link wrath.common.scheduler.SchedulerEventHandler} to the list of handlers that responds to events.
+     * @param handler The {@link wrath.common.scheduler.SchedulerEventHandler} to add to the handlers list.
+     */
+    public void addSchedulerEventHandler(SchedulerEventHandler handler)
+    {
+        handlerList.add(handler);
+    }
+    
+    /**
+     * Gets the current tick count of the scheduler.
+     * @return Returns the current tick count of the scheduler.
+     */
+    public long getCurrentTick()
+    {
+        return ticks;
+    }
+    
+    private Scheduler getThis()
+    {
+        return this;
+    }
     
     /**
      * Runs a task repeatedly every {delayInTicks} ticks.
@@ -54,6 +79,7 @@ public class Scheduler
             l.addTask(task);
             map.put(ticks + waitInTicks, l);
         }
+        rootHandler.onTaskSchedule(this, task, ticks + waitInTicks);
     }
     
     /**
@@ -69,6 +95,7 @@ public class Scheduler
             l.addTask(task);
             map.put(ticks + 1, l);
         }
+        rootHandler.onTaskSchedule(this, task, ticks + 1);
     }
     
     /**
@@ -128,6 +155,7 @@ public class Scheduler
                     if(t.isActive())
                     {
                         t.run();
+                        rootHandler.onTaskRun(getThis(), t);
                         if(t.isRepeating()) runTaskLater(t, t.getDelay());
                     }
                 });
@@ -136,5 +164,28 @@ public class Scheduler
             tasks.clear();
             alive = false;
         }
+    }
+    
+    private class RootSchedulerEventHandler implements SchedulerEventHandler
+    {
+
+        @Override
+        public void onTaskRun(Scheduler scheduler, Task task)
+        {
+            handlerList.stream().forEach((h) -> 
+            {
+                h.onTaskRun(scheduler, task);
+            });
+        }
+
+        @Override
+        public void onTaskSchedule(Scheduler scheduler, Task task, long tick)
+        {
+            handlerList.stream().forEach((h) -> 
+            {
+                h.onTaskSchedule(scheduler, task, tick);
+            });
+        }
+        
     }
 }

@@ -21,7 +21,7 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from wrath.client import Game
 from wrath.client.events import GameEventHandler
-from wrath.client import RenderMode
+from wrath.client.enums import RenderMode
 from wrath.test.client import TempWorld
 from java.io import File
 
@@ -74,7 +74,7 @@ if File("etc/world.dat").exists():
 else:
 	world = TempWorld(64, File("etc/world.dat"))
 if world is None:
-	parentObject.getGameLogger().log("TempWorld is not compatible with Python Scripts!")
+	parentObject.getLogger().log("TempWorld is not compatible with Python Scripts!")
 
 scriptsManager.loadScriptsFromDirectory(File("etc/scripts/autoexec"), True, True)
 gameObject.start()

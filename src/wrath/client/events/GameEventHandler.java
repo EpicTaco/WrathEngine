@@ -30,7 +30,7 @@ public interface GameEventHandler
     public void onGameClose();
     
     /**
-     * Method that is called when the game is opened (right before the loop initializes.
+     * Method that is called when the game is opened (right before the loop initializes).
      */
     public void onGameOpen();
   

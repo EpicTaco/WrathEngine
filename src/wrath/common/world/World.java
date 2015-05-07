@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import wrath.util.Logger;
@@ -35,7 +36,8 @@ import wrath.util.Logger;
 public class World implements Serializable
 {
     private File file;
-    private transient WorldEventHandler handler;
+    private transient final ArrayList<WorldEventHandler> handlerList = new ArrayList<>();
+    private transient final RootWorldEventHandler rootHandler = new RootWorldEventHandler();
     
     public World(File file)
     {
@@ -47,6 +49,25 @@ public class World implements Serializable
             }
             catch(IOException e){}
         }
+    }
+    
+    /**
+     * Adds a {@link wrath.common.world.WorldEventHandler} to handle events that occur in this world.
+     * Does not carry over after a previously saved World is loaded.
+     * @param handler The {@link wrath.common.world.WorldEventHandler} to link to this World.
+     */
+    public void addWorldEventHandler(WorldEventHandler handler)
+    {
+        handlerList.add(handler);
+    }
+    
+    /**
+     * Gets the root instance of {@link wrath.common.world.WorldEventHandler} to report events to.
+     * @return Returns the root instance of {@link wrath.common.world.WorldEventHandler} to report events to.
+     */
+    public WorldEventHandler getWorldEventHandler()
+    {
+        return rootHandler;
     }
     
     /**
@@ -84,15 +105,6 @@ public class World implements Serializable
         }
     }
     
-    /**
-     * Sets this World's {@link wrath.common.world.WorldEventHandler}.
-     * Does not carry over after a previously saved World is loaded.
-     * @param handler The {@link wrath.common.world.WorldEventHandler} to link to this World.
-     */
-    public void setEventHandler(WorldEventHandler handler)
-    {
-        this.handler = handler;
-    }
     
     //Static Methods
     
@@ -134,5 +146,12 @@ public class World implements Serializable
         }
         
         return ret;
+    }
+    
+    
+    
+    private class RootWorldEventHandler implements WorldEventHandler
+    {
+        
     }
 }

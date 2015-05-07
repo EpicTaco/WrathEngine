@@ -3,10 +3,10 @@ Things to fix/edit:
 
 
 Things to add:
-- Work on Savable Key Binds.
+- Create Java plugins API
 
 - TEXT RENDERING (Pain in the ass, let me tell you)
-	|-- Research the dark depths of font conversions and micro-graphic opertions to make this possible.
+	|-- Research the dark depths of font conversions and micro-graphic operations to make this possible.
 
 - Audio
 	|-- Research OpenAL w/ LWJGL 3.0

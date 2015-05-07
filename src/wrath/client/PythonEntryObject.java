@@ -22,7 +22,7 @@ import wrath.common.scripts.PythonScriptManager;
 import wrath.common.scripts.ScriptManager;
 
 /**
- * The class to launch the game off of a python script called 'init.py' in the engine's root folder.
+ * The class to launch the game off of a python script called 'initscript' in the engine's root folder.
  * @author Trent Spears
  */
 public class PythonEntryObject implements EntryObject
