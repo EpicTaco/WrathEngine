@@ -46,6 +46,25 @@ public abstract class ScriptManager
         });
     }
     
+    /**
+     * Gets the {@link wrath.util.Config} associated with this Script Manager.
+     * @return Returns the {@link wrath.util.Config} associated with this Script Manager.
+     */
+    public static Config getScriptConfig()
+    {
+        return SCRIPT_CONFIG;
+    }
+    
+    /**
+     * Gets the {@link wrath.util.Logger} associated with this Script Manager.
+     * @return Returns the {@link wrath.util.Logger} associated with this Script Manager.
+     */
+    public static Logger getScriptLogger()
+    {
+        return SCRIPT_LOGGER;
+    }
+    
+    
     protected final String fileExtension;
     protected final Object parentObject;
     private final RootScriptEventHandler rootHandler;
@@ -61,7 +80,6 @@ public abstract class ScriptManager
         this.fileExtension = fileExtension;
         this.parentObject = parentObject;
         this.rootHandler = new RootScriptEventHandler();
-        mgrList.add(this);
         
         autoLoadScripts();
     }
@@ -77,6 +95,7 @@ public abstract class ScriptManager
     
     private void autoLoadScripts()
     {
+        mgrList.add(this);
         if(SCRIPT_CONFIG.getBoolean("AutoLoadFromDirectory", true)) 
             loadScriptsFromDirectory(new File(SCRIPT_CONFIG.getString("AutoLoadDirectory", "etc/scripts/autoexec")), true, true);
     }
@@ -147,15 +166,6 @@ public abstract class ScriptManager
     }
     
     /**
-     * Gets the {@link wrath.util.Config} associated with this Script Manager.
-     * @return Returns the {@link wrath.util.Config} associated with this Script Manager.
-     */
-    public Config getScriptConfig()
-    {
-        return SCRIPT_CONFIG;
-    }
-    
-    /**
      * Gets the root {@link wrath.common.scripts.ScriptEventHandler} to report events occuring.
      * @return Returns the root {@link wrath.common.scripts.ScriptEventHandler} to report events occuring.
      */
@@ -164,14 +174,6 @@ public abstract class ScriptManager
         return rootHandler;
     }
     
-    /**
-     * Gets the {@link wrath.util.Logger} associated with this Script Manager.
-     * @return Returns the {@link wrath.util.Logger} associated with this Script Manager.
-     */
-    public Logger getScriptLogger()
-    {
-        return SCRIPT_LOGGER;
-    }
     
     
     private class RootScriptEventHandler implements ScriptEventHandler
