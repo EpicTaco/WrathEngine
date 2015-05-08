@@ -19,3 +19,7 @@ of LWJGL 3 (which is using OpenGL, OpenAL, OpenCL and GLFW) for graphics and aud
 [Download Core Engine](http://epictaco.github.io/WrathEngine/WrathEngine-redist.zip)
 
 [Setting up the Engine](https://github.com/EpicTaco/WrathEngine/wiki/Getting-Started#setting-up-the-environment)
+
+[Wiki](https://github.com/EpicTaco/WrathEngine/wiki/)
+
+[Project Page](https://epictaco.github.io/WrathEngine)
