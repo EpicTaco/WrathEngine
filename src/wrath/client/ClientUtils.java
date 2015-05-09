@@ -19,15 +19,21 @@ package wrath.client;
 
 import java.awt.Desktop;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
+import org.lwjgl.opengl.GL20;
 import wrath.client.enums.PopupMessageType;
 import wrath.util.Logger;
 
@@ -42,6 +48,18 @@ public class ClientUtils
      * Static libraries, no constructor necessary.
      */
     private ClientUtils(){}
+    
+    /**
+     * Converts an array of primitive bytes to a {@link java.nio.ByteBuffer}.
+     * @param data The byte array to convert.
+     * @return Returns the {@link java.nio.ByteBuffer} form of the byte array.
+     */
+    public static ByteBuffer byteArrayToByteBuffer(byte[] data)
+    {
+        ByteBuffer ret = ByteBuffer.allocateDirect(data.length).order(ByteOrder.nativeOrder());
+        ret.put(data).flip();
+        return ret;
+    }
     
     /**
      * Displays a pop-up message.
@@ -61,6 +79,18 @@ public class ClientUtils
         else if(type == PopupMessageType.WARNING) opt = JOptionPane.WARNING_MESSAGE;
         
         JOptionPane.showMessageDialog(null, message, popupTitle, opt);
+    }
+    
+    /**
+     * Converts an array of primitive floats to a {@link java.nio.FloatBuffer}.
+     * @param data The float array to convert.
+     * @return Returns the {@link java.nio.FloatBuffer} form of the float array.
+     */
+    public static FloatBuffer floatArrayToFloatBuffer(float[] data)
+    {
+        FloatBuffer ret = ByteBuffer.allocateDirect(data.length << 2).order(ByteOrder.nativeOrder()).asFloatBuffer();
+        ret.put(data).flip();
+        return ret;
     }
     
     /**
@@ -172,6 +202,18 @@ public class ClientUtils
     }
     
     /**
+     * Converts an array of primitive ints to a {@link java.nio.IntBuffer}.
+     * @param data The int array to convert.
+     * @return Returns the {@link java.nio.IntBuffer} form of the int array.
+     */
+    public static IntBuffer intArrayToIntBuffer(int[] data)
+    {
+        IntBuffer ret = ByteBuffer.allocateDirect(data.length << 2).order(ByteOrder.nativeOrder()).asIntBuffer();
+        ret.put(data).flip();
+        return ret;
+    }
+    
+    /**
      * Loads a {@link java.awt.image.BufferedImage} from a {@link java.io.File}.
      * @param file The {@link java.io.File} to load the {@link java.awt.image.BufferedImage} from.
      * @return Returns the {@link java.awt.image.BufferedImage} located in the {@link java.io.File}.
@@ -192,6 +234,121 @@ public class ClientUtils
         }
         
         return ret;
+    }
+    
+    /**
+     * Reads the specified shader file and retrieves it's source in {@link java.lang.String} format.
+     * @param shaderFile The {@link java.io.File} to read the shader from.
+     * @return Returns the String source of the shader.
+     */
+    public static String loadShaderSource(File shaderFile)
+    {
+        if(!shaderFile.exists())
+        {
+            Logger.getErrorLogger().log("Could not load shader from file '" + shaderFile.getAbsolutePath() + "'! File not found!");
+            return null;
+        }
+        
+        String src = "";
+        
+        try
+        {
+            String inp;
+            try(BufferedReader read = new BufferedReader(new FileReader(shaderFile))) 
+            {
+                while((inp = read.readLine()) != null) src = src + inp + '\n';
+            }
+        }
+        catch(IOException e)
+        {
+            Logger.getErrorLogger().log("Could not load shader from file '" + shaderFile.getAbsolutePath() + "'! I/O Error!");
+            return null;
+        }
+        
+        return src;
+    }
+    
+    /**
+     * Reads the two specified shader files and compiles the shaders into an OpenGL program format.
+     * @param vertFile The {@link java.io.File} to read the vert shader from.
+     * @param fragFile The {@link java.io.File} to read the frag shader from.
+     * @return Returns the integer id of the shader program (as OpenGL uses).
+     */
+    public static int loadShaderProgram(File vertFile, File fragFile)
+    {
+        if(!vertFile.exists())
+        {
+            Logger.getErrorLogger().log("Could not load shader from file '" + vertFile.getAbsolutePath() + "'! File not found!");
+            return -1;
+        }
+        
+        if(!fragFile.exists())
+        {
+            Logger.getErrorLogger().log("Could not load shader from file '" + fragFile.getAbsolutePath() + "'! File not found!");
+            return -1;
+        }
+        
+        String vsrc = "";
+        
+        try
+        {
+            String inp;
+            try(BufferedReader read = new BufferedReader(new FileReader(vertFile))) 
+            {
+                while((inp = read.readLine()) != null) vsrc = vsrc + inp + '\n';
+            }
+        }
+        catch(IOException e)
+        {
+            Logger.getErrorLogger().log("Could not load shader from file '" + vertFile.getAbsolutePath() + "'! I/O Error!");
+            return -1;
+        }
+        
+        String fsrc = "";
+        
+        try
+        {
+            String inp;
+            try(BufferedReader read = new BufferedReader(new FileReader(fragFile))) 
+            {
+                while((inp = read.readLine()) != null) fsrc = fsrc + inp + '\n';
+            }
+        }
+        catch(IOException e)
+        {
+            Logger.getErrorLogger().log("Could not load shader from file '" + fragFile.getAbsolutePath() + "'! I/O Error!");
+            return -1;
+        }
+        
+        int prog = GL20.glCreateProgram();
+        int vert = GL20.glCreateShader(GL20.GL_VERTEX_SHADER);
+        int frag = GL20.glCreateShader(GL20.GL_FRAGMENT_SHADER);
+        
+        GL20.glShaderSource(vert, vsrc);
+        GL20.glShaderSource(frag, fsrc);
+        
+        GL20.glCompileShader(vert);
+        if(GL20.glGetShaderi(vert, GL20.GL_COMPILE_STATUS) == GL11.GL_FALSE)
+        {
+            Logger.getErrorLogger().log("Could not load shader from file '" + vertFile.getAbsolutePath() + "'! Compile Error:");
+            Logger.getErrorLogger().log(GL20.glGetShaderInfoLog(vert));
+            return -1;
+        }
+        
+        GL20.glCompileShader(frag);
+        if(GL20.glGetShaderi(frag, GL20.GL_COMPILE_STATUS) == GL11.GL_FALSE)
+        {
+            Logger.getErrorLogger().log("Could not load shader from file '" + fragFile.getAbsolutePath() + "'! Compile Error:");
+            Logger.getErrorLogger().log(GL20.glGetShaderInfoLog(frag));
+            return -1;
+        }
+        
+        GL20.glAttachShader(prog, vert);
+        GL20.glAttachShader(prog, frag);
+        GL20.glLinkProgram(prog);
+        GL20.glValidateProgram(prog);
+        
+        return prog;
     }
     
     /**
