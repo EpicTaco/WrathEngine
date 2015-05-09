@@ -32,7 +32,7 @@ public class EntryPoint
     public static void main(String[] args)
     {
         if(!new File("assets/init").exists())
-            ClientUtils.throwInternalError("assets/init file is missing!", true);
+            ClientUtils.throwInternalError("assets/init file is missing!", false);
         
         try
         {
@@ -41,20 +41,9 @@ public class EntryPoint
             in.close();
             
             if(fline == null) ClientUtils.throwInternalError("assets/init could not be read! I/O Error!", true);
-            
-            try
-            {
-                EntryObject obj = (EntryObject) EntryObject.class.getClassLoader().loadClass(fline).newInstance();
-                obj.init(args);
-            }
-            catch(InstantiationException | IllegalAccessException e)
-            {
-                ClientUtils.throwInternalError("Failed to load EntryObject!", true);
-            }
-            catch(ClassNotFoundException e)
-            {
-                ClientUtils.throwInternalError("Invalid EntryObject denoted as '" + fline + "'!", true);
-            }
+
+            if(fline.equalsIgnoreCase("python")) new PythonEntryObject().init(args);
+            else new JavaEntryObject(fline).init(args);
         }
         catch(IOException e)
         {

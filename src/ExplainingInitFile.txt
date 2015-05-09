@@ -1,3 +1,3 @@
 assets/init is the file that contains the class-path of the Java EntryObject that will be loaded.
-This file is REQUIRED and CANNOT be empty, default value is 'wrath.client.PythonEntryObject', which is the class that must be set in the file to launch using a python script named initscript in the engine's root folder.
+This file is REQUIRED and CANNOT be empty, default value is 'Python', which specifies 'wrath.client.PythonEntryObject', the class that must be used to launch using a python script named initscript.py in the engine's 'assets' folder.
 Only the first line of assets/init will be read.
