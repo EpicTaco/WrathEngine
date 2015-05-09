@@ -49,6 +49,14 @@ FullscreenUsesResolution: false
 #Default is 10.0
 PersistentInputChecksPerSecond: 10.0
 
+#If true, the game will attempt to load and execute jar-format java plugins in the 'AutoLoadJavaPluginsDirectory' folder.
+#Default is true
+AutoLoadJavaPlugins: true
+
+#The relative directory to automatically load jar-format java plugins.
+#Default is 'etc/plugins'
+AutoLoadJavaPluginsDirectory: etc/plugins
+
 #For GLFW and OpenGL libraries. Set to false as setting to true *may* cause errors.
 #Default is false
 APIForwardCompatMode: false

@@ -150,15 +150,18 @@ public abstract class ScriptManager
      */
     public Script[] loadScriptsFromDirectory(File directory, boolean autoCompile, boolean autoExecute)
     {
-        if(!directory.exists() || !directory.isDirectory()) return null;
+        if(!directory.exists() || !directory.isDirectory())
+        {
+            getScriptLogger().log("Could not load scripts from directory '" + directory.getAbsolutePath() + "', directory does not exist!");
+            return null;
+        }
         
         ArrayList<Script> scr = new ArrayList<>();
         
         for(File f : directory.listFiles())
-            if(f.getName().endsWith(fileExtension))
-            {
+            if(f.getName().toLowerCase().endsWith(fileExtension.toLowerCase()))
                 scr.add(loadScript(f, autoCompile, autoExecute));
-            }
+            
         
         Script[] ret = new Script[scr.size()];
         scr.toArray(ret);

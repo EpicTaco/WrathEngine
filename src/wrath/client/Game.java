@@ -44,6 +44,7 @@ import org.lwjgl.system.MemoryUtil;
 import wrath.client.enums.ImageFormat;
 import wrath.client.events.InputEventHandler;
 import wrath.client.events.PlayerEventHandler;
+import wrath.common.javaloader.JarLoader;
 import wrath.common.scheduler.Scheduler;
 import wrath.common.scripts.ScriptManager;
 import wrath.util.Config;
@@ -357,6 +358,9 @@ public class Game
             stopImpl();
             return;
         }
+        
+        ExternalPluginManager.setGameInstance(this);
+        if(gameConfig.getBoolean("AutoLoadJavaPlugins", true)) JarLoader.loadPluginsDirectory(new File(gameConfig.getString("AutoLoadJavaPluginsDirectory", "etc/plugins")));
         
         winManager.openWindow();
         

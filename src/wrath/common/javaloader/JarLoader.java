@@ -17,11 +17,15 @@
  */
 package wrath.common.javaloader;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
 import wrath.util.Config;
 import wrath.util.Logger;
 
@@ -31,8 +35,11 @@ import wrath.util.Logger;
  */
 public class JarLoader
 {
+    private static final JarLoader inst = new JarLoader();
     public static final Config JAVA_LDR_CONFIG = new Config("JarLoader");
     public static final Logger JAVA_LDR_LOGGER = new Logger("JarLoader");
+    
+    private JarLoader(){}
     
     /**
      * Closes the standard java-loader java and saves the standard java-loader config.
@@ -55,8 +62,8 @@ public class JarLoader
         
         try 
         {
-            ClassLoader load = URLClassLoader.newInstance(new URL[]{jarFile.toURI().toURL()});
-            ret = load.loadClass(classPath);
+            URLClassLoader load = new URLClassLoader(new URL[]{jarFile.toURI().toURL()}, inst.getClass().getClassLoader());
+            ret = Class.forName(classPath, true, load);
         }
         catch(ClassNotFoundException e)
         {
@@ -66,6 +73,43 @@ public class JarLoader
         {
             JAVA_LDR_LOGGER.log("Could not read Jar file '" + jarFile.getAbsolutePath() + "'!");
         }
+        return ret;
+    }
+    
+    /**
+     * Detects Jar files in a directory and loads them, attempting to read the 'init' file in it's default package to find and load its main class.
+     * @param pluginsDir The Directory to load the plugins from in {@link java.io.File} object.
+     * @return Returns an array of loaded objects.
+     */
+    public static Object[] loadPluginsDirectory(File pluginsDir)
+    {
+        if(!pluginsDir.exists() || !pluginsDir.isDirectory())
+        {
+            JAVA_LDR_LOGGER.log("Could not load jars from directory '" + pluginsDir.getAbsolutePath() + "', directory does not exist!");
+            return null;
+        }
+        
+        ArrayList<Object> obj = new ArrayList<>();
+        for(File f : pluginsDir.listFiles())
+            if(f.getName().toLowerCase().endsWith(".jar"))
+            {
+                try
+                {
+                    URL url = new URL("jar:file:" + f.getAbsolutePath() + "!/init");
+                    BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
+                    String classPath = br.readLine();
+                    br.close();
+                    Object o = loadObject(f, classPath);
+                    if(o != null) obj.add(o);
+                }
+                catch(IOException e)
+                {
+                    JAVA_LDR_LOGGER.log("Could not load jar '" + f.getAbsolutePath() + "'! I/O Error!");
+                }
+            }
+        
+        Object[] ret = new Object[obj.size()];
+        obj.toArray(ret);
         return ret;
     }
     
