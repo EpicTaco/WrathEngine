@@ -95,7 +95,11 @@ public class Game
         
         File nativeDir = new File("assets/native");
         if(!nativeDir.exists())
-            ClientUtils.throwInternalError("Missing assets folder! Try re-downloading!", true);
+        {
+            ClientUtils.throwInternalError("Missing assets folder! Try re-downloading!", false);
+            stopImpl();
+        }
+           
         
         System.setProperty("org.lwjgl.librarypath", "assets/native");
         
