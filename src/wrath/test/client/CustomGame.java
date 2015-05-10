@@ -104,6 +104,9 @@ public class CustomGame extends Game implements GameEventHandler, EntryObject
     }
     
     @Override
+    public void onLoadJavaPlugin(Object obj){}
+    
+    @Override
     public void onTick(){}
     
     @Override

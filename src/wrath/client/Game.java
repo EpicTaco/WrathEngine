@@ -230,6 +230,18 @@ public class Game
     }
     
     /**
+     * Loads a java plugin from the specified file.
+     * @param jarFile The {@link java.io.File} to load the plugin from.
+     * @return Returns the object formed from the Java plugin.
+     */
+    public Object loadJavaPlugin(File jarFile)
+    {
+        Object obj = JarLoader.loadObject(jarFile);
+        this.getEventManager().getGameEventHandler().onLoadJavaPlugin(obj);
+        return obj;
+    }
+    
+    /**
      * Private loop (main game loop).
      */
     private void loop()
@@ -364,7 +376,11 @@ public class Game
         }
         
         ExternalPluginManager.setGameInstance(this);
-        if(gameConfig.getBoolean("AutoLoadJavaPlugins", true)) JarLoader.loadPluginsDirectory(new File(gameConfig.getString("AutoLoadJavaPluginsDirectory", "etc/plugins")));
+        if(gameConfig.getBoolean("AutoLoadJavaPlugins", true))
+        {
+            Object[] list = JarLoader.loadPluginsDirectory(new File(gameConfig.getString("AutoLoadJavaPluginsDirectory", "etc/plugins")));
+            for(Object obj : list) evManager.getGameEventHandler().onLoadJavaPlugin(obj);
+        }
         
         winManager.openWindow();
         
@@ -643,6 +659,15 @@ public class Game
             });
         }
 
+        @Override
+        public void onLoadJavaPlugin(Object loadedObject)
+        {
+            evManager.gameHandlers.stream().forEach((handler) ->
+            {
+                handler.onLoadJavaPlugin(loadedObject);
+            });
+        }
+        
         @Override
         public void onTick()
         {

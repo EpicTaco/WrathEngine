@@ -35,6 +35,12 @@ public interface GameEventHandler
     public void onGameOpen();
   
     /**
+     * Method that is called when a java plugin is loaded.
+     * @param loadedObject The {@link java.lang.Object} that was loaded by the {@link wrath.common.javaloader.JarLoader}.
+     */
+    public void onLoadJavaPlugin(Object loadedObject);
+    
+    /**
      * Method that is called every time the game's logic is supposed to update.
      */
     public void onTick();

@@ -114,6 +114,31 @@ public class JarLoader
      * Loads a {@link java.lang.Class} from the specified Jar file and creates an instance of it.
      * Specified object MUST have an empty constructor.
      * @param jarFile The Jar File to load the object from.
+     * @return Returns an {@link java.lang.Object} that was made from the specified class.
+     */
+    public static Object loadObject(File jarFile)
+    {
+        try(BufferedReader read = new BufferedReader(new InputStreamReader(new URL("jar:file:" + jarFile.getAbsolutePath() + "!/init").openStream())))
+        {
+            String classPath = read.readLine();
+            return loadObject(jarFile, classPath);
+        }
+        catch(MalformedURLException e)
+        {
+            JAVA_LDR_LOGGER.log("Could not load jar plugin '" + jarFile.getName() + "'! File 'init' was not found!");
+        }
+        catch(IOException e)
+        {
+            JAVA_LDR_LOGGER.log("Could not load jar plugin '" + jarFile.getName() + "'! I/O Error!");
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Loads a {@link java.lang.Class} from the specified Jar file and creates an instance of it.
+     * Specified object MUST have an empty constructor.
+     * @param jarFile The Jar File to load the object from.
      * @param classPath The package.file path to the Class located in the Jar File.
      * @return Returns an {@link java.lang.Object} that was made from the specified class.
      */

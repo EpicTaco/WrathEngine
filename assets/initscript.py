@@ -38,7 +38,10 @@ class EventHandler(GameEventHandler):
 	def onGameClose(self):
 		if world is not None:
 			world.save()
-			
+	
+	def onLoadJavaPlugin(self, object):
+		pass
+	
 	def onTick(self):
 		pass
 		
