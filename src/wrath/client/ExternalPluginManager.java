@@ -17,13 +17,16 @@
  */
 package wrath.client;
 
+import wrath.common.scripts.PythonScriptManager;
+
 /**
  * Class to act as a portal between external applications and the {@link wrath.client.Game} class.
  * @author Trent Spears
  */
 public class ExternalPluginManager
 {
-    private static Game inst = null;
+    private static Game game = null;
+    private static PythonScriptManager pyMgr = null;
     
     /**
      * Gets the currently active {@link wrath.client.Game} class.
@@ -31,15 +34,33 @@ public class ExternalPluginManager
      */
     public static Game getGameInstance()
     {
-        return inst;
+        return game;
+    }
+    
+    /**
+     * Gets the currently active {@link wrath.common.scripts.PythonScriptManager} class.
+     * @return Returns the currently active {@link wrath.common.scripts.PythonScriptManager} class.
+     */
+    public static PythonScriptManager getPythonScriptManager()
+    {
+        return pyMgr;
     }
     
     /**
      * Executed automatically internally, this method links the {@link wrath.client.Game} class to link with external applications.
-     * @param game The {@link wrath.client.Game} instance to link with external applications.
+     * @param thisGame The {@link wrath.client.Game} instance to link with external applications.
      */
-    protected static void setGameInstance(Game game)
+    protected static void setGameInstance(Game thisGame)
     {
-        inst = game;
+        game = thisGame;
+    }
+    
+    /**
+     * Sets the active {@link wrath.common.scripts.PythonScriptManager} when you create one.
+     * @param thisPyManager The {@link wrath.common.scripts.PythonScriptManager} instance to link with external applications.
+     */
+    public static void setPythonScriptManager(PythonScriptManager thisPyManager)
+    {
+        pyMgr = thisPyManager;
     }
 }

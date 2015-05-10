@@ -19,6 +19,7 @@ package wrath.test.client;
 
 import java.io.File;
 import wrath.client.EntryObject;
+import wrath.client.ExternalPluginManager;
 import wrath.client.Game;
 import wrath.client.enums.RenderMode;
 import wrath.client.events.GameEventHandler;
@@ -49,6 +50,7 @@ public class CustomGame extends Game implements GameEventHandler, EntryObject
         else world = new TempWorld(64, worldFile);
         
         scripts = new PythonScriptManager(this);
+        ExternalPluginManager.setPythonScriptManager(scripts);
         
         getEventManager().addGameEventHandler(this);
     }
