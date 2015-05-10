@@ -69,11 +69,11 @@ public class InputManager
      * Adds a listener to a specified String ID to be added later to a Keyboard or mouse function.
      * Name is NOT case sensitive!
      * @param id The String ID of the saved function.
-     * @param event The event to be saved.
+     * @param function The event to be saved.
      */
-    public static void addSavedFunction(String id, Runnable event)
+    public static void addSavedFunction(String id, Runnable function)
     {
-        savedFuncMap.put(id.trim().toLowerCase(), event);
+        savedFuncMap.put(id.trim().toLowerCase(), function);
     }
 
     /**
@@ -208,19 +208,19 @@ public class InputManager
             game.getWindowManager().minimizeWindow();
         });
         
-        bindKey(Key.KEY_HOME, Key.MOD_CONTROL + Key.MOD_SHIFT, KeyAction.KEY_PRESS, () ->
+        bindKey(Key.KEY_HOME, Key.MOD_CTRL + Key.MOD_SHIFT, KeyAction.KEY_PRESS, () ->
         {
             bindKeysToDefaults();
         });
         
-        bindKey(Key.KEY_HOME, Key.MOD_CONTROL + Key.MOD_ALT + Key.MOD_SHIFT, KeyAction.KEY_PRESS, () ->
+        bindKey(Key.KEY_HOME, Key.MOD_CTRL + Key.MOD_ALT + Key.MOD_SHIFT, KeyAction.KEY_PRESS, () ->
         {
             unbindAllKeys();
             bindDefaultEngineKeys();
             bindKeysToDefaults();
         });
         
-        bindKey(Key.KEY_S, Key.MOD_CONTROL + Key.MOD_ALT, KeyAction.KEY_PRESS, () ->
+        bindKey(Key.KEY_S, Key.MOD_CTRL + Key.MOD_ALT, KeyAction.KEY_PRESS, () ->
         {
             saveKeys();
             game.getConfig().save();

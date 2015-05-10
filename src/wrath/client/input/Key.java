@@ -158,7 +158,7 @@ public class Key
                 //Mod Keys
                 MOD_NONE          = 0,
                 MOD_SHIFT         = GLFW.GLFW_MOD_SHIFT,
-                MOD_CONTROL       = GLFW.GLFW_MOD_CONTROL,
+                MOD_CTRL       = GLFW.GLFW_MOD_CONTROL,
                 MOD_ALT           = GLFW.GLFW_MOD_ALT,
                 MOD_SUPER         = GLFW.GLFW_MOD_SUPER;
                         
