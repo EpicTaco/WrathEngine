@@ -26,7 +26,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
-import wrath.util.Config;
 import wrath.util.Logger;
 
 /**
@@ -36,8 +35,7 @@ import wrath.util.Logger;
 public class JarLoader
 {
     private static final JarLoader inst = new JarLoader();
-    public static final Config JAVA_LDR_CONFIG = new Config("JarLoader");
-    public static final Logger JAVA_LDR_LOGGER = new Logger("JarLoader");
+    public static final Logger JAVA_LDR_LOGGER = new Logger("jarloader");
     
     private JarLoader(){}
     
@@ -47,7 +45,6 @@ public class JarLoader
     public static void closeJavaPlugins()
     {
         JAVA_LDR_LOGGER.close();
-        JAVA_LDR_CONFIG.save();
     }
     
     /**
