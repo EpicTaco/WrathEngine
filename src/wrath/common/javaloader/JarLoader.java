@@ -83,7 +83,7 @@ public class JarLoader
         if(!pluginsDir.exists() || !pluginsDir.isDirectory())
         {
             JAVA_LDR_LOGGER.log("Could not load jars from directory '" + pluginsDir.getAbsolutePath() + "', directory does not exist!");
-            return null;
+            return new Object[0];
         }
         
         ArrayList<Object> obj = new ArrayList<>();
