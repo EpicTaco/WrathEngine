@@ -93,20 +93,20 @@ public class FontRenderer
      */
     public void renderString(String string, float x, float y)
     {
-        renderString(string, x, y, 8f);
+        renderString(string, x, y, 6.8f);
     }
     
     /**
      * Draws the specified string onto the screen at the specified points.
      * @param string The {Link java.lang.String} to write to the screen.
-     * @param x The X-coordinate of the bottom left of the message.
-     * @param y The Y-coordinate of the bottom left of the message.
+     * @param x The X-coordinate of the top left of the message.
+     * @param y The Y-coordinate of the top left of the message.
      * @param widthOffset The divisor to lower space between characters. The higher the offset, the closer the characters are to each other.
      */
     public void renderString(String string, float x, float y, float widthOffset) 
     {
         final int gridSize = 16;
-        final float characterWidth = fontSize * 0.01f;
+        float characterWidth = fontSize * 0.01f;
         final float characterHeight = characterWidth * 0.75f;
         
         glPushAttrib(GL_TEXTURE_BIT | GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT);
@@ -121,24 +121,32 @@ public class FontRenderer
         glTranslatef(x, 0, 0);
         glColor4f(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
         glBegin(GL_QUADS);
+        float curPos = 0f;
         for(int i = 0; i < string.length(); i++) 
         {
             int ascii = (int) string.charAt(i);
             final float cellSize = 1.0f / gridSize;
             float cellX = ((int) ascii % gridSize) * cellSize;
             float cellY = ((int) ascii / gridSize) * cellSize;
-            
+            //(0, 1) bottom left
             glTexCoord2f(cellX, cellY + cellSize);
-            glVertex2f(i * characterWidth / widthOffset, y);
+            glVertex2f(curPos, y - characterHeight);
             
+            //(1, 1) bottom right
             glTexCoord2f(cellX + cellSize, cellY + cellSize);
-            glVertex2f(i * characterWidth / widthOffset + characterWidth / 2, y);
+            glVertex2f(curPos + characterWidth / 2, y - characterHeight);
             
+            //(1, 0) top right 
             glTexCoord2f(cellX + cellSize, cellY);
-            glVertex2f(i * characterWidth / widthOffset + characterWidth / 2, y + characterHeight);
+            glVertex2f(curPos + characterWidth / 2, y);
             
+            //(0, 0) top left
             glTexCoord2f(cellX, cellY);
-            glVertex2f(i * characterWidth / widthOffset, y + characterHeight);
+            glVertex2f(curPos, y);
+            
+            if(string.charAt(i) == 'l' || string.charAt(i) == 'i' || string.charAt(i) == '!' || string.charAt(i) == '|')
+                curPos = (((i + 1) * characterWidth / widthOffset) + ((i) * characterWidth / widthOffset)) / 1.96f;
+            else curPos = (i + 1) * characterWidth / widthOffset;
         }
         glEnd();
         glPopMatrix();

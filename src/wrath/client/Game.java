@@ -307,7 +307,7 @@ public class Game
                 winManager.getBackground().renderBackground();
                 render();
                 winManager.getGUI().renderGUI();
-                if(winManager.isRenderingFPS()) winManager.getFontRenderer().renderString(winManager.getFPS() + "", -1f, 0.94f);
+                if(winManager.isRenderingFPS()) winManager.getFontRenderer().renderString(winManager.getFPS() + "", -1f, 1f);
                 GL11.glFlush();
                 GLFW.glfwSwapBuffers(winManager.window);
             
@@ -1000,21 +1000,20 @@ public class Game
 
             GL11.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             GL11.glViewport(0, 0, width, height);
+            if(gameConfig.getBoolean("FullscreenUsesResolution", false) && gameConfig.getString("WindowState").equalsIgnoreCase("Fullscreen"))
+            {
+                width = gameConfig.getInt("Width", 800);
+                height = gameConfig.getInt("Height", 600);
+                winManager.setResolution(width, height);
+            }
             GL11.glMatrixMode(GL11.GL_PROJECTION);
             GL11.glLoadIdentity();
             if(MODE == RenderMode.Mode2D) GL11.glOrtho(1, 1, 1, 1, 1, -1);
             //TODO: Make this 3D! else GL11.glOrtho(1, 1, 1, 1, 1, -1);
             GL11.glMatrixMode(GL11.GL_MODELVIEW);
             GL11.glLoadIdentity();
-
-            if(gameConfig.getBoolean("FullscreenUsesResolution", false) && gameConfig.getString("WindowState").equalsIgnoreCase("Fullscreen"))
-            {
-                winManager.setResolution(gameConfig.getInt("Width", 800), gameConfig.getInt("Height", 600));
-                width = gameConfig.getInt("Width", 800);
-                height = gameConfig.getInt("Height", 600);
-            }
             
-            if(font == null) font = new FontRenderer(new File("assets/fonts/timesnewroman.png"), 8f, inst);
+            if(font == null) font = new FontRenderer(new File("assets/fonts/arial.png"), 8f, inst);
             else font.refreshRenderer();
             
             centerWindow();
@@ -1026,8 +1025,7 @@ public class Game
 
         /**
          * Takes a screen-shot and saves it to the file specified as a PNG.
-         * @param saveToName The name of the file to save the screen-shot to
-         * (excluding file extension).
+         * @param saveToName The name of the file to save the screen-shot to (excluding file extension).
          */
         public void screenShot(String saveToName)
         {
