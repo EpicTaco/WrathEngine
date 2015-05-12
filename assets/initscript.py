@@ -24,7 +24,7 @@ from wrath.client.events import GameEventHandler
 from wrath.client.enums import RenderMode
 from java.io import File
 from wrath.client.graphics import Color
-from wrath.client.graphics import Model3D
+from wrath.client.graphics import Model
 from org.lwjgl.opengl import GL30
 from org.lwjgl.opengl import GL20
 from org.lwjgl.opengl import GL11
