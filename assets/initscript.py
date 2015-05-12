@@ -54,7 +54,7 @@ class CustomGame(Game):
 		scriptsManager.setGlobalVariable("parentObject", self)
 		
 	def render(self):
-		self.getWindowManager().getFontRenderer().renderString("%d" % self.getWindowManager().getFPS(), -1.0, 0.94)
+		self.getWindowManager().getFontRenderer().renderString("Test Client!", 0, 0)
 	
 	def getWorld(self):
 		pass

@@ -22,7 +22,6 @@ import wrath.client.ExternalPluginManager;
 import wrath.client.Game;
 import wrath.client.enums.RenderMode;
 import wrath.client.events.GameEventHandler;
-import wrath.client.graphics.Color;
 import wrath.common.scripts.PythonScriptManager;
 
 /**

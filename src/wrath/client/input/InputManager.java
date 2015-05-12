@@ -35,7 +35,6 @@ import org.lwjgl.glfw.GLFWCursorPosCallback;
 import org.lwjgl.glfw.GLFWKeyCallback;
 import org.lwjgl.glfw.GLFWMouseButtonCallback;
 import org.lwjgl.glfw.GLFWScrollCallback;
-import wrath.client.ClientUtils;
 import wrath.client.Game;
 import wrath.client.enums.ImageFormat;
 import wrath.client.enums.WindowState;
@@ -176,7 +175,7 @@ public class InputManager
         
         bindKey(Key.KEY_F3, Key.MOD_NONE, KeyAction.KEY_PRESS, () ->
         {
-            game.getLogger().log("Current FPS: " + game.getWindowManager().getFPS() + ", Avg FPS: " + game.getWindowManager().getAverageFPS() + ", Total Frames: " + game.getWindowManager().getTotalFramesRendered());
+            game.getWindowManager().setRenderFPS(!game.getWindowManager().isRenderingFPS());
         });
         
         bindKey(Key.KEY_F12, Key.MOD_NONE, KeyAction.KEY_PRESS, () ->

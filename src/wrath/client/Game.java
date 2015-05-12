@@ -307,6 +307,7 @@ public class Game
                 winManager.getBackground().renderBackground();
                 render();
                 winManager.getGUI().renderGUI();
+                if(winManager.isRenderingFPS()) winManager.getFontRenderer().renderString(winManager.getFPS() + "", -1f, 0.94f);
                 GL11.glFlush();
                 GLFW.glfwSwapBuffers(winManager.window);
             
@@ -733,6 +734,7 @@ public class Game
         private double avgFps = 0;
         private FontRenderer font = null;
         private double fps = 0;
+        private boolean renderFps = false;
         private int totalFramesRendered = 0;
         private long window;
         private boolean windowOpen = false;
@@ -871,6 +873,15 @@ public class Game
             return windowState;
         }
 
+        /**
+         * If true, the FPS will be rendered at the top-left of the screen.
+         * @return Returns true if the FPS will be rendered in text at the top-left of the screen.
+         */
+        public boolean isRenderingFPS()
+        {
+            return renderFps;
+        }
+        
         /**
          * Tells whether or not the window is open.
          * @return Returns true if the window is open, otherwise false.
@@ -1060,6 +1071,15 @@ public class Game
         public void setFontRenderer(FontRenderer font)
         {
             this.font = font;
+        }
+        
+        /**
+         * Changes the state of whether or not to render the FPS.
+         * @param render If true, the FPS will be rendered in text at the top-left of the screen.
+         */
+        public void setRenderFPS(boolean render)
+        {
+            this.renderFps = render;
         }
         
         /**

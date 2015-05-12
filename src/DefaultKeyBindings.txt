@@ -2,7 +2,7 @@
 |     Key      |        Modifiers        |                       Function                         |
 ===================================================================================================
     Escape                Shift                Exits the game using the stop() method.
-    F3                    None                 Prints out FPS information to console.
+    F3                    None                 Toggles whether or not the FPS counter should render.
     F12                   None                 Takes a screenshot and saves in PNG format.
     Enter(Return)         Alt                  Toggles between Fullscreen and Windowed modes.
     Enter(Return)         Shift                Centers the window.
