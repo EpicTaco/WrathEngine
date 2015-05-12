@@ -18,10 +18,10 @@
 package wrath.client.graphics;
 
 import java.io.File;
+import org.lwjgl.opengl.GL11;
 import wrath.client.ClientUtils;
 import wrath.client.Game;
 import wrath.util.Logger;
-import static org.lwjgl.opengl.GL11.*;
 
 /**
  * Class to load fonts and manage font rendering.
@@ -109,18 +109,18 @@ public class FontRenderer
         float characterWidth = fontSize * 0.01f;
         final float characterHeight = characterWidth * 0.75f;
         
-        glPushAttrib(GL_TEXTURE_BIT | GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT);
-        glEnable(GL_CULL_FACE);
-        glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, fontTex);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_ONE, GL_ONE);
-        glPushMatrix();
-        glTranslatef(x, 0, 0);
-        glColor4f(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
-        glBegin(GL_QUADS);
+        GL11.glPushAttrib(GL11.GL_TEXTURE_BIT | GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT);
+        GL11.glEnable(GL11.GL_CULL_FACE);
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, fontTex);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ONE);
+        GL11.glPushMatrix();
+        GL11.glTranslatef(x, 0, 0);
+        GL11.glColor4f(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
+        GL11.glBegin(GL11.GL_QUADS);
         float curPos = 0f;
         for(int i = 0; i < string.length(); i++) 
         {
@@ -129,34 +129,100 @@ public class FontRenderer
             float cellX = ((int) ascii % gridSize) * cellSize;
             float cellY = ((int) ascii / gridSize) * cellSize;
             //(0, 1) bottom left
-            glTexCoord2f(cellX, cellY + cellSize);
-            glVertex2f(curPos, y - characterHeight);
+            GL11.glTexCoord2f(cellX, cellY + cellSize);
+            GL11.glVertex2f(curPos, y - characterHeight);
             
             //(1, 1) bottom right
-            glTexCoord2f(cellX + cellSize, cellY + cellSize);
-            glVertex2f(curPos + characterWidth / 2, y - characterHeight);
+            GL11.glTexCoord2f(cellX + cellSize, cellY + cellSize);
+            GL11.glVertex2f(curPos + characterWidth / 2, y - characterHeight);
             
             //(1, 0) top right 
-            glTexCoord2f(cellX + cellSize, cellY);
-            glVertex2f(curPos + characterWidth / 2, y);
+            GL11.glTexCoord2f(cellX + cellSize, cellY);
+            GL11.glVertex2f(curPos + characterWidth / 2, y);
             
             //(0, 0) top left
-            glTexCoord2f(cellX, cellY);
-            glVertex2f(curPos, y);
+            GL11.glTexCoord2f(cellX, cellY);
+            GL11.glVertex2f(curPos, y);
             
             if(string.charAt(i) == 'l' || string.charAt(i) == 'i' || string.charAt(i) == '!' || string.charAt(i) == '|')
                 curPos = (((i + 1) * characterWidth / widthOffset) + ((i) * characterWidth / widthOffset)) / 1.96f;
             else curPos = (i + 1) * characterWidth / widthOffset;
         }
-        glEnd();
-        glPopMatrix();
-        glPopAttrib();
+        GL11.glEnd();
+        GL11.glPopMatrix();
+        GL11.glPopAttrib();
         
-        glColor4f(1, 1, 1, 0);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glDisable(GL_BLEND);
-        glDisable(GL_TEXTURE_2D);
-        glDisable(GL_CULL_FACE);
+        GL11.glColor4f(1, 1, 1, 0);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+        GL11.glDisable(GL11.GL_BLEND);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        GL11.glDisable(GL11.GL_CULL_FACE);
+    }
+    
+    /**
+     * Draws the specified string onto the screen at the specified points independent of variables set in this object.
+     * The only variable taken from the object in this method is the font itself.
+     * @param string The {Link java.lang.String} to write to the screen.
+     * @param x The X-coordinate of the top left of the message.
+     * @param y The Y-coordinate of the top left of the message.
+     * @param widthOffset The divisor to lower space between characters. The higher the offset, the closer the characters are to each other.
+     * @param fontSize The size of the font. This is NOT standardized!
+     * @param color The {@link wrath.client.graphics.Color} to make the rendered text.
+     */
+    public void renderString(String string, float x, float y, float widthOffset, float fontSize, Color color) 
+    {
+        final int gridSize = 16;
+        float characterWidth = fontSize * 0.01f;
+        final float characterHeight = characterWidth * 0.75f;
+        
+        GL11.glPushAttrib(GL11.GL_TEXTURE_BIT | GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT);
+        GL11.glEnable(GL11.GL_CULL_FACE);
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, fontTex);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ONE);
+        GL11.glPushMatrix();
+        GL11.glTranslatef(x, 0, 0);
+        GL11.glColor4f(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
+        GL11.glBegin(GL11.GL_QUADS);
+        float curPos = 0f;
+        for(int i = 0; i < string.length(); i++) 
+        {
+            int ascii = (int) string.charAt(i);
+            final float cellSize = 1.0f / gridSize;
+            float cellX = ((int) ascii % gridSize) * cellSize;
+            float cellY = ((int) ascii / gridSize) * cellSize;
+            //(0, 1) bottom left
+            GL11.glTexCoord2f(cellX, cellY + cellSize);
+            GL11.glVertex2f(curPos, y - characterHeight);
+            
+            //(1, 1) bottom right
+            GL11.glTexCoord2f(cellX + cellSize, cellY + cellSize);
+            GL11.glVertex2f(curPos + characterWidth / 2, y - characterHeight);
+            
+            //(1, 0) top right 
+            GL11.glTexCoord2f(cellX + cellSize, cellY);
+            GL11.glVertex2f(curPos + characterWidth / 2, y);
+            
+            //(0, 0) top left
+            GL11.glTexCoord2f(cellX, cellY);
+            GL11.glVertex2f(curPos, y);
+            
+            if(string.charAt(i) == 'l' || string.charAt(i) == 'i' || string.charAt(i) == '!' || string.charAt(i) == '|')
+                curPos = (((i + 1) * characterWidth / widthOffset) + ((i) * characterWidth / widthOffset)) / 1.96f;
+            else curPos = (i + 1) * characterWidth / widthOffset;
+        }
+        GL11.glEnd();
+        GL11.glPopMatrix();
+        GL11.glPopAttrib();
+        
+        GL11.glColor4f(1, 1, 1, 0);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+        GL11.glDisable(GL11.GL_BLEND);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        GL11.glDisable(GL11.GL_CULL_FACE);
     }
     
     /**

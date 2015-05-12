@@ -44,6 +44,7 @@ import wrath.client.events.InputEventHandler;
 import wrath.client.events.PlayerEventHandler;
 import wrath.client.graphics.Color;
 import wrath.client.graphics.FontRenderer;
+import wrath.client.graphics.Model;
 import wrath.common.javaloader.JarLoader;
 import wrath.common.scheduler.Scheduler;
 import wrath.common.scripts.ScriptManager;
@@ -409,6 +410,7 @@ public class Game
     private void stopImpl()
     {
         try{
+        Model.clearModels();
         winManager.closeWindow();
         inpManager.closeInput(true);
         GLFW.glfwTerminate();

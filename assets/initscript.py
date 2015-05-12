@@ -24,6 +24,10 @@ from wrath.client.events import GameEventHandler
 from wrath.client.enums import RenderMode
 from java.io import File
 from wrath.client.graphics import Color
+from wrath.client.graphics import Model3D
+from org.lwjgl.opengl import GL30
+from org.lwjgl.opengl import GL20
+from org.lwjgl.opengl import GL11
 
 gameObject = None
 
@@ -54,7 +58,7 @@ class CustomGame(Game):
 		scriptsManager.setGlobalVariable("parentObject", self)
 		
 	def render(self):
-		self.getWindowManager().getFontRenderer().renderString("Test Client!", 0, 0)
+		pass
 	
 	def getWorld(self):
 		pass

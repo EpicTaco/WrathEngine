@@ -17,11 +17,15 @@
  */
 package wrath.test.client;
 
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL30;
 import wrath.client.EntryObject;
 import wrath.client.ExternalPluginManager;
 import wrath.client.Game;
 import wrath.client.enums.RenderMode;
 import wrath.client.events.GameEventHandler;
+import wrath.client.graphics.Model;
 import wrath.common.scripts.PythonScriptManager;
 
 /**
@@ -32,6 +36,7 @@ import wrath.common.scripts.PythonScriptManager;
 public class CustomGame extends Game implements GameEventHandler, EntryObject
 {
     private final PythonScriptManager scripts;
+    private Model model;
     
     /**
      * Do not use start() in the constructor! EVER!
@@ -59,13 +64,19 @@ public class CustomGame extends Game implements GameEventHandler, EntryObject
     @Override
     public void render()
     {
-        getWindowManager().getFontRenderer().renderString("this is a long string", 0, 0);
+        GL11.glColor4f(1, 0, 0, 1);
+        GL30.glBindVertexArray(model.getPositionsVaoID());
+        GL20.glEnableVertexAttribArray(0);
+        GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, model.getVertexCount());
+        GL20.glDisableVertexAttribArray(0);
+        GL30.glBindVertexArray(0);
     }
     
     @Override
     public void onGameOpen()
     {
         getInputManager().bindDefaultEngineKeys();
+        model = Model.createModel("test", new float[]{-0.5f, 0.5f, 0f, -0.5f, -0.5f, 0f, 0.5f, -0.5f, 0f, 0.5f, -0.5f, 0f, 0.5f, 0.5f, 0f, -0.5f, 0.5f, 0f});
     }
     
     @Override
