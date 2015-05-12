@@ -154,6 +154,9 @@ public class FontRenderer
         
         glColor4f(1, 1, 1, 0);
         glBindTexture(GL_TEXTURE_2D, 0);
+        glDisable(GL_BLEND);
+        glDisable(GL_TEXTURE_2D);
+        glDisable(GL_CULL_FACE);
     }
     
     /**
