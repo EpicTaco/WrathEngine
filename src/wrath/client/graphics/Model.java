@@ -44,6 +44,8 @@ public class Model
         {
             GL15.glDeleteBuffers(model.getVboID());
         });
+        
+        map.clear();
     }
     
     public static Model createModel(String modelName, float[] verticies)
