@@ -27,7 +27,7 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
 /**
- * Class to represent a 3D Model.
+ * Class to represent a Model.
  * @author Trent Spears
  */
 public class Model
