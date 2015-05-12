@@ -22,22 +22,17 @@
 from wrath.client import Game
 from wrath.client.events import GameEventHandler
 from wrath.client.enums import RenderMode
-from wrath.test.client import TempWorld
 from java.io import File
+from wrath.client.graphics import Color
 
 gameObject = None
-world = None
 
 class EventHandler(GameEventHandler):
 	def onGameOpen(self):
 		gameObject.getInputManager().bindDefaultEngineKeys()
-		parentObject.getInputManager().addDefaultKeyBinding(Key.MOUSE_BUTTON_1, Key.MOD_NONE, KeyAction.KEY_HOLD_DOWN, "setgrass")
-		parentObject.getInputManager().addDefaultKeyBinding(Key.MOUSE_BUTTON_2, Key.MOD_NONE, KeyAction.KEY_HOLD_DOWN,"setstone")
-		parentObject.getInputManager().addDefaultKeyBinding(Key.MOUSE_BUTTON_3, Key.MOD_NONE, KeyAction.KEY_HOLD_DOWN,"setair")
 		
 	def onGameClose(self):
-		if world is not None:
-			world.save()
+		pass
 	
 	def onLoadJavaPlugin(self, object):
 		pass
@@ -46,7 +41,7 @@ class EventHandler(GameEventHandler):
 		pass
 		
 	def onResolutionChange(self, oldWidth, oldHeight, newWidth, newHeight):
-		gameObject.getWindowManager().setResolution(oldWidth, oldHeight)
+		pass
 		
 	def onWindowOpen(self):
 		gameObject.getInputManager().setCursorEnabled(True)
@@ -59,25 +54,12 @@ class CustomGame(Game):
 		scriptsManager.setGlobalVariable("parentObject", self)
 		
 	def render(self):
-		if world is not None:
-			world.drawWorld()
+		self.getWindowManager().getFontRenderer().renderString("%d" % self.getWindowManager().getFPS(), -1.0, 0.94)
 	
 	def getWorld(self):
-		if world is not None:
-			return world
-		else:
-			return None
-
-
+		pass
 
 gameObject = CustomGame()
-
-if File("etc/world.dat").exists():
-	world = TempWorld.load(File("etc/world.dat"))
-else:
-	world = TempWorld(64, File("etc/world.dat"))
-if world is None:
-	parentObject.getLogger().log("TempWorld is not compatible with Python Scripts!")
 
 scriptsManager.loadScriptsFromDirectory(File("etc/scripts/autoexec"), True, True)
 gameObject.start()

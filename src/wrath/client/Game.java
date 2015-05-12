@@ -19,8 +19,6 @@ package wrath.client;
 
 import wrath.client.enums.WindowState;
 import wrath.client.enums.RenderMode;
-import java.awt.Font;
-import java.awt.FontFormatException;
 import wrath.client.input.InputManager;
 import wrath.client.events.GameEventHandler;
 import java.awt.image.BufferedImage;
@@ -44,6 +42,8 @@ import org.lwjgl.system.MemoryUtil;
 import wrath.client.enums.ImageFormat;
 import wrath.client.events.InputEventHandler;
 import wrath.client.events.PlayerEventHandler;
+import wrath.client.graphics.Color;
+import wrath.client.graphics.FontRenderer;
 import wrath.common.javaloader.JarLoader;
 import wrath.common.scheduler.Scheduler;
 import wrath.common.scripts.ScriptManager;
@@ -56,6 +56,8 @@ import wrath.util.Logger;
  */
 public class Game 
 {   
+    private final Game inst;
+    
     private final RenderMode MODE;
     private final String TITLE;
     private final double TPS;
@@ -100,11 +102,12 @@ public class Game
             stopImpl();
         }
            
-        
         System.setProperty("org.lwjgl.librarypath", "assets/native");
         
         File screenshotDir = new File("etc/screenshots");
         if(!screenshotDir.exists()) screenshotDir.mkdirs();
+        
+        inst = this;
     }
     
     /**
@@ -427,8 +430,9 @@ public class Game
     public class Background
     {
         private int backTexture = 0;
-        private float br = 1, bg = 1, bb = 1, ba = 0;
+        private Color color;
         private boolean def = true;
+        private final Color defColor = new Color(1, 1, 1, 0);
         
         /**
          * Used to render user-set background.
@@ -439,7 +443,7 @@ public class Game
            
             GL11.glEnable(GL11.GL_TEXTURE_2D);
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, backTexture);
-            GL11.glColor4f(br, bg, bb, ba);
+            GL11.glColor4f(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
             GL11.glBegin(GL11.GL_QUADS);
             {
                 GL11.glTexCoord2f(0, 0);
@@ -460,16 +464,12 @@ public class Game
         }
         
         /**
-         * Gets the RGBA Values of the background color in an array format.
-         * Element 0 of the array is the R (red) value, scaled 0.0 (no red) to 1.0 (pure red).
-         * Element 1 of the array is the G (green) value, scaled 0.0 (no green) to 1.0 (pure green).
-         * Element 2 of the array is the B (blue) value, scaled 0.0 (no blue) to 1.0 (pure blue).
-         * Element 3 of the array is the A (alpha transparency) value, scaled 0.0 (opaque) to 1.0 (transparent).
-         * @return Returns an array of float variables describing the RGBA value of the background.
+         * Gets the {@link wrath.client.graphics.Color} value of the background.
+         * @return Returns the {@link wrath.client.graphics.Color} value of the background.
          */
-        public float[] getBackgroundRGBA()
+        public Color getBackgroundColor()
         {
-            return new float[]{br, bg, bb, ba};
+            return color;
         }
         
         /**
@@ -509,24 +509,18 @@ public class Game
          */
         public void setBackgroundImage(int texture)
         {
-            def = br == 1 && bg == 1 && bb == 1 && ba == 0 && texture == 0;
+            def = color == defColor && texture == 0;
             backTexture = texture;
         }
 
         /**
-         * Sets the RGBA configuration of the background image.
-         * @param red The red value, max 1.0.
-         * @param green The green value, max 1.0.
-         * @param blue The blue value, max 1.0.
-         * @param alpha The transparency, 1.0 being opaque.
+         * Changes the background color to the values defined in the specified {@link wrath.client.graphics.Color}.
+         * @param color The {@link wrath.client.graphics.Color} object representing the background color.
          */
-        public void setBackgroundRGBA(float red, float green, float blue, float alpha)
+        public void setBackgroundColor(Color color)
         {
-            def = red == 1 && green == 1 && blue == 1 && alpha == 0 && backTexture == 0;
-            br = red;
-            bg = green;
-            bb = blue;
-            ba = alpha;
+            def = color == defColor && backTexture == 0;
+            this.color = color;
         }
 
         /**
@@ -535,10 +529,7 @@ public class Game
         public void setBackgroundToDefault()
         {
             def = true;
-            br = 1;
-            bg = 1;
-            bb = 1;
-            ba = 0;
+            color = defColor;
             backTexture = 0;
         }
     }
@@ -740,7 +731,7 @@ public class Game
     public class WindowManager
     {
         private double avgFps = 0;
-        private Font font = new Font("Times New Roman", Font.PLAIN, 16);
+        private FontRenderer font = null;
         private double fps = 0;
         private int totalFramesRendered = 0;
         private long window;
@@ -808,11 +799,10 @@ public class Game
         }
         
         /**
-        * Gets the default global font.
-        * @return The current global font.
-        * @see java.awt.Font
+        * Gets the default global font renderer.
+        * @return The current global {@link wrath.client.graphics.FontRenderer}.
         */
-        public Font getFont()
+        public FontRenderer getFontRenderer()
         {
             return font;
         }
@@ -907,7 +897,7 @@ public class Game
         public void openWindow()
         {
             if(windowOpen) return;
-
+            
             GLFW.glfwDefaultWindowHints();
             GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GL11.GL_FALSE);
             GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, ClientUtils.getLWJGLBoolean(gameConfig.getBoolean("WindowResizable", true)));
@@ -994,7 +984,6 @@ public class Game
                     gameConfig.setProperty("Height", height + "");
                     GL11.glViewport(0, 0, width, height);
                     evManager.getGameEventHandler().onResolutionChange(ow, oh, width, height);
-                  
                 }
             }));
 
@@ -1002,8 +991,8 @@ public class Game
             GL11.glViewport(0, 0, width, height);
             GL11.glMatrixMode(GL11.GL_PROJECTION);
             GL11.glLoadIdentity();
-            if(MODE == RenderMode.Mode2D) GL11.glOrtho(-1, 1, 1, -1, 1, -1);
-            //TODO: Make 3D!    else GL11.glOrtho(-ratio, ratio, -1.f, 1.f, 1.f, -1.f);
+            if(MODE == RenderMode.Mode2D) GL11.glOrtho(1, 1, 1, 1, 1, -1);
+            //TODO: Make this 3D! else GL11.glOrtho(1, 1, 1, 1, 1, -1);
             GL11.glMatrixMode(GL11.GL_MODELVIEW);
             GL11.glLoadIdentity();
 
@@ -1013,6 +1002,9 @@ public class Game
                 width = gameConfig.getInt("Width", 800);
                 height = gameConfig.getInt("Height", 600);
             }
+            
+            if(font == null) font = new FontRenderer(new File("assets/fonts/timesnewroman.png"), 8f, inst);
+            else font.refreshRenderer();
             
             centerWindow();
             
@@ -1062,32 +1054,12 @@ public class Game
         }
 
         /**
-         * Sets the game's global font.
-         * @param font The {@link java.awt.Font} to derive from.
+         * Sets the game's global font renderer.
+         * @param font The {@link wrath.client.graphics.FontRenderer} to manage text rendering.
          */
-        public void setFont(Font font)
+        public void setFontRenderer(FontRenderer font)
         {
             this.font = font;
-        }
-
-        /**
-         * Sets the game's global font.
-         * @param fontLocation The file containing the font.
-         */
-        public void setFont(File fontLocation)
-        {
-            try 
-            {
-                font = Font.createFont(Font.TRUETYPE_FONT, fontLocation);
-            }
-            catch(FontFormatException e) 
-            {
-                Logger.getErrorLogger().log("Could not load font from '" + fontLocation.getAbsolutePath() + "'! Invalid Format!");
-            }
-            catch(IOException e) 
-            {
-                Logger.getErrorLogger().log("Could not load font from '" + fontLocation.getAbsolutePath() + "'! I/O Error!");
-            }
         }
         
         /**

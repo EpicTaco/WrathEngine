@@ -17,15 +17,12 @@
  */
 package wrath.test.client;
 
-import java.io.File;
 import wrath.client.EntryObject;
 import wrath.client.ExternalPluginManager;
 import wrath.client.Game;
 import wrath.client.enums.RenderMode;
 import wrath.client.events.GameEventHandler;
-import wrath.client.input.InputManager;
-import wrath.client.input.Key;
-import wrath.client.input.KeyAction;
+import wrath.client.graphics.Color;
 import wrath.common.scripts.PythonScriptManager;
 
 /**
@@ -35,7 +32,6 @@ import wrath.common.scripts.PythonScriptManager;
  */
 public class CustomGame extends Game implements GameEventHandler, EntryObject
 {
-    private final TempWorld world;
     private final PythonScriptManager scripts;
     
     /**
@@ -44,10 +40,6 @@ public class CustomGame extends Game implements GameEventHandler, EntryObject
     public CustomGame()
     {
         super("Test Client", "INDEV", 30, RenderMode.Mode2D);
-        
-        File worldFile = new File("etc/world.dat");
-        if(worldFile.exists()) world = TempWorld.load(worldFile);
-        else world = new TempWorld(64, worldFile);
         
         scripts = new PythonScriptManager(this);
         ExternalPluginManager.setPythonScriptManager(scripts);
@@ -68,42 +60,17 @@ public class CustomGame extends Game implements GameEventHandler, EntryObject
     @Override
     public void render()
     {
-        world.drawWorld();
+        getWindowManager().getFontRenderer().renderString("this is a long string", 0, 0);
     }
     
     @Override
     public void onGameOpen()
-    { 
-        //Pre-defined key functions
-        InputManager.addSavedFunction("setgrass", () ->
-        {
-            int[] tile = world.getBounds(getInputManager().getCursorX(), getInputManager().getCursorY());
-            if(tile.length >= 2) world.setTile(tile[0], tile[1], TempWorld.GRASS);
-        });
-        
-        InputManager.addSavedFunction("setstone", () ->
-        {
-            int[] tile = world.getBounds(getInputManager().getCursorX(), getInputManager().getCursorY());
-            if(tile.length >= 2) world.setTile(tile[0], tile[1], TempWorld.STONE);
-        });
-        
-        InputManager.addSavedFunction("setair", () ->
-        {
-            int[] tile = world.getBounds(getInputManager().getCursorX(), getInputManager().getCursorY());
-            if(tile.length >= 2) world.setTile(tile[0], tile[1], TempWorld.AIR);
-        });
-
+    {
         getInputManager().bindDefaultEngineKeys();
-        getInputManager().addDefaultKeyBinding(Key.MOUSE_BUTTON_1, Key.MOD_NONE, KeyAction.KEY_HOLD_DOWN, "setgrass");
-        getInputManager().addDefaultKeyBinding(Key.MOUSE_BUTTON_2, Key.MOD_NONE, KeyAction.KEY_HOLD_DOWN, "setstone");
-        getInputManager().addDefaultKeyBinding(Key.MOUSE_BUTTON_3, Key.MOD_NONE, KeyAction.KEY_HOLD_DOWN, "setair");
     }
     
     @Override
-    public void onGameClose()
-    {
-        world.save();
-    }
+    public void onGameClose(){}
     
     @Override
     public void onLoadJavaPlugin(Object obj){}

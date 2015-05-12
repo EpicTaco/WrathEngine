@@ -353,7 +353,7 @@ public class InputManager
      */
     public double getCursorY()
     {
-        return (2 / (double) game.getWindowManager().getHeight() * cury) - 1.0;
+        return ((2 / (double) game.getWindowManager().getHeight() * cury) - 1.0) * -1;
     }
 
     /**
