@@ -3,6 +3,7 @@ wrath.client.enums
 wrath.client.events
 wrath.client.graphics
 wrath.client.input
+wrath.common
 wrath.common.javaloader
 wrath.common.scheduler
 wrath.common.scripts
