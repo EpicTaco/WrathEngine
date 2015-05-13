@@ -39,8 +39,9 @@ public class World implements Serializable
     private transient final ArrayList<WorldEventHandler> handlerList = new ArrayList<>();
     private transient final RootWorldEventHandler rootHandler = new RootWorldEventHandler();
     
-    public World(File file)
+    public World(File worldFile)
     {
+        this.file = worldFile;
         if(!file.exists())
         {
             try
@@ -48,7 +49,10 @@ public class World implements Serializable
                 file.createNewFile();
             }
             catch(IOException e){}
+            
         }
+        
+        generateNewWorld();
     }
     
     /**
@@ -59,6 +63,11 @@ public class World implements Serializable
     public void addWorldEventHandler(WorldEventHandler handler)
     {
         handlerList.add(handler);
+    }
+    
+    private void generateNewWorld()
+    {
+        
     }
     
     /**
@@ -91,7 +100,11 @@ public class World implements Serializable
             Logger.getErrorLogger().log("Could not save World! I/O Error!");
         }
         
-        if(out == null || fos == null || gout == null) return;
+        if(out == null || fos == null || gout == null)
+        {
+            Logger.getErrorLogger().log("Could not save World! Streams can not bind!");
+            return;
+        }
         
         try
         {
@@ -114,7 +127,7 @@ public class World implements Serializable
      * @param file The file to read world data from.
      * @return Returns {@link wrath.common.world.World} from the specified {java.io.File}, null if invalid or corrupt.
      */
-    public static World load(File file)
+    public static World loadWorld(File file)
     {
         World ret = null;
         FileInputStream fis = null;
@@ -132,7 +145,11 @@ public class World implements Serializable
             Logger.getErrorLogger().log("Could not load World! I/O Error!");
         }
         
-        if(in == null || fis == null || is == null) return ret;
+        if(in == null || fis == null || is == null)
+        {
+            Logger.getErrorLogger().log("Could not load World! Streams could not bind!");
+            return ret;
+        }
         
         try
         {

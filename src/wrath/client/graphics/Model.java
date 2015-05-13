@@ -19,6 +19,9 @@ package wrath.client.graphics;
 
 import java.io.File;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -30,93 +33,173 @@ import org.lwjgl.opengl.GL30;
  * Class to represent a Model.
  * @author Trent Spears
  */
-public class Model
+public class Model implements Renderable
 {
+    private static final int INDICIES_ATTRIB_INDEX = 1;
+    private static final int VERTICIES_ATTRIB_INDEX = 0;
+    
     private static final HashMap<String, Model> map = new HashMap<>();
     
+    /**
+     * Clears all memory allocated to models and removes it from the list of loaded models.
+     */
     public static void clearModels()
     {
-        map.values().stream().map((model) -> 
+        map.values().stream().map((m) -> 
         {
-            GL30.glDeleteVertexArrays(model.getPositionsVaoID());
-            return model;
-        }).forEach((model) -> 
+            GL30.glDeleteVertexArrays(m.getVaoID());
+            return m;
+        }).forEach((m) -> 
         {
-            GL15.glDeleteBuffers(model.getVboID());
+            for(Integer i : m.getVboList())
+                GL15.glDeleteBuffers(i);
         });
-        
         map.clear();
     }
     
-    public static Model createModel(String modelName, float[] verticies)
+    /**
+     * Creates a 2D or 3D model from a list of verticies.
+     * Models are always assumed to be made with triangles, and will be rendered as such.
+     * @param modelName The {@link java.lang.String} representation of the model's name.
+     * @param verticies The list of verticies in the model. One point is represented by (x, y, z), and there must be at least 3 points.
+     * @param indicies The list of points to connect for OpenGL. Look up indicies in OpenGL for reference.
+     * @return Returns the {@link wrath.client.graphics.Model} object of your model.
+     */
+    public static Model createModel(String modelName, float[] verticies, int[] indicies)
     {
+        // Generating VAO
         int vaoid = GL30.glGenVertexArrays();
         GL30.glBindVertexArray(vaoid);
-        int vboid = GL15.glGenBuffers();
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboid);
-        FloatBuffer buffer = BufferUtils.createFloatBuffer(verticies.length);
-        buffer.put(verticies);
-        buffer.flip();
-        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);
-        GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 0, 0);
         
-        Model model = new Model(modelName, null, vaoid, vboid, verticies.length/3);
+        // Generating Verticies VBO
+        int vtvboid = GL15.glGenBuffers();
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vtvboid);
+        FloatBuffer vbuffer = BufferUtils.createFloatBuffer(verticies.length);
+        vbuffer.put(verticies);
+        vbuffer.flip();
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, vbuffer, GL15.GL_STATIC_DRAW);
+        GL20.glVertexAttribPointer(VERTICIES_ATTRIB_INDEX, 3, GL11.GL_FLOAT, false, 0, 0);
+        
+        // Generating Indicies VBO
+        int invboid = GL15.glGenBuffers();
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, invboid);
+        IntBuffer ibuffer = BufferUtils.createIntBuffer(indicies.length);
+        ibuffer.put(indicies);
+        ibuffer.flip();
+        GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, ibuffer, GL15.GL_STATIC_DRAW);
+        
+        // Creating Model Object
+        Model model = new Model(modelName, null, vaoid, new Integer[]{vtvboid, invboid}, indicies.length);
         map.put(modelName, model);
+        
+        // Unbinding OpenGL Objects
         GL30.glBindVertexArray(0);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
         return model;
     }
     
+    /**
+     * Loads a 2D or 3D model from specified {@link java.io.File}.
+     * Models are always assumed to be made with triangles, and will be rendered as such.
+     * @param modelFile The {@link java.io.File} to read the model data from.
+     * @return Returns the {@link wrath.client.graphics.Model} object of your model.
+     */
     public static Model loadModel(File modelFile)
     {
         return loadModel(modelFile.getName(), modelFile);
     }
     
+    /**
+     * Loads a 2D or 3D model from specified {@link java.io.File}.
+     * Models are always assumed to be made with triangles, and will be rendered as such.
+     * @param modelName The {@link java.lang.String} representation of the model's name.
+     * @param modelFile The {@link java.io.File} to read the model data from.
+     * @return Returns the {@link wrath.client.graphics.Model} object of your model.
+     */
     public static Model loadModel(String modelName, File modelFile)
     {
-        //This data would be read from the file.
-        float[] data = new float[0];
+        // Obtaining Data
+        float[] verticies = new float[0];
+        int[] indicies = new int[0];
         
+        // Generating VAO
         int vaoid = GL30.glGenVertexArrays();
         GL30.glBindVertexArray(vaoid);
-        int vboid = GL15.glGenBuffers();
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboid);
-        FloatBuffer buffer = BufferUtils.createFloatBuffer(data.length);
-        buffer.put(data);
-        buffer.flip();
-        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);
-        GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 0, 0);
         
-        Model model = new Model(modelName, modelFile, vaoid, vboid, data.length/3);
+        // Generating Verticies VBO
+        int vtvboid = GL15.glGenBuffers();
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vtvboid);
+        FloatBuffer vbuffer = BufferUtils.createFloatBuffer(verticies.length);
+        vbuffer.put(verticies);
+        vbuffer.flip();
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, vbuffer, GL15.GL_STATIC_DRAW);
+        GL20.glVertexAttribPointer(VERTICIES_ATTRIB_INDEX, 3, GL11.GL_FLOAT, false, 0, 0);
+        
+        // Generating Indicies VBO
+        int invboid = GL15.glGenBuffers();
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, invboid);
+        IntBuffer ibuffer = BufferUtils.createIntBuffer(indicies.length);
+        ibuffer.put(indicies);
+        ibuffer.flip();
+        GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, ibuffer, GL15.GL_STATIC_DRAW);
+        
+        // Creating Model Object
+        Model model = new Model(modelName, null, vaoid, new Integer[]{vtvboid, invboid}, indicies.length);
         map.put(modelName, model);
+        
+        // Unbinding OpenGL Objects
         GL30.glBindVertexArray(0);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
         return model;
     }
  
     private final int vao;
-    private final int vbo;
+    private final ArrayList<Integer> vbos = new ArrayList<>();
     private final int vertexCount;
     
-    private Model(String modelName, File modelFile, int vao, int vbo, int vertexCount)
+    private Model(String modelName, File modelFile, int vao, Integer[] initVbos, int vertexCount)
     {
         this.vao = vao;
-        this.vbo = vbo;
+        vbos.addAll(Arrays.asList(initVbos));
         this.vertexCount = vertexCount;
     }
     
-    public int getPositionsVaoID()
+    /**
+     * Gets the OpenGL ID of the model's Vertex Array Object.
+     * @return Returns the OpenGL ID of the model's Vertex Array Object.
+     */
+    public int getVaoID()
     {
         return vao;
     }
     
-    public int getVboID()
+    /**
+     * Gets the OpenGL IDs of the model's Vertex Buffer Objects.
+     * @return Returns the OpenGL IDs of the model's Vertex Buffer Objects.
+     */
+    public Integer[] getVboList()
     {
-        return vbo;
+        Integer[] ret = new Integer[vbos.size()];
+        vbos.toArray(ret);
+        return ret;
     }
     
+    /**
+     * Gets the amount of verticies in the model.
+     * @return Returns the number of verticies in the model.
+     */
     public int getVertexCount()
     {
         return vertexCount;
+    }
+   
+    @Override
+    public void render()
+    {
+        GL30.glBindVertexArray(getVaoID());
+        GL20.glEnableVertexAttribArray(VERTICIES_ATTRIB_INDEX);
+        GL11.glDrawElements(GL11.GL_TRIANGLES, vertexCount, GL11.GL_UNSIGNED_INT, 0);
+        GL20.glDisableVertexAttribArray(VERTICIES_ATTRIB_INDEX);
+        GL30.glBindVertexArray(0);
     }
 }

@@ -175,7 +175,7 @@ public class InputManager
         
         bindKey(Key.KEY_F3, Key.MOD_NONE, KeyAction.KEY_PRESS, () ->
         {
-            game.getWindowManager().setRenderFPS(!game.getWindowManager().isRenderingFPS());
+            game.getRenderer().setRenderFPS(!game.getRenderer().isRenderingFPS());
         });
         
         bindKey(Key.KEY_F12, Key.MOD_NONE, KeyAction.KEY_PRESS, () ->

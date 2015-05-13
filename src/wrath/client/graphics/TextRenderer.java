@@ -24,10 +24,10 @@ import wrath.client.Game;
 import wrath.util.Logger;
 
 /**
- * Class to load fonts and manage font rendering.
+ * Class to load fonts and manages text rendering.
  * @author Trent Spears
  */
-public class FontRenderer
+public class TextRenderer
 {
     private Color color;
     private final File file;
@@ -41,7 +41,7 @@ public class FontRenderer
      * @param fontSize The size of the font. This is NOT standardized!
      * @param game The {@link wrath.client.Game} object that parents this. This is needed to access the game's {@link wrath.util.Logger}.
      */
-    public FontRenderer(File ttfFile, float fontSize, Game game)
+    public TextRenderer(File ttfFile, float fontSize, Game game)
     {
         this.file = ttfFile;
         color = new Color(1, 1, 1, 1);

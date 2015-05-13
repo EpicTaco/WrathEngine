@@ -17,14 +17,12 @@
  */
 package wrath.test.client;
 
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL30;
 import wrath.client.EntryObject;
 import wrath.client.ExternalPluginManager;
 import wrath.client.Game;
 import wrath.client.enums.RenderMode;
 import wrath.client.events.GameEventHandler;
+import wrath.client.graphics.Color;
 import wrath.client.graphics.Model;
 import wrath.common.scripts.PythonScriptManager;
 
@@ -48,6 +46,11 @@ public class CustomGame extends Game implements GameEventHandler, EntryObject
         scripts = new PythonScriptManager(this);
         ExternalPluginManager.setPythonScriptManager(scripts);
         
+        afterConstructor();
+    }
+    
+    private void afterConstructor()
+    {
         getEventManager().addGameEventHandler(this);
     }
     
@@ -64,19 +67,15 @@ public class CustomGame extends Game implements GameEventHandler, EntryObject
     @Override
     public void render()
     {
-        GL11.glColor4f(1, 0, 0, 1);
-        GL30.glBindVertexArray(model.getPositionsVaoID());
-        GL20.glEnableVertexAttribArray(0);
-        GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, model.getVertexCount());
-        GL20.glDisableVertexAttribArray(0);
-        GL30.glBindVertexArray(0);
+        model.render();
     }
     
     @Override
     public void onGameOpen()
     {
         getInputManager().bindDefaultEngineKeys();
-        model = Model.createModel("test", new float[]{-0.5f, 0.5f, 0f, -0.5f, -0.5f, 0f, 0.5f, -0.5f, 0f, 0.5f, -0.5f, 0f, 0.5f, 0.5f, 0f, -0.5f, 0.5f, 0f});
+        getRenderer().setStandardColor(new Color(1f, 0f, 0f, 1f));
+        model = Model.createModel("test", new float[]{-0.5f, 0.5f, 0f, -0.5f, -0.5f, 0f, 0.5f, -0.5f, 0f, 0.5f, 0.5f, 0f}, new int[]{0,1,3,3,1,2});
     }
     
     @Override

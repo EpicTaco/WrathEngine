@@ -43,8 +43,9 @@ import wrath.client.enums.ImageFormat;
 import wrath.client.events.InputEventHandler;
 import wrath.client.events.PlayerEventHandler;
 import wrath.client.graphics.Color;
-import wrath.client.graphics.FontRenderer;
 import wrath.client.graphics.Model;
+import wrath.client.graphics.Renderable;
+import wrath.client.graphics.TextRenderer;
 import wrath.common.javaloader.JarLoader;
 import wrath.common.scheduler.Scheduler;
 import wrath.common.scripts.ScriptManager;
@@ -57,7 +58,7 @@ import wrath.util.Logger;
  */
 public class Game 
 {   
-    private final Game inst;
+    private Game inst;
     
     private final RenderMode MODE;
     private final String TITLE;
@@ -76,6 +77,7 @@ public class Game
     
     private final EventManager evManager;
     private final InputManager inpManager;
+    private final RenderManager renManager;
     private final WindowManager winManager;
     
     /**
@@ -94,6 +96,7 @@ public class Game
         TPS = ticksPerSecond;
         this.evManager = new EventManager();
         this.inpManager = new InputManager(this);
+        this.renManager = new RenderManager();
         this.winManager = new WindowManager();
         
         File nativeDir = new File("assets/native");
@@ -108,6 +111,11 @@ public class Game
         File screenshotDir = new File("etc/screenshots");
         if(!screenshotDir.exists()) screenshotDir.mkdirs();
         
+        afterConstructor();
+    }
+    
+    private void afterConstructor()
+    {
         inst = this;
     }
     
@@ -165,6 +173,15 @@ public class Game
     public LWJGLUtil.Platform getOS()
     {
         return LWJGLUtil.getPlatform();
+    }
+    
+    /**
+     * Gets the renderer (as specified by the {@link wrath.client.Game.RenderManager} class) for this game.
+     * @return Returns the renderer (as specified by the {@link wrath.client.Game.RenderManager} class) for this game.
+     */
+    public RenderManager getRenderer()
+    {
+        return renManager;
     }
     
     /**
@@ -252,7 +269,6 @@ public class Game
     {
         // FPS counter.
         int afpsCount = 0;
-        double fpsBuf = 0;
         int fpsCount = 0;
         
         //Input Checking
@@ -291,9 +307,9 @@ public class Game
                     if(fpsCount >= TPS)
                     {
                         afpsCount++;
-                        winManager.fps = fpsBuf;
-                        winManager.avgFps = winManager.totalFramesRendered / afpsCount;
-                        fpsBuf = 0;
+                        renManager.fps = renManager.fpsBuf;
+                        renManager.avgFps = renManager.totalFramesRendered / afpsCount;
+                        renManager.fpsBuf = 0;
                         fpsCount-=TPS;
                     }
                     else fpsCount++;
@@ -301,21 +317,7 @@ public class Game
                 delta--;
             }
             
-            //While the window is open
-            if(winManager.windowOpen)
-            {
-                GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-                winManager.getBackground().renderBackground();
-                render();
-                winManager.getGUI().renderGUI();
-                if(winManager.isRenderingFPS()) winManager.getFontRenderer().renderString(winManager.getFPS() + "", -1f, 1f);
-                GL11.glFlush();
-                GLFW.glfwSwapBuffers(winManager.window);
-            
-                GLFW.glfwPollEvents();
-                fpsBuf++;
-                winManager.totalFramesRendered++;
-            }
+            renManager.render();
         }
         
         stop();
@@ -449,17 +451,21 @@ public class Game
             GL11.glColor4f(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
             GL11.glBegin(GL11.GL_QUADS);
             {
-                GL11.glTexCoord2f(0, 0);
-                GL11.glVertex2f(-1, -1);
+                //Top Left
+                GL11.glTexCoord2f(0f, 0f);
+                GL11.glVertex2f(-1f, 1f);
 
-                GL11.glTexCoord2f(1, 0);
-                GL11.glVertex2f(1, -1);
+                //Top Right
+                GL11.glTexCoord2f(1f, 0f);
+                GL11.glVertex2f(1f, 1f);
 
-                GL11.glTexCoord2f(1, 1);
-                GL11.glVertex2f(1, 1);
+                //Bottom Right
+                GL11.glTexCoord2f(1f, 1f);
+                GL11.glVertex2f(1f, -1f);
 
-                GL11.glTexCoord2f(0, 1);
-                GL11.glVertex2f(-1, 1);
+                //Bottom Left
+                GL11.glTexCoord2f(0f, 1f);
+                GL11.glVertex2f(-1f, -1f);
             }
             GL11.glEnd();
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
@@ -632,6 +638,161 @@ public class Game
         }
     }
     
+    public class RenderManager
+    {
+        private double avgFps = 0;
+        private final Background back = new Background();
+        private Color color = Color.WHITE;
+        private double fps = 0;
+        private double fpsBuf = 0.0;
+        private final GUI front = new GUI();
+        private boolean renderFps = false;
+        private TextRenderer text = null;
+        private int totalFramesRendered = 0;
+        
+        
+        private final ArrayList<Renderable> renderQueue = new ArrayList<>();
+        
+        /**
+         * Adds an object implementing the {@link wrath.client.graphics.Renderable} interface to be rendered next frame.
+         * @param obj The {@link wrath.client.graphics.Renderable} object to render.
+         */
+        public void addRenderableObjectToList(Renderable obj)
+        {
+            renderQueue.add(obj);
+        }
+        
+        /**
+         * Gets the average FPS of the game while it has been running.
+         * @return Returns the average FPS of the game while it has been running.
+         */
+        public double getAverageFPS()
+        {
+            return avgFps;
+        }
+        
+        /**
+         * Gets the {@link wrath.client.Game.Background} linked to this Window.
+         * @return Returns the {@link wrath.client.Game.Background} linked to this Window.
+         */
+        public Background getBackground()
+        {
+            return back;
+        }
+    
+        /**
+        * Gets the last recorded Frames-Per-Second count.
+        * @return Returns the last FPS count.
+        */
+        public double getFPS()
+        {
+            return fps;
+        }
+        
+        /**
+         * Gets the {@link wrath.client.Game.GUI} linked to this Window.
+         * @return Returns the {@link wrath.client.Game.GUI} linked to this Window.
+         */
+        public GUI getGUI()
+        {
+            return front;
+        }
+        
+        /**
+         * Gets the standard {@link wrath.client.graphics.Color} that will be used to render unless specified otherwise by OpenGL code.
+         * @return Returns the standard {@link wrath.client.graphics.Color}.
+         */
+        public Color getStandardColor()
+        {
+            return color;
+        }
+        
+        /**
+        * Gets the default global text renderer.
+        * @return The current global {@link wrath.client.graphics.TextRenderer}.
+        */
+        public TextRenderer getTextRenderer()
+        {
+            return text;
+        }
+        
+        /**
+         * Gets the amount of frames the game has rendered since it launched.
+         * @return Returns the amount of frames the game has rendered since it launched.
+         */
+        public int getTotalFramesRendered()
+        {
+            return totalFramesRendered;
+        }
+        
+        /**
+         * If true, the FPS will be rendered at the top-left of the screen.
+         * @return Returns true if the FPS will be rendered in text at the top-left of the screen.
+         */
+        public boolean isRenderingFPS()
+        {
+            return renderFps;
+        }
+        
+        /**
+         * Method called by the loop to render everything needed.
+         */
+        private void render()
+        {
+            if(winManager.windowOpen)
+            {
+                GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+                back.renderBackground();
+                GL11.glColor4f(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
+                renderQueue.stream().map((ren) -> 
+                {
+                    GL11.glColor4f(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
+                    return ren;
+                }).forEach((ren) -> 
+                {
+                    ren.render();
+                });
+                renderQueue.clear();
+                inst.render();
+                front.renderGUI();
+                if(renderFps) text.renderString(fps + "", -1f, 1f);
+                GL11.glFlush();
+                GLFW.glfwSwapBuffers(winManager.window);
+            
+                GLFW.glfwPollEvents();
+                fpsBuf++;
+                totalFramesRendered++;
+            }
+        }
+        
+        /**
+         * Changes the state of whether or not to render the FPS.
+         * @param render If true, the FPS will be rendered in text at the top-left of the screen.
+         */
+        public void setRenderFPS(boolean render)
+        {
+            this.renderFps = render;
+        }
+        
+        /**
+         * Sets the standard {@link wrath.client.graphics.Color} that will be used to render unless specified otherwise by OpenGL code.
+         * @param color The standard {@link wrath.client.graphics.Color} to set.
+         */
+        public void setStandardColor(Color color)
+        {
+            this.color = color;
+        }
+        
+        /**
+         * Sets the game's global text renderer.
+         * @param text The {@link wrath.client.graphics.TextRenderer} to manage text rendering.
+         */
+        public void setTextRenderer(TextRenderer text)
+        {
+            this.text = text;
+        }
+    }
+    
     private class RootGameEventHandler implements GameEventHandler
     {
 
@@ -733,17 +894,9 @@ public class Game
      */
     public class WindowManager
     {
-        private double avgFps = 0;
-        private FontRenderer font = null;
-        private double fps = 0;
-        private boolean renderFps = false;
-        private int totalFramesRendered = 0;
         private long window;
         private boolean windowOpen = false;
         private WindowState windowState = null;
-        
-        private final Background back = new Background();
-        private final GUI front = new GUI();
 
         private int width = 800;
         private int height = 600;
@@ -785,66 +938,12 @@ public class Game
         }
         
         /**
-         * Gets the average FPS of the game while it has been running.
-         * @return Returns the average FPS of the game while it has been running.
-         */
-        public double getAverageFPS()
-        {
-            return avgFps;
-        }
-        
-        /**
-         * Gets the {@link wrath.client.Game.Background} linked to this Window.
-         * @return Returns the {@link wrath.client.Game.Background} linked to this Window.
-         */
-        public Background getBackground()
-        {
-            return back;
-        }
-        
-        /**
-        * Gets the default global font renderer.
-        * @return The current global {@link wrath.client.graphics.FontRenderer}.
-        */
-        public FontRenderer getFontRenderer()
-        {
-            return font;
-        }
-    
-        /**
-        * Gets the last recorded Frames-Per-Second count.
-        * @return Returns the last FPS count.
-        */
-        public double getFPS()
-        {
-            return fps;
-        }
-        
-        /**
-         * Gets the {@link wrath.client.Game.GUI} linked to this Window.
-         * @return Returns the {@link wrath.client.Game.GUI} linked to this Window.
-         */
-        public GUI getGUI()
-        {
-            return front;
-        }
-        
-        /**
          * Returns the height of the window.
          * @return Returns the height (in pixels) of the window.
          */
         public int getHeight()
         {
             return height;
-        }
-        
-        /**
-         * Gets the amount of frames the game has rendered since it launched.
-         * @return Returns the amount of frames the game has rendered since it launched.
-         */
-        public int getTotalFramesRendered()
-        {
-            return totalFramesRendered;
         }
         
         /**
@@ -873,15 +972,6 @@ public class Game
         public WindowState getWindowState()
         {
             return windowState;
-        }
-
-        /**
-         * If true, the FPS will be rendered at the top-left of the screen.
-         * @return Returns true if the FPS will be rendered in text at the top-left of the screen.
-         */
-        public boolean isRenderingFPS()
-        {
-            return renderFps;
         }
         
         /**
@@ -1015,8 +1105,8 @@ public class Game
             GL11.glMatrixMode(GL11.GL_MODELVIEW);
             GL11.glLoadIdentity();
             
-            if(font == null) font = new FontRenderer(new File("assets/fonts/arial.png"), 8f, inst);
-            else font.refreshRenderer();
+            if(renManager.text == null) renManager.text = new TextRenderer(new File("assets/fonts/arial.png"), 8f, inst);
+            else renManager.text.refreshRenderer();
             
             centerWindow();
             
@@ -1062,24 +1152,6 @@ public class Game
             });
 
             t.start();
-        }
-
-        /**
-         * Sets the game's global font renderer.
-         * @param font The {@link wrath.client.graphics.FontRenderer} to manage text rendering.
-         */
-        public void setFontRenderer(FontRenderer font)
-        {
-            this.font = font;
-        }
-        
-        /**
-         * Changes the state of whether or not to render the FPS.
-         * @param render If true, the FPS will be rendered in text at the top-left of the screen.
-         */
-        public void setRenderFPS(boolean render)
-        {
-            this.renderFps = render;
         }
         
         /**
