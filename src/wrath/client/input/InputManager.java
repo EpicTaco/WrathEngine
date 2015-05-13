@@ -38,13 +38,14 @@ import org.lwjgl.glfw.GLFWScrollCallback;
 import wrath.client.Game;
 import wrath.client.enums.ImageFormat;
 import wrath.client.enums.WindowState;
+import wrath.common.Closeable;
 import wrath.util.Logger;
 
 /**
  * Class to manage all input operations.
  * Used to organize code and clean up the {@link wrath.client.Game} class.
  */
-public class InputManager
+public class InputManager implements Closeable
 {
     private final ArrayList<KeyData> defaults = new ArrayList<>();
 
@@ -94,6 +95,12 @@ public class InputManager
     public InputManager(Game game)
     {
         this.game = game;
+        afterConstructor();
+    }
+    
+    private void afterConstructor()
+    {
+        game.addToTrashCleanup(this);
     }
     
     /**
@@ -322,19 +329,22 @@ public class InputManager
         });
     }
 
-    /**
-     * Closes all input and input function.
-     * This cannot be called while the window is open.
-     * @param destroyCursor True if client is closing or want cursor to be destroyed, otherwise false.
-     */
-    public void closeInput(boolean destroyCursor)
+    @Override
+    public void close()
     {
         keyStr.release();
         mkeyStr.release();
         charStr.release();
         curStr.release();
-        scrStr.release();
-        if(destroyCursor && cursor != -1) GLFW.glfwDestroyCursor(cursor);
+        scrStr.release(); 
+    }
+    
+    /**
+     * Destroys the custom cursor and all of it's data, if it exists.
+     */
+    public void destroyCursor()
+    {
+        if(cursor != -1) GLFW.glfwDestroyCursor(cursor);
     }
     
     /**

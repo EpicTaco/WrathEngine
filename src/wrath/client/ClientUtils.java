@@ -33,7 +33,6 @@ import javax.swing.JOptionPane;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
-import org.lwjgl.opengl.GL20;
 import wrath.client.enums.PopupMessageType;
 import wrath.util.Logger;
 
@@ -239,6 +238,7 @@ public class ClientUtils
     
     /**
      * Reads the specified shader file and retrieves it's source in {@link java.lang.String} format.
+     * It is recommended that shaders be stored in the 'assets/shaders' directory (which is not present by default).
      * @param shaderFile The {@link java.io.File} to read the shader from.
      * @return Returns the String source of the shader.
      */
@@ -267,89 +267,6 @@ public class ClientUtils
         }
         
         return src;
-    }
-    
-    /**
-     * Reads the two specified shader files and compiles the shaders into an OpenGL program format.
-     * @param vertFile The {@link java.io.File} to read the vert shader from.
-     * @param fragFile The {@link java.io.File} to read the frag shader from.
-     * @return Returns the integer id of the shader program (as OpenGL uses).
-     */
-    public static int loadShaderProgram(File vertFile, File fragFile)
-    {
-        if(!vertFile.exists())
-        {
-            Logger.getErrorLogger().log("Could not load shader from file '" + vertFile.getAbsolutePath() + "'! File not found!");
-            return -1;
-        }
-        
-        if(!fragFile.exists())
-        {
-            Logger.getErrorLogger().log("Could not load shader from file '" + fragFile.getAbsolutePath() + "'! File not found!");
-            return -1;
-        }
-        
-        String vsrc = "";
-        
-        try
-        {
-            String inp;
-            try(BufferedReader read = new BufferedReader(new FileReader(vertFile))) 
-            {
-                while((inp = read.readLine()) != null) vsrc = vsrc + inp + '\n';
-            }
-        }
-        catch(IOException e)
-        {
-            Logger.getErrorLogger().log("Could not load shader from file '" + vertFile.getAbsolutePath() + "'! I/O Error!");
-            return -1;
-        }
-        
-        String fsrc = "";
-        
-        try
-        {
-            String inp;
-            try(BufferedReader read = new BufferedReader(new FileReader(fragFile))) 
-            {
-                while((inp = read.readLine()) != null) fsrc = fsrc + inp + '\n';
-            }
-        }
-        catch(IOException e)
-        {
-            Logger.getErrorLogger().log("Could not load shader from file '" + fragFile.getAbsolutePath() + "'! I/O Error!");
-            return -1;
-        }
-        
-        int prog = GL20.glCreateProgram();
-        int vert = GL20.glCreateShader(GL20.GL_VERTEX_SHADER);
-        int frag = GL20.glCreateShader(GL20.GL_FRAGMENT_SHADER);
-        
-        GL20.glShaderSource(vert, vsrc);
-        GL20.glShaderSource(frag, fsrc);
-        
-        GL20.glCompileShader(vert);
-        if(GL20.glGetShaderi(vert, GL20.GL_COMPILE_STATUS) == GL11.GL_FALSE)
-        {
-            Logger.getErrorLogger().log("Could not load shader from file '" + vertFile.getAbsolutePath() + "'! Compile Error:");
-            Logger.getErrorLogger().log(GL20.glGetShaderInfoLog(vert));
-            return -1;
-        }
-        
-        GL20.glCompileShader(frag);
-        if(GL20.glGetShaderi(frag, GL20.GL_COMPILE_STATUS) == GL11.GL_FALSE)
-        {
-            Logger.getErrorLogger().log("Could not load shader from file '" + fragFile.getAbsolutePath() + "'! Compile Error:");
-            Logger.getErrorLogger().log(GL20.glGetShaderInfoLog(frag));
-            return -1;
-        }
-        
-        GL20.glAttachShader(prog, vert);
-        GL20.glAttachShader(prog, frag);
-        GL20.glLinkProgram(prog);
-        GL20.glValidateProgram(prog);
-        
-        return prog;
     }
     
     /**

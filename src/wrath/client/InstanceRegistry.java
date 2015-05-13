@@ -20,10 +20,10 @@ package wrath.client;
 import wrath.common.scripts.PythonScriptManager;
 
 /**
- * Class to act as a portal between external applications and the {@link wrath.client.Game} class.
+ * Class to keep track of current objects.
  * @author Trent Spears
  */
-public class ExternalPluginManager
+public class InstanceRegistry
 {
     private static Game game = null;
     private static PythonScriptManager pyMgr = null;

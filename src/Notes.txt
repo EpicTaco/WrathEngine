@@ -1,6 +1,4 @@
 Things to fix/edit:
-- Change Background and (possibly) GUI from immediate mode.
-
 
 Things to add:
 - Audio

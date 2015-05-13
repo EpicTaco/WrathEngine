@@ -28,34 +28,18 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
+import wrath.client.InstanceRegistry;
+import wrath.common.Closeable;
 
 /**
  * Class to represent a Model.
  * @author Trent Spears
  */
-public class Model implements Renderable
+public class Model implements Renderable, Closeable
 {
-    private static final int INDICIES_ATTRIB_INDEX = 1;
     private static final int VERTICIES_ATTRIB_INDEX = 0;
     
     private static final HashMap<String, Model> map = new HashMap<>();
-    
-    /**
-     * Clears all memory allocated to models and removes it from the list of loaded models.
-     */
-    public static void clearModels()
-    {
-        map.values().stream().map((m) -> 
-        {
-            GL30.glDeleteVertexArrays(m.getVaoID());
-            return m;
-        }).forEach((m) -> 
-        {
-            for(Integer i : m.getVboList())
-                GL15.glDeleteBuffers(i);
-        });
-        map.clear();
-    }
     
     /**
      * Creates a 2D or 3D model from a list of verticies.
@@ -95,6 +79,7 @@ public class Model implements Renderable
         // Unbinding OpenGL Objects
         GL30.glBindVertexArray(0);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+        InstanceRegistry.getGameInstance().addToTrashCleanup(model);
         return model;
     }
     
@@ -150,9 +135,11 @@ public class Model implements Renderable
         // Unbinding OpenGL Objects
         GL30.glBindVertexArray(0);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+        InstanceRegistry.getGameInstance().addToTrashCleanup(model);
         return model;
     }
  
+    private ShaderProgram shader = null;
     private final int vao;
     private final ArrayList<Integer> vbos = new ArrayList<>();
     private final int vertexCount;
@@ -162,6 +149,27 @@ public class Model implements Renderable
         this.vao = vao;
         vbos.addAll(Arrays.asList(initVbos));
         this.vertexCount = vertexCount;
+    }
+    
+    /**
+     * Applies a shader program to the model to be called every time the model is rendered.
+     * Only one can be attached at a time.
+     * @param shader The {@link wrath.client.graphics.ShaderProgram} to associate with this model.
+     */
+    public void attachShader(ShaderProgram shader)
+    {
+        shader.bindAttribute(0, "position");
+        this.shader = shader;
+    }
+    
+    @Override
+    public void close()
+    {
+        if(!map.isEmpty()) map.clear();
+        GL30.glDeleteVertexArrays(getVaoID());
+        for(Integer i : getVboList())
+                GL15.glDeleteBuffers(i);
+        InstanceRegistry.getGameInstance().removeFromTrashCleanup(this);
     }
     
     /**
@@ -196,9 +204,12 @@ public class Model implements Renderable
     @Override
     public void render()
     {
+        
         GL30.glBindVertexArray(getVaoID());
         GL20.glEnableVertexAttribArray(VERTICIES_ATTRIB_INDEX);
+        if(shader != null) shader.startUse();
         GL11.glDrawElements(GL11.GL_TRIANGLES, vertexCount, GL11.GL_UNSIGNED_INT, 0);
+        if(shader != null) shader.stopUse();
         GL20.glDisableVertexAttribArray(VERTICIES_ATTRIB_INDEX);
         GL30.glBindVertexArray(0);
     }

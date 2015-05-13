@@ -43,9 +43,9 @@ import wrath.client.enums.ImageFormat;
 import wrath.client.events.InputEventHandler;
 import wrath.client.events.PlayerEventHandler;
 import wrath.client.graphics.Color;
-import wrath.client.graphics.Model;
 import wrath.client.graphics.Renderable;
 import wrath.client.graphics.TextRenderer;
+import wrath.common.Closeable;
 import wrath.common.javaloader.JarLoader;
 import wrath.common.scheduler.Scheduler;
 import wrath.common.scripts.ScriptManager;
@@ -79,6 +79,8 @@ public class Game
     private final InputManager inpManager;
     private final RenderManager renManager;
     private final WindowManager winManager;
+    
+    private final TrashCollector trashCollector = new TrashCollector();
     
     /**
      * Constructor.
@@ -117,6 +119,17 @@ public class Game
     private void afterConstructor()
     {
         inst = this;
+    }
+    
+    /**
+    * Adds a {@link wrath.common.Closeable} object to be run after the window closes.
+    * Note that the window closing is NOT the end of the program.
+    * @param obj The {@link wrath.common.Closeable} object to run after the window closes.
+    */
+    public void addToTrashCleanup(Closeable obj)
+    {
+        if(trashCollector == null) System.out.println("shit");
+        trashCollector.list.add(obj);
     }
     
     /**
@@ -334,6 +347,15 @@ public class Game
     }
     
     /**
+     * Removes a {@link wrath.common.Closeable} object from the cleanup list.
+     * @param obj The {@link wrath.common.Closeable} object to remove from cleanup list.
+     */
+    public void removeFromTrashCleanup(Closeable obj)
+    {
+        trashCollector.list.remove(obj);
+    }
+    
+    /**
      * Override-able method that is called as much as possible to issue rendering commands.
      */
     protected void render(){} //TODO: Add Rendering Pipeline (kind of a biggie)
@@ -382,7 +404,7 @@ public class Game
             return;
         }
         
-        ExternalPluginManager.setGameInstance(this);
+        InstanceRegistry.setGameInstance(this);
         if(gameConfig.getBoolean("AutoLoadJavaPlugins", true))
         {
             Object[] list = JarLoader.loadPluginsDirectory(new File(gameConfig.getString("AutoLoadJavaPluginsDirectory", "etc/plugins")));
@@ -412,9 +434,8 @@ public class Game
     private void stopImpl()
     {
         try{
-        Model.clearModels();
         winManager.closeWindow();
-        inpManager.closeInput(true);
+        inpManager.destroyCursor();
         GLFW.glfwTerminate();
         
         gameConfig.save();
@@ -890,6 +911,26 @@ public class Game
     }
     
     /**
+     * Class to manage every 'Closeable' interface in the game.
+     */
+    private class TrashCollector
+    {
+        protected final ArrayList<Closeable> list = new ArrayList<>();
+        
+        private TrashCollector(){}
+        
+        private void run()
+        {
+            ArrayList<Closeable> cpy = new ArrayList<>();
+            cpy.addAll(list);
+            cpy.stream().forEach((c) -> 
+            {
+                c.close();
+            });
+        }
+    }
+    
+    /**
      * Class to manage anything to do with the Game Window.
      */
     public class WindowManager
@@ -930,7 +971,7 @@ public class Game
             gameLogger.log("Closing window [" + width + "x" + height + "]");
         
             winSizeStr.release();
-            inpManager.closeInput(false);
+            trashCollector.run();
             AL.destroy(audiocontext);
             GLFW.glfwDestroyWindow(window);
             

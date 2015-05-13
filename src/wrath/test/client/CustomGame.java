@@ -18,12 +18,12 @@
 package wrath.test.client;
 
 import wrath.client.EntryObject;
-import wrath.client.ExternalPluginManager;
+import wrath.client.InstanceRegistry;
 import wrath.client.Game;
 import wrath.client.enums.RenderMode;
 import wrath.client.events.GameEventHandler;
-import wrath.client.graphics.Color;
 import wrath.client.graphics.Model;
+import wrath.client.graphics.ShaderProgram;
 import wrath.common.scripts.PythonScriptManager;
 
 /**
@@ -44,7 +44,7 @@ public class CustomGame extends Game implements GameEventHandler, EntryObject
         super("Test Client", "INDEV", 30, RenderMode.Mode2D);
         
         scripts = new PythonScriptManager(this);
-        ExternalPluginManager.setPythonScriptManager(scripts);
+        InstanceRegistry.setPythonScriptManager(scripts);
         
         afterConstructor();
     }
@@ -74,8 +74,6 @@ public class CustomGame extends Game implements GameEventHandler, EntryObject
     public void onGameOpen()
     {
         getInputManager().bindDefaultEngineKeys();
-        getRenderer().setStandardColor(new Color(1f, 0f, 0f, 1f));
-        model = Model.createModel("test", new float[]{-0.5f, 0.5f, 0f, -0.5f, -0.5f, 0f, 0.5f, -0.5f, 0f, 0.5f, 0.5f, 0f}, new int[]{0,1,3,3,1,2});
     }
     
     @Override
@@ -93,6 +91,8 @@ public class CustomGame extends Game implements GameEventHandler, EntryObject
     @Override
     public void onWindowOpen()
     {
+        model = Model.createModel("test", new float[]{-0.5f, 0.5f, 0f, -0.5f, -0.5f, 0f, 0.5f, -0.5f, 0f, 0.5f, 0.5f, 0f}, new int[]{0,1,3,3,1,2});
+        model.attachShader(ShaderProgram.loadShaderProgram(new java.io.File("assets/shaders/colorshader.vert"), new java.io.File("assets/shaders/colorshader.frag")));
         getInputManager().setCursorEnabled(true);
     }
 }

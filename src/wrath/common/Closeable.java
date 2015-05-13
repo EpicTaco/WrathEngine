@@ -15,25 +15,16 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package wrath.client;
-
-import java.io.File;
-import wrath.common.scripts.PythonScriptManager;
-import wrath.common.scripts.ScriptManager;
+package wrath.common;
 
 /**
- * The class to launch the game off of a python script called 'initscript.py' in the 'assets' folder.
+ * Interface to represent anything that must be cleaned up-after.
  * @author Trent Spears
  */
-public class PythonEntryObject implements EntryObject
-{   
-    @Override
-    public void init(String[] args)
-    {
-        ScriptManager.SCRIPT_CONFIG.setProperty("AutoLoadFromDirectory", false);
-        ScriptManager.SCRIPT_CONFIG.setProperty("AssignParentObject", false);
-        PythonScriptManager scripts = new PythonScriptManager(this);
-        InstanceRegistry.setPythonScriptManager(scripts);
-        scripts.loadScript(new File("assets/initscript.py"), true, false).execute();
-    }
+public interface Closeable
+{
+    /**
+     * Place anything that needs to be closed in this method.
+     */
+    public void close();
 }
