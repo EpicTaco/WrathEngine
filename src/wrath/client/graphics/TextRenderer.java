@@ -22,13 +22,14 @@ import java.util.HashMap;
 import org.lwjgl.opengl.GL11;
 import wrath.client.ClientUtils;
 import wrath.client.InstanceRegistry;
+import wrath.common.Closeable;
 import wrath.util.Logger;
 
 /**
- * Class to load fonts and manages text rendering.
+ * Class to load fonts and manage text rendering.
  * @author Trent Spears
  */
-public class TextRenderer
+public class TextRenderer implements Closeable
 {
     private static final HashMap<Character, Float> DEF_SPACE_MAP = new HashMap<>();
     
@@ -63,6 +64,19 @@ public class TextRenderer
             InstanceRegistry.getGameInstance().getLogger().log("Loaded font from '" + ttfFile.getName() + "'!");
         else
             Logger.getErrorLogger().log("Could not load font from '" + ttfFile.getName() + "'! Unknown error!");
+        
+        afterConstructor();
+    }
+    
+    private void afterConstructor()
+    {
+        InstanceRegistry.getGameInstance().addToTrashCleanup(this);
+    }
+    
+    @Override
+    public void close()
+    {
+        GL11.glDeleteTextures(fontTex);
     }
     
     /**
@@ -95,8 +109,9 @@ public class TextRenderer
         if(!metricsFile.exists()) spaceMap.putAll(DEF_SPACE_MAP);
         else
         {
-            //Fill ratio map.
+            //Fill spacing map.
         }
+        
         if(fontTex != 0)
             InstanceRegistry.getGameInstance().getLogger().log("Loaded font from '" + file.getName() + "'!");
         else

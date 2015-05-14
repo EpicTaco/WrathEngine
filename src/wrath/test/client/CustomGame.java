@@ -17,6 +17,7 @@
  */
 package wrath.test.client;
 
+import java.io.File;
 import wrath.client.EntryObject;
 import wrath.client.InstanceRegistry;
 import wrath.client.Game;
@@ -24,6 +25,7 @@ import wrath.client.enums.RenderMode;
 import wrath.client.events.GameEventHandler;
 import wrath.client.graphics.Model;
 import wrath.client.graphics.ShaderProgram;
+import wrath.client.graphics.Texture;
 import wrath.client.input.Key;
 import wrath.common.scripts.PythonScriptManager;
 
@@ -36,6 +38,7 @@ public class CustomGame extends Game implements GameEventHandler, EntryObject
 {
     private final PythonScriptManager scripts;
     private Model model;
+    private Texture texture;
     
     /**
      * Do not use start() in the constructor! EVER!
@@ -97,7 +100,9 @@ public class CustomGame extends Game implements GameEventHandler, EntryObject
     public void onWindowOpen()
     {
         model = Model.createModel("test", new float[]{-0.5f, 0.5f, 0f, -0.5f, -0.5f, 0f, 0.5f, -0.5f, 0f, 0.5f, 0.5f, 0f}, new int[]{0,1,3,3,1,2});
-        model.attachShader(ShaderProgram.loadShaderProgram(new java.io.File("assets/shaders/colorshader.vert"), new java.io.File("assets/shaders/colorshader.frag")));
+        texture = new Texture(new File("assets/textures/texture.png"));
+        model.attachShader(ShaderProgram.loadShaderProgram(new File("assets/shaders/texture_shader2d.vert"), new File("assets/shaders/texture_shader2d.frag")));
+        model.attachTexture(texture);
         getInputManager().setCursorEnabled(true);
     }
 }

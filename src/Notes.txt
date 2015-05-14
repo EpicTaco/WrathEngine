@@ -1,4 +1,6 @@
 Things to fix/edit:
+- Use Model and Texture system for Background rendering.
+- Add 3D support for Model Textures.
 
 Things to add:
 - Audio

@@ -21,10 +21,14 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.FloatBuffer;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import wrath.client.InstanceRegistry;
 import wrath.common.Closeable;
+import wrath.common.Matrix4f;
+import wrath.common.Vector3f;
 import wrath.util.Logger;
 
 /**
@@ -114,11 +118,13 @@ public class ShaderProgram implements Closeable
         
         ShaderProgram ret = new ShaderProgram(prog, vert, frag);
         InstanceRegistry.getGameInstance().addToTrashCleanup(ret);
+        //TODO: Get all uniform variables locations.
         return ret;
     }
     
     private boolean finalized = false;
     private final int programID, vertShaderID, fragShaderID;
+    private final FloatBuffer matrixBuffer = BufferUtils.createFloatBuffer(16);
     
     private ShaderProgram(int programID, int vertShaderID, int fragShaderID)
     {
@@ -149,6 +155,97 @@ public class ShaderProgram implements Closeable
         GL20.glDeleteShader(fragShaderID);
         GL20.glDeleteProgram(programID);
         InstanceRegistry.getGameInstance().removeFromTrashCleanup(this);
+    }
+    
+    /**
+     * Gets the integer location of a uniform variable.
+     * @param variableName The {@link java.lang.String} name of the Uniform variable.
+     * @return Returns the integer location of a uniform variable.
+     */
+    public int getUniformVariableLocation(String variableName)
+    {
+        return GL20.glGetUniformLocation(programID, variableName);
+    }
+    
+    /**
+     * Sets the value of a uniform variable in the shader.
+     * @param variableName The {@link java.lang.String} name of the Uniform variable.
+     * @param value The value to set.
+     */
+    public void setUniformVariable(String variableName, float value)
+    {
+        setUniformVariable(getUniformVariableLocation(variableName), value);
+    }
+    
+    /**
+     * Sets the value of a uniform variable in the shader.
+     * @param variableLocation The integer location of the Uniform variable.
+     * @param value The value to set.
+     */
+    public void setUniformVariable(int variableLocation, float value)
+    {
+        GL20.glUniform1f(variableLocation, value);
+    }
+    
+    /**
+     * Sets the value of a uniform variable in the shader.
+     * @param variableName The {@link java.lang.String} name of the Uniform variable.
+     * @param value The value to set.
+     */
+    public void setUniformVariable(String variableName, Vector3f value)
+    {
+        setUniformVariable(getUniformVariableLocation(variableName), value);
+    }
+    
+    /**
+     * Sets the value of a uniform variable in the shader.
+     * @param variableLocation The integer location of the Uniform variable.
+     * @param value The value to set.
+     */
+    public void setUniformVariable(int variableLocation, Vector3f value)
+    {
+        GL20.glUniform3f(variableLocation, value.x, value.y, value.z);
+    }
+    
+    /**
+     * Sets the value of a uniform variable in the shader.
+     * @param variableName The {@link java.lang.String} name of the Uniform variable.
+     * @param value The value to set.
+     */
+    public void setUniformVariable(String variableName, boolean value)
+    {
+        setUniformVariable(getUniformVariableLocation(variableName), value);
+    }
+    
+    /**
+     * Sets the value of a uniform variable in the shader.
+     * @param variableLocation The integer location of the Uniform variable.
+     * @param value The value to set.
+     */
+    public void setUniformVariable(int variableLocation, boolean value)
+    {
+        GL20.glUniform1f(variableLocation, value ? 1f : 0f);
+    }
+    
+    /**
+     * Sets the value of a uniform variable in the shader.
+     * @param variableName The {@link java.lang.String} name of the Uniform variable.
+     * @param value The value to set.
+     */
+    public void setUniformVariable(String variableName, Matrix4f value)
+    {
+        setUniformVariable(getUniformVariableLocation(variableName), value);
+    }
+    
+    /**
+     * Sets the value of a uniform variable in the shader.
+     * @param variableLocation The integer location of the Uniform variable.
+     * @param value The value to set.
+     */
+    public void setUniformVariable(int variableLocation, Matrix4f value)
+    {
+        //TODO: Make Matrix4f class and put the Matrix into the FloatBuffer.
+        GL20.glUniformMatrix4(variableLocation, false, matrixBuffer);
     }
     
     /**

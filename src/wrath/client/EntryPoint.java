@@ -33,12 +33,14 @@ public class EntryPoint
     {
         if(!new File("assets/init").exists())
             ClientUtils.throwInternalError("assets/init file is missing!", false);
-        
+
         try
         {
-            BufferedReader in = new BufferedReader(new FileReader("assets/init"));
-            String fline = in.readLine();
-            in.close();
+            String fline;
+            try(BufferedReader in = new BufferedReader(new FileReader("assets/init"))) 
+            {
+                fline = in.readLine();
+            }
             
             if(fline == null) ClientUtils.throwInternalError("assets/init could not be read! I/O Error!", true);
 
