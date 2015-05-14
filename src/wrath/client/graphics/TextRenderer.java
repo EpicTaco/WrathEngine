@@ -239,11 +239,17 @@ public class TextRenderer implements Closeable
             {
                 if(!spaceMap.containsKey(string.charAt(i))) curPos = curPos + (fontSize / 48f);
                 else curPos = curPos + (spaceMap.get(string.charAt(i)) * (fontSize / 48f));
-                if((i + 1) < string.length() && string.charAt(i + 1) == 'W') curPos = curPos + (spaceMap.get('W') * (fontSize / 215f));
-                else if((i + 1) < string.length() && string.charAt(i + 1) == 'i') curPos = curPos - (spaceMap.get('i') * (fontSize / 100f));
+                
+                if((i + 1) < string.length() && string.charAt(i + 1) == 'i') curPos = curPos - (spaceMap.get('i') * (fontSize / 60f));
                 else if((i + 1) < string.length() && string.charAt(i + 1) == 'I') curPos = curPos - (spaceMap.get('I') * (fontSize / 100f));
                 else if((i + 1) < string.length() && string.charAt(i + 1) == 'l') curPos = curPos - (spaceMap.get('l') * (fontSize / 100f));
                 else if((i + 1) < string.length() && string.charAt(i + 1) == '.') curPos = curPos - (spaceMap.get('.') * (fontSize / 100f));
+                else if((i + 1) < string.length() && string.charAt(i + 1) == '!') curPos = curPos - (spaceMap.get('.') * (fontSize / 100f));
+                else if((i + 1) < string.length() && string.charAt(i + 1) == 'W') curPos = curPos + (spaceMap.get('W') * (fontSize / 215f));
+                else if((i + 1) < string.length() && string.charAt(i + 1) == 'O') curPos = curPos + (spaceMap.get('O') * (fontSize / 215f));
+                else if((i + 1) < string.length() && string.charAt(i + 1) == 'M') curPos = curPos + (spaceMap.get('M') * (fontSize / 215f));
+                else if((i + 1) < string.length() && string.charAt(i + 1) == 'm') curPos = curPos + (spaceMap.get('m') * (fontSize / 215f));
+                else if((i + 1) < string.length() && string.charAt(i + 1) == 'S') curPos = curPos + (spaceMap.get('S') * (fontSize / 215f));
             }
         }
         GL11.glEnd();
@@ -279,19 +285,19 @@ public class TextRenderer implements Closeable
     private static void setDefaultMetrics()
     {
         DEF_SPACE_MAP.clear();
-        DEF_SPACE_MAP.put(' ', 0.5f);
+        DEF_SPACE_MAP.put(' ', 0.65f);
         DEF_SPACE_MAP.put('A', 0.975f);
-        DEF_SPACE_MAP.put('a', 0.8f);
-        DEF_SPACE_MAP.put('B', 0.925f);
+        DEF_SPACE_MAP.put('a', 0.75f);
+        DEF_SPACE_MAP.put('B', 0.875f);
         DEF_SPACE_MAP.put('b', 0.8f);
         DEF_SPACE_MAP.put('C', 0.925f);
-        DEF_SPACE_MAP.put('c', 0.9f);
+        DEF_SPACE_MAP.put('c', 0.8f);
         DEF_SPACE_MAP.put('D', 1.0f);
         DEF_SPACE_MAP.put('d', 0.9f);
         DEF_SPACE_MAP.put('E', 0.925f);
         DEF_SPACE_MAP.put('e', 0.7f);
         DEF_SPACE_MAP.put('F', 0.825f);
-        DEF_SPACE_MAP.put('f', 0.65f);
+        DEF_SPACE_MAP.put('f', 0.55f);
         DEF_SPACE_MAP.put('G', 1.0f);
         DEF_SPACE_MAP.put('g', 0.925f);
         DEF_SPACE_MAP.put('H', 0.9f);
@@ -311,28 +317,29 @@ public class TextRenderer implements Closeable
         DEF_SPACE_MAP.put('O', 1.025f);
         DEF_SPACE_MAP.put('o', 0.7f);
         DEF_SPACE_MAP.put('P', 0.95f);
-        DEF_SPACE_MAP.put('p', 0.7f);
+        DEF_SPACE_MAP.put('p', 0.75f);
         DEF_SPACE_MAP.put('Q', 1.0f);
         DEF_SPACE_MAP.put('q', 0.8f);
         DEF_SPACE_MAP.put('R', 0.8f);
-        DEF_SPACE_MAP.put('r', 0.8f);
-        DEF_SPACE_MAP.put('S', 0.95f);
-        DEF_SPACE_MAP.put('s', 0.675f);
+        DEF_SPACE_MAP.put('r', 0.7f);
+        DEF_SPACE_MAP.put('S', 0.75f);
+        DEF_SPACE_MAP.put('s', 0.6f);
         DEF_SPACE_MAP.put('T', 0.8f);
         DEF_SPACE_MAP.put('t', 0.6f);
         DEF_SPACE_MAP.put('U', 0.88f);
-        DEF_SPACE_MAP.put('u', 0.95f);
+        DEF_SPACE_MAP.put('u', 0.7f);
         DEF_SPACE_MAP.put('V', 1.05f);
         DEF_SPACE_MAP.put('v', 0.9f);
-        DEF_SPACE_MAP.put('W', 1.48f);
-        DEF_SPACE_MAP.put('w', 1.2f);
+        DEF_SPACE_MAP.put('W', 1.0f);
+        DEF_SPACE_MAP.put('w', 1.0f);
         DEF_SPACE_MAP.put('X', 1.05f);
         DEF_SPACE_MAP.put('x', 0.75f);
         DEF_SPACE_MAP.put('Y', 0.9f);
         DEF_SPACE_MAP.put('y', 0.9f);
         DEF_SPACE_MAP.put('Z', 1.0f);
-        DEF_SPACE_MAP.put('z', 0.95f);
+        DEF_SPACE_MAP.put('z', 0.85f);
         
+        DEF_SPACE_MAP.put('[', 0.7f);
         DEF_SPACE_MAP.put('%', 1.15f);
         DEF_SPACE_MAP.put('@', 1.2f);
         DEF_SPACE_MAP.put('1', 0.8f);

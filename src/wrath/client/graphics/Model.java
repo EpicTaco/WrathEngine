@@ -113,6 +113,7 @@ public class Model implements Renderable, Closeable
         return createModel(modelName, verticies, indicies);
     }
  
+    private final File modelFile;
     private final String modelName;
     private ShaderProgram shader = null;
     private Texture texture = null;
@@ -122,6 +123,7 @@ public class Model implements Renderable, Closeable
     
     private Model(String modelName, File modelFile, int vao, Integer[] initVbos, int vertexCount)
     {
+        this.modelFile = modelFile;
         this.modelName = modelName;
         this.vao = vao;
         vbos.addAll(Arrays.asList(initVbos));
@@ -147,14 +149,17 @@ public class Model implements Renderable, Closeable
      */
     public void attachTexture(Texture texture)
     {
-        attachTexture(texture, new float[]{0f,0f,0f,1f,1f,1f,1f,0f});
+        float[] def;
+        if(InstanceRegistry.getGameInstance().getRenderMode() == RenderMode.Mode2D) def = new float[]{0f,0f,0f,1f,1f,1f,1f,0f};
+        else def = new float[0];
+        attachTexture(texture, def);
     }
     
     /**
      * Applies a {@link wrath.client.graphics.Texture} to the model to be rendered on top of the Model.
      * Only one can be attached at a time.
      * @param texture The {@link wrath.client.graphics.Texture} to associate with this model.
-     * @param textureCoords
+     * @param textureCoords The (u, v) coordinates of the texture to the model.
      */
     public void attachTexture(Texture texture, float[] textureCoords)
     {
@@ -222,11 +227,16 @@ public class Model implements Renderable, Closeable
     {
         GL30.glBindVertexArray(vao);
         GL20.glEnableVertexAttribArray(VERTICIES_ATTRIB_INDEX);
-        if(texture != null) GL20.glEnableVertexAttribArray(TEXTURE_ATTRIB_INDEX);
+        if(texture != null)
+        {
+            GL20.glEnableVertexAttribArray(TEXTURE_ATTRIB_INDEX);
+            if(InstanceRegistry.getGameInstance().getRenderMode() == RenderMode.Mode2D) GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture.getTextureID());
+            else GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture.getTextureID());
+        }
         if(shader != null) shader.startUse();
-        if(InstanceRegistry.getGameInstance().getRenderMode() == RenderMode.Mode2D) GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture.getTextureID());
-        //else GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture.getTextureID()); TODO: Make 3D!
+        
         GL11.glDrawElements(GL11.GL_TRIANGLES, vertexCount, GL11.GL_UNSIGNED_INT, 0);
+        
         if(shader != null) shader.stopUse();
         if(texture != null) GL20.glDisableVertexAttribArray(TEXTURE_ATTRIB_INDEX);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
