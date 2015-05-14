@@ -24,6 +24,7 @@ import wrath.client.enums.RenderMode;
 import wrath.client.events.GameEventHandler;
 import wrath.client.graphics.Model;
 import wrath.client.graphics.ShaderProgram;
+import wrath.client.input.Key;
 import wrath.common.scripts.PythonScriptManager;
 
 /**
@@ -73,6 +74,10 @@ public class CustomGame extends Game implements GameEventHandler, EntryObject
     @Override
     public void onGameOpen()
     {
+        getInputManager().bindKey(Key.KEY_F5, () ->
+        {
+            getRenderer().getTextRenderer().refreshRenderer();
+        });
         getInputManager().bindDefaultEngineKeys();
     }
     

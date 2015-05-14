@@ -75,6 +75,7 @@ public class Model implements Renderable, Closeable
         // Creating Model Object
         Model model = new Model(modelName, null, vaoid, new Integer[]{vtvboid, invboid}, indicies.length);
         map.put(modelName, model);
+        InstanceRegistry.getGameInstance().getLogger().log("Loaded model '" + modelName + "'!");
         
         // Unbinding OpenGL Objects
         GL30.glBindVertexArray(0);
@@ -107,36 +108,7 @@ public class Model implements Renderable, Closeable
         float[] verticies = new float[0];
         int[] indicies = new int[0];
         
-        // Generating VAO
-        int vaoid = GL30.glGenVertexArrays();
-        GL30.glBindVertexArray(vaoid);
-        
-        // Generating Verticies VBO
-        int vtvboid = GL15.glGenBuffers();
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vtvboid);
-        FloatBuffer vbuffer = BufferUtils.createFloatBuffer(verticies.length);
-        vbuffer.put(verticies);
-        vbuffer.flip();
-        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, vbuffer, GL15.GL_STATIC_DRAW);
-        GL20.glVertexAttribPointer(VERTICIES_ATTRIB_INDEX, 3, GL11.GL_FLOAT, false, 0, 0);
-        
-        // Generating Indicies VBO
-        int invboid = GL15.glGenBuffers();
-        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, invboid);
-        IntBuffer ibuffer = BufferUtils.createIntBuffer(indicies.length);
-        ibuffer.put(indicies);
-        ibuffer.flip();
-        GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, ibuffer, GL15.GL_STATIC_DRAW);
-        
-        // Creating Model Object
-        Model model = new Model(modelName, null, vaoid, new Integer[]{vtvboid, invboid}, indicies.length);
-        map.put(modelName, model);
-        
-        // Unbinding OpenGL Objects
-        GL30.glBindVertexArray(0);
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
-        InstanceRegistry.getGameInstance().addToTrashCleanup(model);
-        return model;
+        return createModel(modelName, verticies, indicies);
     }
  
     private ShaderProgram shader = null;

@@ -57,9 +57,7 @@ import wrath.util.Logger;
  * @author Trent Spears
  */
 public class Game 
-{   
-    private Game inst;
-    
+{
     private final RenderMode MODE;
     private final String TITLE;
     private final double TPS;
@@ -112,13 +110,6 @@ public class Game
         
         File screenshotDir = new File("etc/screenshots");
         if(!screenshotDir.exists()) screenshotDir.mkdirs();
-        
-        afterConstructor();
-    }
-    
-    private void afterConstructor()
-    {
-        inst = this;
     }
     
     /**
@@ -774,9 +765,9 @@ public class Game
                     ren.render();
                 });
                 renderQueue.clear();
-                inst.render();
+                InstanceRegistry.getGameInstance().render();
                 front.renderGUI();
-                if(renderFps) text.renderString(fps + "", -1f, 1f);
+                if(renderFps) text.renderString(fps + "", -1f, 1f, 0.8f, new Color(0.57f, 2.37f, 0.4f));
                 GL11.glFlush();
                 GLFW.glfwSwapBuffers(winManager.window);
             
@@ -1146,7 +1137,7 @@ public class Game
             GL11.glMatrixMode(GL11.GL_MODELVIEW);
             GL11.glLoadIdentity();
             
-            if(renManager.text == null) renManager.text = new TextRenderer(new File("assets/fonts/arial.png"), 8f, inst);
+            if(renManager.text == null) renManager.text = new TextRenderer(new File("assets/fonts/arial.png"), 0.75f);
             else renManager.text.refreshRenderer();
             
             centerWindow();

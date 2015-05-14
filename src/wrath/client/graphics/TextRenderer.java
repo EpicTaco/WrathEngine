@@ -18,9 +18,10 @@
 package wrath.client.graphics;
 
 import java.io.File;
+import java.util.HashMap;
 import org.lwjgl.opengl.GL11;
 import wrath.client.ClientUtils;
-import wrath.client.Game;
+import wrath.client.InstanceRegistry;
 import wrath.util.Logger;
 
 /**
@@ -29,28 +30,37 @@ import wrath.util.Logger;
  */
 public class TextRenderer
 {
+    private static final HashMap<Character, Float> DEF_SPACE_MAP = new HashMap<>();
+    
+    private final HashMap<Character, Float> spaceMap = new HashMap<>();
+    
     private Color color;
     private final File file;
     private float fontSize;
     private int fontTex;
-    private final Game game;
     
     /**
      * Creates a renderer to render the specified PNG font {@link java.io.File}.
      * @param ttfFile The {@link java.io.File} containing the font to render.
      * @param fontSize The size of the font. This is NOT standardized!
-     * @param game The {@link wrath.client.Game} object that parents this. This is needed to access the game's {@link wrath.util.Logger}.
      */
-    public TextRenderer(File ttfFile, float fontSize, Game game)
+    public TextRenderer(File ttfFile, float fontSize)
     {
+        if(DEF_SPACE_MAP.isEmpty()) setDefaultMetrics();
         this.file = ttfFile;
         color = new Color(1, 1, 1, 1);
         
+        File metricsFile = new File(ttfFile.getParentFile().getPath() + "/" + ttfFile.getName().split(".png")[0] + ".metrics");
+        if(!metricsFile.exists()) spaceMap.putAll(DEF_SPACE_MAP);
+        else
+        {
+            //Fill ratio map.
+        }
+        
         this.fontSize = fontSize;
         fontTex = ClientUtils.get2DTexture(ClientUtils.loadImageFromFile(ttfFile));
-        this.game = game;
         if(fontTex != 0)
-            game.getLogger().log("Loaded font from '" + ttfFile.getName() + "'!");
+            InstanceRegistry.getGameInstance().getLogger().log("Loaded font from '" + ttfFile.getName() + "'!");
         else
             Logger.getErrorLogger().log("Could not load font from '" + ttfFile.getName() + "'! Unknown error!");
     }
@@ -78,9 +88,17 @@ public class TextRenderer
      */
     public void refreshRenderer()
     {
+        spaceMap.clear();
+        setDefaultMetrics();
         fontTex = ClientUtils.get2DTexture(ClientUtils.loadImageFromFile(file));
+        File metricsFile = new File(file.getParentFile().getPath() + "/" + file.getName().split(".png")[0] + ".metrics");
+        if(!metricsFile.exists()) spaceMap.putAll(DEF_SPACE_MAP);
+        else
+        {
+            //Fill ratio map.
+        }
         if(fontTex != 0)
-            game.getLogger().log("Loaded font from '" + file.getName() + "'!");
+            InstanceRegistry.getGameInstance().getLogger().log("Loaded font from '" + file.getName() + "'!");
         else
             Logger.getErrorLogger().log("Could not load font from '" + file.getName() + "'! Unknown error!");
     }
@@ -88,25 +106,13 @@ public class TextRenderer
     /**
      * Draws the specified string onto the screen at the specified points.
      * @param string The {Link java.lang.String} to write to the screen.
-     * @param x The X-coordinate of the bottom left of the message.
-     * @param y The Y-coordinate of the bottom left of the message.
-     */
-    public void renderString(String string, float x, float y)
-    {
-        renderString(string, x, y, 6.8f);
-    }
-    
-    /**
-     * Draws the specified string onto the screen at the specified points.
-     * @param string The {Link java.lang.String} to write to the screen.
      * @param x The X-coordinate of the top left of the message.
      * @param y The Y-coordinate of the top left of the message.
-     * @param widthOffset The divisor to lower space between characters. The higher the offset, the closer the characters are to each other.
      */
-    public void renderString(String string, float x, float y, float widthOffset) 
+    public void renderString(String string, float x, float y) 
     {
         final int gridSize = 16;
-        float characterWidth = fontSize * 0.01f;
+        final float characterWidth = fontSize * 0.09f;
         final float characterHeight = characterWidth * 0.75f;
         
         GL11.glPushAttrib(GL11.GL_TEXTURE_BIT | GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT);
@@ -118,10 +124,9 @@ public class TextRenderer
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ONE);
         GL11.glPushMatrix();
-        GL11.glTranslatef(x, 0, 0);
         GL11.glColor4f(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
         GL11.glBegin(GL11.GL_QUADS);
-        float curPos = 0f;
+        float curPos = x;
         for(int i = 0; i < string.length(); i++) 
         {
             int ascii = (int) string.charAt(i);
@@ -144,9 +149,16 @@ public class TextRenderer
             GL11.glTexCoord2f(cellX, cellY);
             GL11.glVertex2f(curPos, y);
             
-            if(string.charAt(i) == 'l' || string.charAt(i) == 'i' || string.charAt(i) == '!' || string.charAt(i) == '|')
-                curPos = (((i + 1) * characterWidth / widthOffset) + ((i) * characterWidth / widthOffset)) / 1.96f;
-            else curPos = (i + 1) * characterWidth / widthOffset;
+            if(i < string.length())
+            {
+                if(!spaceMap.containsKey(string.charAt(i))) curPos = curPos + (fontSize / 48f);
+                else curPos = curPos + (spaceMap.get(string.charAt(i)) * (fontSize / 48f));
+                if((i + 1) < string.length() && string.charAt(i + 1) == 'W') curPos = curPos + (spaceMap.get('W') * (fontSize / 215f));
+                else if((i + 1) < string.length() && string.charAt(i + 1) == 'i') curPos = curPos - (spaceMap.get('i') * (fontSize / 100f));
+                else if((i + 1) < string.length() && string.charAt(i + 1) == 'I') curPos = curPos - (spaceMap.get('I') * (fontSize / 100f));
+                else if((i + 1) < string.length() && string.charAt(i + 1) == 'l') curPos = curPos - (spaceMap.get('l') * (fontSize / 100f));
+                else if((i + 1) < string.length() && string.charAt(i + 1) == '.') curPos = curPos - (spaceMap.get('.') * (fontSize / 100f));
+            }
         }
         GL11.glEnd();
         GL11.glPopMatrix();
@@ -165,14 +177,13 @@ public class TextRenderer
      * @param string The {Link java.lang.String} to write to the screen.
      * @param x The X-coordinate of the top left of the message.
      * @param y The Y-coordinate of the top left of the message.
-     * @param widthOffset The divisor to lower space between characters. The higher the offset, the closer the characters are to each other.
      * @param fontSize The size of the font. This is NOT standardized!
      * @param color The {@link wrath.client.graphics.Color} to make the rendered text.
      */
-    public void renderString(String string, float x, float y, float widthOffset, float fontSize, Color color) 
+    public void renderString(String string, float x, float y, float fontSize, Color color) 
     {
         final int gridSize = 16;
-        float characterWidth = fontSize * 0.01f;
+        final float characterWidth = fontSize * 0.09f;
         final float characterHeight = characterWidth * 0.75f;
         
         GL11.glPushAttrib(GL11.GL_TEXTURE_BIT | GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT);
@@ -184,10 +195,9 @@ public class TextRenderer
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ONE);
         GL11.glPushMatrix();
-        GL11.glTranslatef(x, 0, 0);
         GL11.glColor4f(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
         GL11.glBegin(GL11.GL_QUADS);
-        float curPos = 0f;
+        float curPos = x;
         for(int i = 0; i < string.length(); i++) 
         {
             int ascii = (int) string.charAt(i);
@@ -210,9 +220,16 @@ public class TextRenderer
             GL11.glTexCoord2f(cellX, cellY);
             GL11.glVertex2f(curPos, y);
             
-            if(string.charAt(i) == 'l' || string.charAt(i) == 'i' || string.charAt(i) == '!' || string.charAt(i) == '|')
-                curPos = (((i + 1) * characterWidth / widthOffset) + ((i) * characterWidth / widthOffset)) / 1.96f;
-            else curPos = (i + 1) * characterWidth / widthOffset;
+            if(i < string.length())
+            {
+                if(!spaceMap.containsKey(string.charAt(i))) curPos = curPos + (fontSize / 48f);
+                else curPos = curPos + (spaceMap.get(string.charAt(i)) * (fontSize / 48f));
+                if((i + 1) < string.length() && string.charAt(i + 1) == 'W') curPos = curPos + (spaceMap.get('W') * (fontSize / 215f));
+                else if((i + 1) < string.length() && string.charAt(i + 1) == 'i') curPos = curPos - (spaceMap.get('i') * (fontSize / 100f));
+                else if((i + 1) < string.length() && string.charAt(i + 1) == 'I') curPos = curPos - (spaceMap.get('I') * (fontSize / 100f));
+                else if((i + 1) < string.length() && string.charAt(i + 1) == 'l') curPos = curPos - (spaceMap.get('l') * (fontSize / 100f));
+                else if((i + 1) < string.length() && string.charAt(i + 1) == '.') curPos = curPos - (spaceMap.get('.') * (fontSize / 100f));
+            }
         }
         GL11.glEnd();
         GL11.glPopMatrix();
@@ -242,5 +259,68 @@ public class TextRenderer
     public void setFontSize(float fontSize)
     {
         this.fontSize = fontSize;
+    }
+
+    private static void setDefaultMetrics()
+    {
+        DEF_SPACE_MAP.clear();
+        DEF_SPACE_MAP.put(' ', 0.5f);
+        DEF_SPACE_MAP.put('A', 0.975f);
+        DEF_SPACE_MAP.put('a', 0.8f);
+        DEF_SPACE_MAP.put('B', 0.925f);
+        DEF_SPACE_MAP.put('b', 0.8f);
+        DEF_SPACE_MAP.put('C', 0.925f);
+        DEF_SPACE_MAP.put('c', 0.9f);
+        DEF_SPACE_MAP.put('D', 1.0f);
+        DEF_SPACE_MAP.put('d', 0.9f);
+        DEF_SPACE_MAP.put('E', 0.925f);
+        DEF_SPACE_MAP.put('e', 0.7f);
+        DEF_SPACE_MAP.put('F', 0.825f);
+        DEF_SPACE_MAP.put('f', 0.65f);
+        DEF_SPACE_MAP.put('G', 1.0f);
+        DEF_SPACE_MAP.put('g', 0.925f);
+        DEF_SPACE_MAP.put('H', 0.9f);
+        DEF_SPACE_MAP.put('h', 0.75f);
+        DEF_SPACE_MAP.put('I', 0.5f);
+        DEF_SPACE_MAP.put('i', 0.5f);
+        DEF_SPACE_MAP.put('J', 0.675f);
+        DEF_SPACE_MAP.put('j', 0.6f);
+        DEF_SPACE_MAP.put('K', 0.95f);
+        DEF_SPACE_MAP.put('k', 0.7f);
+        DEF_SPACE_MAP.put('L', 0.775f);
+        DEF_SPACE_MAP.put('l', 0.6f);
+        DEF_SPACE_MAP.put('M', 1.1f);
+        DEF_SPACE_MAP.put('m', 1.0f);
+        DEF_SPACE_MAP.put('N', 0.85f);
+        DEF_SPACE_MAP.put('n', 0.8f);
+        DEF_SPACE_MAP.put('O', 1.025f);
+        DEF_SPACE_MAP.put('o', 0.7f);
+        DEF_SPACE_MAP.put('P', 0.95f);
+        DEF_SPACE_MAP.put('p', 0.7f);
+        DEF_SPACE_MAP.put('Q', 1.0f);
+        DEF_SPACE_MAP.put('q', 0.8f);
+        DEF_SPACE_MAP.put('R', 0.8f);
+        DEF_SPACE_MAP.put('r', 0.8f);
+        DEF_SPACE_MAP.put('S', 0.95f);
+        DEF_SPACE_MAP.put('s', 0.675f);
+        DEF_SPACE_MAP.put('T', 0.8f);
+        DEF_SPACE_MAP.put('t', 0.6f);
+        DEF_SPACE_MAP.put('U', 0.88f);
+        DEF_SPACE_MAP.put('u', 0.95f);
+        DEF_SPACE_MAP.put('V', 1.05f);
+        DEF_SPACE_MAP.put('v', 0.9f);
+        DEF_SPACE_MAP.put('W', 1.48f);
+        DEF_SPACE_MAP.put('w', 1.2f);
+        DEF_SPACE_MAP.put('X', 1.05f);
+        DEF_SPACE_MAP.put('x', 0.75f);
+        DEF_SPACE_MAP.put('Y', 0.9f);
+        DEF_SPACE_MAP.put('y', 0.9f);
+        DEF_SPACE_MAP.put('Z', 1.0f);
+        DEF_SPACE_MAP.put('z', 0.95f);
+        
+        DEF_SPACE_MAP.put('%', 1.15f);
+        DEF_SPACE_MAP.put('@', 1.2f);
+        DEF_SPACE_MAP.put('1', 0.8f);
+        DEF_SPACE_MAP.put('.', 0.5f);
     }
 }
