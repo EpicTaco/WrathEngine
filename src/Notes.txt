@@ -1,4 +1,6 @@
 Things to fix/edit:
+- Make Vector3f class.
+- Make Matrix4f class.
 - Use Model and Texture system for Background rendering.
 - Add 3D support for Model Textures.
 
