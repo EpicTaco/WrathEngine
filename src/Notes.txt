@@ -1,8 +1,6 @@
 Things to fix/edit:
-- Make Vector3f class.
-- Make Matrix4f class.
+- Work on wrath.common.math package.
 - Use Model and Texture system for Background rendering.
-- Add 3D support for Model Textures.
 
 Things to add:
 - Audio

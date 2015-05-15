@@ -15,12 +15,14 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package wrath.common;
+package wrath.common.math;
+
+import java.io.Serializable;
 
 /**
- * Class to represent a 4-dimensional matrix.
+ * Class to represent a 2-dimensional matrix.
  * @author Trent Spears
  */
-public class Matrix4f
+public class Matrix2f implements Serializable
 {
 }

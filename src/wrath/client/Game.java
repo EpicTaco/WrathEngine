@@ -94,8 +94,9 @@ public class Game
         TITLE = gameTitle;
         VERSION = version;
         TPS = ticksPerSecond;
+        InstanceRegistry.setGameInstance(this);
         this.evManager = new EventManager();
-        this.inpManager = new InputManager(this);
+        this.inpManager = new InputManager();
         this.renManager = new RenderManager();
         this.winManager = new WindowManager();
         

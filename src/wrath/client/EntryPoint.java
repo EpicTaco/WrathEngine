@@ -21,6 +21,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import wrath.test.client.CustomGame;
 
 /**
  * This is the entry class of the engine.
@@ -33,7 +34,7 @@ public class EntryPoint
     {
         if(!new File("assets/init").exists())
             ClientUtils.throwInternalError("assets/init file is missing!", false);
-        
+
         try
         {
             String fline;

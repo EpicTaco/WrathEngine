@@ -35,7 +35,7 @@ import org.lwjgl.glfw.GLFWCursorPosCallback;
 import org.lwjgl.glfw.GLFWKeyCallback;
 import org.lwjgl.glfw.GLFWMouseButtonCallback;
 import org.lwjgl.glfw.GLFWScrollCallback;
-import wrath.client.Game;
+import wrath.client.InstanceRegistry;
 import wrath.client.enums.ImageFormat;
 import wrath.client.enums.WindowState;
 import wrath.common.Closeable;
@@ -63,8 +63,6 @@ public class InputManager implements Closeable
     private double curx = 0;
     private double cury = 0;
     
-    private final Game game;
-    
     /**
      * Adds a listener to a specified String ID to be added later to a Keyboard or mouse function.
      * Name is NOT case sensitive!
@@ -90,17 +88,15 @@ public class InputManager implements Closeable
     
     /**
      * Constructor.
-     * @param game The {@link wrath.client.Game} the InputManager is attached to.
      */
-    public InputManager(Game game)
+    public InputManager()
     {
-        this.game = game;
         afterConstructor();
     }
     
     private void afterConstructor()
     {
-        game.addToTrashCleanup(this);
+        InstanceRegistry.getGameInstance().addToTrashCleanup(this);
     }
     
     /**
@@ -177,41 +173,41 @@ public class InputManager implements Closeable
     {
         bindKey(Key.KEY_ESCAPE, Key.MOD_SHIFT, KeyAction.KEY_PRESS, () ->
         {
-            game.stop();
+            InstanceRegistry.getGameInstance().stop();
         });
         
         bindKey(Key.KEY_F3, Key.MOD_NONE, KeyAction.KEY_PRESS, () ->
         {
-            game.getRenderer().setRenderFPS(!game.getRenderer().isRenderingFPS());
+            InstanceRegistry.getGameInstance().getRenderer().setRenderFPS(!InstanceRegistry.getGameInstance().getRenderer().isRenderingFPS());
         });
         
         bindKey(Key.KEY_F12, Key.MOD_NONE, KeyAction.KEY_PRESS, () ->
         {
             DateFormat format = new SimpleDateFormat("MM_dd_yyyy___HHmmss");
             Calendar now = Calendar.getInstance();
-            game.getWindowManager().screenShot("screenshot_" + format.format(now.getTime()), ImageFormat.PNG);
+            InstanceRegistry.getGameInstance().getWindowManager().screenShot("screenshot_" + format.format(now.getTime()), ImageFormat.PNG);
         });
         
         bindKey(Key.KEY_ENTER, Key.MOD_ALT, KeyAction.KEY_PRESS, () ->
         {
-            if(game.getWindowManager().getWindowState() == WindowState.FULLSCREEN) game.getWindowManager().setWindowState(WindowState.WINDOWED);
-            else game.getWindowManager().setWindowState(WindowState.FULLSCREEN);
+            if(InstanceRegistry.getGameInstance().getWindowManager().getWindowState() == WindowState.FULLSCREEN) InstanceRegistry.getGameInstance().getWindowManager().setWindowState(WindowState.WINDOWED);
+            else InstanceRegistry.getGameInstance().getWindowManager().setWindowState(WindowState.FULLSCREEN);
         });
         
         bindKey(Key.KEY_ENTER, Key.MOD_SHIFT, KeyAction.KEY_PRESS, () ->
         {
-            game.getWindowManager().centerWindow();
+            InstanceRegistry.getGameInstance().getWindowManager().centerWindow();
         });
         
         bindKey(Key.KEY_UP, Key.MOD_ALT, KeyAction.KEY_PRESS, () ->
         {
-            if(game.getWindowManager().getWindowState() == WindowState.FULLSCREEN_WINDOWED) game.getWindowManager().setWindowState(WindowState.WINDOWED);
-            else game.getWindowManager().setWindowState(WindowState.FULLSCREEN_WINDOWED);
+            if(InstanceRegistry.getGameInstance().getWindowManager().getWindowState() == WindowState.FULLSCREEN_WINDOWED) InstanceRegistry.getGameInstance().getWindowManager().setWindowState(WindowState.WINDOWED);
+            else InstanceRegistry.getGameInstance().getWindowManager().setWindowState(WindowState.FULLSCREEN_WINDOWED);
         });
         
         bindKey(Key.KEY_DOWN, Key.MOD_ALT, KeyAction.KEY_PRESS, () ->
         {
-            game.getWindowManager().minimizeWindow();
+            InstanceRegistry.getGameInstance().getWindowManager().minimizeWindow();
         });
         
         bindKey(Key.KEY_HOME, Key.MOD_CTRL + Key.MOD_SHIFT, KeyAction.KEY_PRESS, () ->
@@ -229,7 +225,7 @@ public class InputManager implements Closeable
         bindKey(Key.KEY_S, Key.MOD_CTRL + Key.MOD_ALT, KeyAction.KEY_PRESS, () ->
         {
             saveKeys();
-            game.getConfig().save();
+            InstanceRegistry.getGameInstance().getConfig().save();
         });
     }
     
@@ -308,7 +304,7 @@ public class InputManager implements Closeable
             list.addBinding(new KeyData(key, keyMod, action, functionID));
         }
         else keyMap.put(key, new KeyList(new KeyData(key, keyMod, action, functionID)));
-        game.getLogger().log("Function '" + functionID + "' bound to key '" + key + "'.");
+        InstanceRegistry.getGameInstance().getLogger().log("Function '" + functionID + "' bound to key '" + key + "'.");
     }
 
     /**
@@ -317,7 +313,7 @@ public class InputManager implements Closeable
      */
     public void bindKeysToDefaults()
     {
-        game.getLogger().log("Setting keys to defaults!");
+        InstanceRegistry.getGameInstance().getLogger().log("Setting keys to defaults!");
         defaults.stream().forEach((d) ->
         {
             if(keyMap.containsKey(d.getKey()))
@@ -353,7 +349,7 @@ public class InputManager implements Closeable
      */
     public double getCursorX()
     {
-        return (2 / (double) game.getWindowManager().getWidth() * curx) - 1.0;
+        return (2 / (double) InstanceRegistry.getGameInstance().getWindowManager().getWidth() * curx) - 1.0;
     }
 
     /**
@@ -362,7 +358,7 @@ public class InputManager implements Closeable
      */
     public double getCursorY()
     {
-        return ((2 / (double) game.getWindowManager().getHeight() * cury) - 1.0) * -1;
+        return ((2 / (double) InstanceRegistry.getGameInstance().getWindowManager().getHeight() * cury) - 1.0) * -1;
     }
 
     /**
@@ -371,7 +367,7 @@ public class InputManager implements Closeable
      */
     public boolean isCursorEnabled()
     {
-        return GLFW.glfwGetInputMode(game.getWindowManager().getWindowID(), GLFW.GLFW_CURSOR) == GLFW.GLFW_CURSOR_NORMAL;
+        return GLFW.glfwGetInputMode(InstanceRegistry.getGameInstance().getWindowManager().getWindowID(), GLFW.GLFW_CURSOR) == GLFW.GLFW_CURSOR_NORMAL;
     }
 
     /**
@@ -389,13 +385,13 @@ public class InputManager implements Closeable
      */
     public void loadKeys()
     {
-        File inpFile = new File(game.getConfig().getString("KeyBindsFile", "etc/keys.dat"));
+        File inpFile = new File(InstanceRegistry.getGameInstance().getConfig().getString("KeyBindsFile", "etc/keys.dat"));
         if(!inpFile.exists())
         {
             try
             {
                 inpFile.createNewFile();
-                game.getLogger().log("Saved key bindings not found, Generating file @ '" + inpFile.getAbsolutePath() + "'!");
+                InstanceRegistry.getGameInstance().getLogger().log("Saved key bindings not found, Generating file @ '" + inpFile.getAbsolutePath() + "'!");
             }
             catch(IOException ex)
             {
@@ -415,7 +411,7 @@ public class InputManager implements Closeable
                     return;
                 }
                 
-                game.getLogger().log("Reading key bindings from file '" + inpFile.getAbsolutePath() + "'!");
+                InstanceRegistry.getGameInstance().getLogger().log("Reading key bindings from file '" + inpFile.getAbsolutePath() + "'!");
                 try(BufferedReader in = new BufferedReader(new FileReader(inpFile))) 
                 {
                     String inputBuffer;
@@ -434,7 +430,7 @@ public class InputManager implements Closeable
                         functionID = inputArray[0].trim().toLowerCase();
                         if(!savedFuncMap.containsKey(functionID))
                         {
-                            game.getLogger().log("Unknown function '" + functionID + "' while loading key binds from file '" + inpFile.getAbsolutePath() + "'; Line " + lineNum);
+                            InstanceRegistry.getGameInstance().getLogger().log("Unknown function '" + functionID + "' while loading key binds from file '" + inpFile.getAbsolutePath() + "'; Line " + lineNum);
                             continue;
                         }
                         
@@ -444,14 +440,14 @@ public class InputManager implements Closeable
                         }
                         catch(NumberFormatException e)
                         {
-                            game.getLogger().log("Unknown key mod value '" + inputArray[1] + "' while loading key binds from file '" + inpFile.getAbsolutePath() + "'; Line " + lineNum);
+                            InstanceRegistry.getGameInstance().getLogger().log("Unknown key mod value '" + inputArray[1] + "' while loading key binds from file '" + inpFile.getAbsolutePath() + "'; Line " + lineNum);
                             continue;
                         }
                         
                         action = KeyAction.valueOf(inputArray[2]);
                         if(action == null)
                         {
-                            game.getLogger().log("Unknown key action value '" + inputArray[2] + "' while loading key binds from file '" + inpFile.getAbsolutePath() + "'; Line " + lineNum);
+                            InstanceRegistry.getGameInstance().getLogger().log("Unknown key action value '" + inputArray[2] + "' while loading key binds from file '" + inpFile.getAbsolutePath() + "'; Line " + lineNum);
                             continue;
                         }
                         
@@ -461,7 +457,7 @@ public class InputManager implements Closeable
                         }
                         catch(NumberFormatException e)
                         {
-                            game.getLogger().log("Unknown key value '" + inputArray[3] + "' while loading key binds from file '" + inpFile.getAbsolutePath() + "'; Line " + lineNum);
+                            InstanceRegistry.getGameInstance().getLogger().log("Unknown key value '" + inputArray[3] + "' while loading key binds from file '" + inpFile.getAbsolutePath() + "'; Line " + lineNum);
                             continue;
                         }
                         
@@ -494,29 +490,29 @@ public class InputManager implements Closeable
      */
     public void openInput()
     {
-        if(cursor != -1) GLFW.glfwSetCursor(game.getWindowManager().getWindowID(), cursor);
+        if(cursor != -1) GLFW.glfwSetCursor(InstanceRegistry.getGameInstance().getWindowManager().getWindowID(), cursor);
         
-        GLFW.glfwSetCharCallback(game.getWindowManager().getWindowID(), (charStr = new GLFWCharCallback()
+        GLFW.glfwSetCharCallback(InstanceRegistry.getGameInstance().getWindowManager().getWindowID(), (charStr = new GLFWCharCallback()
         {
             @Override
             public void invoke(long window, int codepoint)
             {
-                game.getEventManager().getInputEventHandler().onCharInput((char) codepoint);
+                InstanceRegistry.getGameInstance().getEventManager().getInputEventHandler().onCharInput((char) codepoint);
             }
         }));
         
-        GLFW.glfwSetCursorPosCallback(game.getWindowManager().getWindowID(), (curStr = new GLFWCursorPosCallback()
+        GLFW.glfwSetCursorPosCallback(InstanceRegistry.getGameInstance().getWindowManager().getWindowID(), (curStr = new GLFWCursorPosCallback()
         {
             @Override
             public void invoke(long window, double x, double y)
             {
                 curx = x;
                 cury = y;
-                game.getEventManager().getInputEventHandler().onCursorMove(getCursorX(), getCursorY());
+                InstanceRegistry.getGameInstance().getEventManager().getInputEventHandler().onCursorMove(getCursorX(), getCursorY());
             }
         }));
         
-        GLFW.glfwSetKeyCallback(game.getWindowManager().getWindowID(), (keyStr = new GLFWKeyCallback()
+        GLFW.glfwSetKeyCallback(InstanceRegistry.getGameInstance().getWindowManager().getWindowID(), (keyStr = new GLFWKeyCallback()
         {
             @Override
             public void invoke(long window, int key, int scancode, int action, int mods)
@@ -526,7 +522,7 @@ public class InputManager implements Closeable
             }
         }));
         
-        GLFW.glfwSetMouseButtonCallback(game.getWindowManager().getWindowID(), (mkeyStr = new GLFWMouseButtonCallback()
+        GLFW.glfwSetMouseButtonCallback(InstanceRegistry.getGameInstance().getWindowManager().getWindowID(), (mkeyStr = new GLFWMouseButtonCallback()
         {
             @Override
             public void invoke(long window, int button, int action, int mods)
@@ -536,12 +532,12 @@ public class InputManager implements Closeable
             }
         }));
         
-        GLFW.glfwSetScrollCallback(game.getWindowManager().getWindowID(), (scrStr = new GLFWScrollCallback()
+        GLFW.glfwSetScrollCallback(InstanceRegistry.getGameInstance().getWindowManager().getWindowID(), (scrStr = new GLFWScrollCallback()
         {
             @Override
             public void invoke(long window, double xoff, double yoff)
             {
-                game.getEventManager().getInputEventHandler().onScroll(xoff, yoff);
+                InstanceRegistry.getGameInstance().getEventManager().getInputEventHandler().onScroll(xoff, yoff);
             }
         }));
     }
@@ -552,7 +548,7 @@ public class InputManager implements Closeable
     public void saveKeys()
     {
         //Format: 'functionID:mod:action:key'
-        File inpFile = new File(game.getConfig().getString("KeyBindsFile", "etc/keys.dat"));
+        File inpFile = new File(InstanceRegistry.getGameInstance().getConfig().getString("KeyBindsFile", "etc/keys.dat"));
         if(!inpFile.exists())
         {
             try
@@ -585,7 +581,7 @@ public class InputManager implements Closeable
             Logger.getErrorLogger().log("Could not save key bindings, I/O Error Occured!");
         }
         
-        game.getLogger().log("Finished writing key binds data to file '" + inpFile.getAbsolutePath() + "'!");
+        InstanceRegistry.getGameInstance().getLogger().log("Finished writing key binds data to file '" + inpFile.getAbsolutePath() + "'!");
     }
 
     /**
@@ -601,7 +597,7 @@ public class InputManager implements Closeable
             cursor = -1;
         }
         cursor = GLFW.glfwCreateStandardCursor(cursormode);
-        GLFW.glfwSetCursor(game.getWindowManager().getWindowID(), cursor);
+        GLFW.glfwSetCursor(InstanceRegistry.getGameInstance().getWindowManager().getWindowID(), cursor);
     }
 
     /**
@@ -612,9 +608,9 @@ public class InputManager implements Closeable
     public void setCursorEnabled(boolean cursorEnabled)
     {
         if(cursorEnabled)
-            GLFW.glfwSetInputMode(game.getWindowManager().getWindowID(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
+            GLFW.glfwSetInputMode(InstanceRegistry.getGameInstance().getWindowManager().getWindowID(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
         else
-            GLFW.glfwSetInputMode(game.getWindowManager().getWindowID(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
+            GLFW.glfwSetInputMode(InstanceRegistry.getGameInstance().getWindowManager().getWindowID(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
     }
 
     /**

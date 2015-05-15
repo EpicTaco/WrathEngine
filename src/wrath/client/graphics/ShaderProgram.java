@@ -27,8 +27,8 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import wrath.client.InstanceRegistry;
 import wrath.common.Closeable;
-import wrath.common.Matrix4f;
-import wrath.common.Vector3f;
+import wrath.common.math.Matrix4f;
+import wrath.common.math.Vector3f;
 import wrath.util.Logger;
 
 /**

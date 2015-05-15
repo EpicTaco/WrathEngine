@@ -15,25 +15,14 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package wrath.common;
+package wrath.common.math;
+
+import java.io.Serializable;
 
 /**
- * Class used to represent a group of x, y and z coordinates.
+ * Class to represent a 3-dimensional matrix.
  * @author Trent Spears
  */
-public class Vector3f
+public class Matrix3f implements Serializable
 {
-    public float x,y,z;
-    
-    public Vector3f()
-    {
-        this(0f, 0f, 0f);
-    }
-    
-    public Vector3f(float x, float y, float z)
-    {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
 }
