@@ -25,10 +25,10 @@ import java.nio.FloatBuffer;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
+import org.lwjgl.util.vector.Matrix4f;
+import org.lwjgl.util.vector.Vector3f;
 import wrath.client.InstanceRegistry;
 import wrath.common.Closeable;
-import wrath.common.math.Matrix4f;
-import wrath.common.math.Vector3f;
 import wrath.util.Logger;
 
 /**
@@ -124,7 +124,7 @@ public class ShaderProgram implements Closeable
     
     private boolean finalized = false;
     private final int programID, vertShaderID, fragShaderID;
-    private final FloatBuffer matrixBuffer = BufferUtils.createFloatBuffer(16);
+    private final FloatBuffer matrixBuf = BufferUtils.createFloatBuffer(16);
     
     private ShaderProgram(int programID, int vertShaderID, int fragShaderID)
     {
@@ -162,7 +162,7 @@ public class ShaderProgram implements Closeable
      * @param variableName The {@link java.lang.String} name of the Uniform variable.
      * @return Returns the integer location of a uniform variable.
      */
-    public int getUniformVariableLocation(String variableName)
+    private int getUniformVariableLocation(String variableName)
     {
         return GL20.glGetUniformLocation(programID, variableName);
     }
@@ -174,17 +174,7 @@ public class ShaderProgram implements Closeable
      */
     public void setUniformVariable(String variableName, float value)
     {
-        setUniformVariable(getUniformVariableLocation(variableName), value);
-    }
-    
-    /**
-     * Sets the value of a uniform variable in the shader.
-     * @param variableLocation The integer location of the Uniform variable.
-     * @param value The value to set.
-     */
-    public void setUniformVariable(int variableLocation, float value)
-    {
-        GL20.glUniform1f(variableLocation, value);
+        GL20.glUniform1f(getUniformVariableLocation(variableName), value);
     }
     
     /**
@@ -194,17 +184,7 @@ public class ShaderProgram implements Closeable
      */
     public void setUniformVariable(String variableName, Vector3f value)
     {
-        setUniformVariable(getUniformVariableLocation(variableName), value);
-    }
-    
-    /**
-     * Sets the value of a uniform variable in the shader.
-     * @param variableLocation The integer location of the Uniform variable.
-     * @param value The value to set.
-     */
-    public void setUniformVariable(int variableLocation, Vector3f value)
-    {
-        GL20.glUniform3f(variableLocation, value.x, value.y, value.z);
+        GL20.glUniform3f(getUniformVariableLocation(variableName), value.x, value.y, value.z);
     }
     
     /**
@@ -214,17 +194,7 @@ public class ShaderProgram implements Closeable
      */
     public void setUniformVariable(String variableName, boolean value)
     {
-        setUniformVariable(getUniformVariableLocation(variableName), value);
-    }
-    
-    /**
-     * Sets the value of a uniform variable in the shader.
-     * @param variableLocation The integer location of the Uniform variable.
-     * @param value The value to set.
-     */
-    public void setUniformVariable(int variableLocation, boolean value)
-    {
-        GL20.glUniform1f(variableLocation, value ? 1f : 0f);
+        GL20.glUniform1f(getUniformVariableLocation(variableName), value ? 1f : 0f);
     }
     
     /**
@@ -234,18 +204,8 @@ public class ShaderProgram implements Closeable
      */
     public void setUniformVariable(String variableName, Matrix4f value)
     {
-        setUniformVariable(getUniformVariableLocation(variableName), value);
-    }
-    
-    /**
-     * Sets the value of a uniform variable in the shader.
-     * @param variableLocation The integer location of the Uniform variable.
-     * @param value The value to set.
-     */
-    public void setUniformVariable(int variableLocation, Matrix4f value)
-    {
-        //TODO: Make Matrix4f class and put the Matrix into the FloatBuffer.
-        GL20.glUniformMatrix4(variableLocation, false, matrixBuffer);
+        value.store(matrixBuf);
+        GL20.glUniformMatrix4(getUniformVariableLocation(variableName), false, matrixBuf);
     }
     
     /**
