@@ -1,5 +1,4 @@
 Things to fix/edit:
-- Work on wrath.common.math package.
 - Use Model and Texture system for Background rendering.
 
 Things to add:

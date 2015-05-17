@@ -227,6 +227,11 @@ public class InputManager implements Closeable
             saveKeys();
             InstanceRegistry.getGameInstance().getConfig().save();
         });
+        
+        bindKey(Key.KEY_C, Key.MOD_ALT, KeyAction.KEY_PRESS, () ->
+        {
+            setCursorEnabled(!isCursorEnabled());
+        });
     }
     
     /**
@@ -391,7 +396,7 @@ public class InputManager implements Closeable
             try
             {
                 inpFile.createNewFile();
-                InstanceRegistry.getGameInstance().getLogger().log("Saved key bindings not found, Generating file @ '" + inpFile.getAbsolutePath() + "'!");
+                InstanceRegistry.getGameInstance().getLogger().log("Saved key bindings not found, Generating file @ '" + inpFile.getName() + "'!");
             }
             catch(IOException ex)
             {
@@ -411,7 +416,7 @@ public class InputManager implements Closeable
                     return;
                 }
                 
-                InstanceRegistry.getGameInstance().getLogger().log("Reading key bindings from file '" + inpFile.getAbsolutePath() + "'!");
+                InstanceRegistry.getGameInstance().getLogger().log("Reading key bindings from file '" + inpFile.getName() + "'!");
                 try(BufferedReader in = new BufferedReader(new FileReader(inpFile))) 
                 {
                     String inputBuffer;

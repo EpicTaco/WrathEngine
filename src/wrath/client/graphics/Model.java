@@ -41,17 +41,14 @@ public class Model implements Renderable, Closeable
     private static final int TEXTURE_ATTRIB_INDEX = 1;
     private static final int VERTICIES_ATTRIB_INDEX = 0;
     
-    private static final HashMap<String, Model> map = new HashMap<>();
-    
     /**
      * Creates a 2D or 3D model from a list of verticies.
      * Models are always assumed to be made with triangles, and will be rendered as such.
-     * @param modelName The {@link java.lang.String} representation of the model's name.
      * @param verticies The list of verticies in the model. One point is represented by (x, y, z), and there must be at least 3 points.
      * @param indicies The list of points to connect for OpenGL. Look up indicies in OpenGL for reference.
      * @return Returns the {@link wrath.client.graphics.Model} object of your model.
      */
-    public static Model createModel(String modelName, float[] verticies, int[] indicies)
+    public static Model createModel(float[] verticies, int[] indicies)
     {
         // Generating VAO
         int vaoid = GL30.glGenVertexArrays();
@@ -75,9 +72,8 @@ public class Model implements Renderable, Closeable
         GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, ibuffer, GL15.GL_STATIC_DRAW);
         
         // Creating Model Object
-        Model model = new Model(modelName, null, vaoid, new Integer[]{vtvboid, invboid}, indicies.length);
-        map.put(modelName, model);
-        InstanceRegistry.getGameInstance().getLogger().log("Loaded model '" + modelName + "'!");
+        Model model = new Model(null, vaoid, new Integer[]{vtvboid, invboid}, indicies.length);
+        InstanceRegistry.getGameInstance().getLogger().log("Loaded model from verticies map!");
         
         // Unbinding OpenGL Objects
         GL30.glBindVertexArray(0);
@@ -94,37 +90,23 @@ public class Model implements Renderable, Closeable
      */
     public static Model loadModel(File modelFile)
     {
-        return loadModel(modelFile.getName(), modelFile);
-    }
-    
-    /**
-     * Loads a 2D or 3D model from specified {@link java.io.File}.
-     * Models are always assumed to be made with triangles, and will be rendered as such.
-     * @param modelName The {@link java.lang.String} representation of the model's name.
-     * @param modelFile The {@link java.io.File} to read the model data from.
-     * @return Returns the {@link wrath.client.graphics.Model} object of your model.
-     */
-    public static Model loadModel(String modelName, File modelFile)
-    {
         // Obtaining Data
         float[] verticies = new float[0];
         int[] indicies = new int[0];
         
-        return createModel(modelName, verticies, indicies);
+        return createModel(verticies, indicies);
     }
  
     private final File modelFile;
-    private final String modelName;
     private ShaderProgram shader = null;
     private Texture texture = null;
     private final int vao;
     private final ArrayList<Integer> vbos = new ArrayList<>();
     private final int vertexCount;
     
-    private Model(String modelName, File modelFile, int vao, Integer[] initVbos, int vertexCount)
+    private Model(File modelFile, int vao, Integer[] initVbos, int vertexCount)
     {
         this.modelFile = modelFile;
-        this.modelName = modelName;
         this.vao = vao;
         vbos.addAll(Arrays.asList(initVbos));
         this.vertexCount = vertexCount;
@@ -186,11 +168,28 @@ public class Model implements Renderable, Closeable
     @Override
     public void close()
     {
-        if(!map.isEmpty()) map.clear();
         GL30.glDeleteVertexArrays(getVaoID());
         for(Integer i : getVboList())
                 GL15.glDeleteBuffers(i);
         InstanceRegistry.getGameInstance().removeFromTrashCleanup(this);
+    }
+    
+    /**
+     * Gets the {@link wrath.client.graphics.ShaderProgram} attached to this model. 
+     * @return Returns the {@link wrath.client.graphics.ShaderProgram} attached to this model.
+     */
+    public ShaderProgram getShader()
+    {
+        return shader;
+    }
+    
+    /**
+     * Gets the {@link wrath.client.graphics.Texture} attached to this model. 
+     * @return Returns the {@link wrath.client.graphics.Texture} attached to this model.
+     */
+    public Texture getTexture()
+    {
+        return texture;
     }
     
     /**
@@ -225,6 +224,7 @@ public class Model implements Renderable, Closeable
     @Override
     public void render()
     {
+        if(!shader.isFinalized()) shader.finish();
         GL30.glBindVertexArray(vao);
         GL20.glEnableVertexAttribArray(VERTICIES_ATTRIB_INDEX);
         if(texture != null)
@@ -233,11 +233,11 @@ public class Model implements Renderable, Closeable
             if(InstanceRegistry.getGameInstance().getRenderMode() == RenderMode.Mode2D) GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture.getTextureID());
             else GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture.getTextureID());
         }
-        if(shader != null) shader.startUse();
+        if(shader != null) GL20.glUseProgram(shader.getProgramID());
         
         GL11.glDrawElements(GL11.GL_TRIANGLES, vertexCount, GL11.GL_UNSIGNED_INT, 0);
         
-        if(shader != null) shader.stopUse();
+        GL20.glUseProgram(0);
         if(texture != null) GL20.glDisableVertexAttribArray(TEXTURE_ATTRIB_INDEX);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
         GL20.glDisableVertexAttribArray(VERTICIES_ATTRIB_INDEX);

@@ -1133,8 +1133,6 @@ public class Game
             }
             GL11.glMatrixMode(GL11.GL_PROJECTION);
             GL11.glLoadIdentity();
-            if(MODE == RenderMode.Mode2D) GL11.glOrtho(1, 1, 1, 1, 1, -1);
-            //TODO: Make this 3D! else GL11.glOrtho(1, 1, 1, 1, 1, -1);
             GL11.glMatrixMode(GL11.GL_MODELVIEW);
             GL11.glLoadIdentity();
             

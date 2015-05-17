@@ -33,6 +33,8 @@ import javax.swing.JOptionPane;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
+import org.lwjgl.util.vector.Matrix4f;
+import org.lwjgl.util.vector.Vector3f;
 import wrath.client.enums.PopupMessageType;
 import wrath.util.Logger;
 
@@ -57,6 +59,27 @@ public class ClientUtils
     {
         ByteBuffer ret = ByteBuffer.allocateDirect(data.length).order(ByteOrder.nativeOrder());
         ret.put(data).flip();
+        return ret;
+    }
+    
+    /**
+     * Creates a {@link org.lwjgl.util.vector.Matrix4f} representing the screen position of an object.
+     * @param translation The {@link org.lwjgl.util.vector.Vector3f} representing the movement on the x-y-z plane.
+     * @param rotateX The degrees (in radians) that X should be rotated.
+     * @param rotateY The degrees (in radians) that Y should be rotated.
+     * @param rotateZ The degrees (in radians) that Z should be rotated.
+     * @param scale The scale (multiplier) of the model.
+     * @return Returns a fully-loaded {@link org.lwjgl.util.vector.Matrix4f} object ready to be loaded onto the shader.
+     */
+    public static Matrix4f createTransformationMatrix(Vector3f translation, float rotateX, float rotateY, float rotateZ, float scale)
+    {
+        Matrix4f ret = new Matrix4f();
+        ret.setIdentity();
+        Matrix4f.translate(translation, ret, ret);
+        Matrix4f.rotate((float) Math.toRadians(rotateX), new Vector3f(1,0,0), ret, ret);
+        Matrix4f.rotate((float) Math.toRadians(rotateY), new Vector3f(0,1,0), ret, ret);
+        Matrix4f.rotate((float) Math.toRadians(rotateZ), new Vector3f(0,0,1), ret, ret);
+        Matrix4f.scale(new Vector3f(scale, scale, scale), ret, ret);
         return ret;
     }
     

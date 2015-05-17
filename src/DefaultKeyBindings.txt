@@ -11,4 +11,5 @@
     Home                  Ctrl + Shift         Runs bindKeysToDefaults() method.
     Home                  Ctrl + Alt + Shift   Runs unbindAllKeys() and bindKeysToDefaults() methods.
     S                     Ctrl + Alt           Saves key bindings and configuration. Used for debug.
+    C                     Alt                  Toggles the cursor state (enabled & disabled).
     

@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.FloatBuffer;
+import java.util.HashMap;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
@@ -118,13 +119,13 @@ public class ShaderProgram implements Closeable
         
         ShaderProgram ret = new ShaderProgram(prog, vert, frag);
         InstanceRegistry.getGameInstance().addToTrashCleanup(ret);
-        //TODO: Get all uniform variables locations.
         return ret;
     }
     
     private boolean finalized = false;
     private final int programID, vertShaderID, fragShaderID;
     private final FloatBuffer matrixBuf = BufferUtils.createFloatBuffer(16);
+    private final HashMap<String, Integer> uniformMap = new HashMap<>();
     
     private ShaderProgram(int programID, int vertShaderID, int fragShaderID)
     {
@@ -148,7 +149,7 @@ public class ShaderProgram implements Closeable
     @Override
     public void close()
     {
-        stopUse();
+        GL20.glUseProgram(0);
         GL20.glDetachShader(programID, vertShaderID);
         GL20.glDetachShader(programID, fragShaderID);
         GL20.glDeleteShader(vertShaderID);
@@ -158,77 +159,115 @@ public class ShaderProgram implements Closeable
     }
     
     /**
+     * Gets the OpenGL integer ID of this shader program.
+     * @return Returns the OpenGL integer ID of this shader program.
+     */
+    public int getProgramID()
+    {
+        return programID;
+    }
+    
+    /**
      * Gets the integer location of a uniform variable.
      * @param variableName The {@link java.lang.String} name of the Uniform variable.
      * @return Returns the integer location of a uniform variable.
      */
-    private int getUniformVariableLocation(String variableName)
+    public int getUniformVariableLocation(String variableName)
     {
-        return GL20.glGetUniformLocation(programID, variableName);
+        if(!finalized) return -1;
+        if(uniformMap.containsKey(variableName)) return uniformMap.get(variableName);
+        else
+        {
+            GL20.glUseProgram(programID);
+            int ret = GL20.glGetUniformLocation(programID, variableName);
+            uniformMap.put(variableName, ret);
+            GL20.glUseProgram(0);
+            return ret;
+        }
     }
     
     /**
-     * Sets the value of a uniform variable in the shader.
-     * @param variableName The {@link java.lang.String} name of the Uniform variable.
-     * @param value The value to set.
+     * If true, the program cannot be edited and is ready for rendering.
+     * @return Returns true if the program cannot be edited and is ready for rendering.
      */
-    public void setUniformVariable(String variableName, float value)
+    public boolean isFinalized()
     {
-        GL20.glUniform1f(getUniformVariableLocation(variableName), value);
+        return finalized;
     }
     
     /**
-     * Sets the value of a uniform variable in the shader.
-     * @param variableName The {@link java.lang.String} name of the Uniform variable.
-     * @param value The value to set.
+     * Changes the shader's transformation matrix to the one specified.
+     * @param value The {@link org.lwjgl.util.vector.Matrix4f} object containing the shader transformation data.
      */
-    public void setUniformVariable(String variableName, Vector3f value)
+    public void setTransformationMatrix(Matrix4f value)
     {
-        GL20.glUniform3f(getUniformVariableLocation(variableName), value.x, value.y, value.z);
-    }
-    
-    /**
-     * Sets the value of a uniform variable in the shader.
-     * @param variableName The {@link java.lang.String} name of the Uniform variable.
-     * @param value The value to set.
-     */
-    public void setUniformVariable(String variableName, boolean value)
-    {
-        GL20.glUniform1f(getUniformVariableLocation(variableName), value ? 1f : 0f);
-    }
-    
-    /**
-     * Sets the value of a uniform variable in the shader.
-     * @param variableName The {@link java.lang.String} name of the Uniform variable.
-     * @param value The value to set.
-     */
-    public void setUniformVariable(String variableName, Matrix4f value)
-    {
-        value.store(matrixBuf);
-        GL20.glUniformMatrix4(getUniformVariableLocation(variableName), false, matrixBuf);
-    }
-    
-    /**
-     * Sets the shader program to the 'current' shader program.
-     */
-    public void startUse()
-    {
-        if(!finalized) finish();
         GL20.glUseProgram(programID);
-    }
-    
-    /**
-     * Clears the 'current' shader.
-     */
-    public void stopUse()
-    {
+        value.store(matrixBuf);
+        matrixBuf.flip();
+        GL20.glUniformMatrix4(getUniformVariableLocation("transformationMatrix"), false, matrixBuf);
         GL20.glUseProgram(0);
     }
     
-    private void finish()
+    /**
+     * Sets the value of a uniform variable in the shader.
+     * @param location The integer id of the Uniform variable.
+     * @param value The value to set.
+     */
+    public void setUniformVariable(int location, float value)
     {
+        GL20.glUseProgram(programID);
+        GL20.glUniform1f(location, value);
+        GL20.glUseProgram(0);
+    }
+    
+    /**
+     * Sets the value of a uniform variable in the shader.
+     * @param location The integer id of the Uniform variable.
+     * @param value The value to set.
+     */
+    public void setUniformVariable(int location, Vector3f value)
+    {
+        GL20.glUseProgram(programID);
+        GL20.glUniform3f(location, value.x, value.y, value.z);
+        GL20.glUseProgram(0);
+    }
+    
+    /**
+     * Sets the value of a uniform variable in the shader.
+     * @param location The integer id of the Uniform variable.
+     * @param value The value to set.
+     */
+    public void setUniformVariable(int location, boolean value)
+    {
+        GL20.glUseProgram(programID);
+        GL20.glUniform1f(location, value ? 1f : 0f);
+        GL20.glUseProgram(0);
+    }
+    
+    /**
+     * Sets the value of a uniform variable in the shader.
+     * @param location The integer id of the Uniform variable.
+     * @param value The value to set.
+     */
+    public void setUniformVariable(int location, Matrix4f value)
+    {
+        GL20.glUseProgram(programID);
+        value.store(matrixBuf);
+        matrixBuf.flip();
+        GL20.glUniformMatrix4(location, false, matrixBuf);
+        GL20.glUseProgram(0);
+    }
+    
+    /**
+     * Finalizes the shader and prepares it for rendering.
+     * This is called automatically!
+     */
+    public void finish()
+    {
+        GL20.glUseProgram(programID);
         GL20.glLinkProgram(programID);
         GL20.glValidateProgram(programID);
         finalized = true;
+        GL20.glUseProgram(0);
     }
 }
