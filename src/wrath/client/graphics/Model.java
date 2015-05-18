@@ -22,7 +22,6 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
@@ -46,9 +45,10 @@ public class Model implements Renderable, Closeable
      * Models are always assumed to be made with triangles, and will be rendered as such.
      * @param verticies The list of verticies in the model. One point is represented by (x, y, z), and there must be at least 3 points.
      * @param indicies The list of points to connect for OpenGL. Look up indicies in OpenGL for reference.
+     * @param useDefaultShaders If true, shaders will be set up automatically.
      * @return Returns the {@link wrath.client.graphics.Model} object of your model.
      */
-    public static Model createModel(float[] verticies, int[] indicies)
+    public static Model createModel(float[] verticies, int[] indicies, boolean useDefaultShaders)
     {
         // Generating VAO
         int vaoid = GL30.glGenVertexArrays();
@@ -74,6 +74,7 @@ public class Model implements Renderable, Closeable
         // Creating Model Object
         Model model = new Model(null, vaoid, new Integer[]{vtvboid, invboid}, indicies.length);
         InstanceRegistry.getGameInstance().getLogger().log("Loaded model from verticies map!");
+        if(useDefaultShaders) model.attachShader(ShaderProgram.DEFAULT_SHADER);
         
         // Unbinding OpenGL Objects
         GL30.glBindVertexArray(0);
@@ -86,15 +87,16 @@ public class Model implements Renderable, Closeable
      * Loads a 2D or 3D model from specified {@link java.io.File}.
      * Models are always assumed to be made with triangles, and will be rendered as such.
      * @param modelFile The {@link java.io.File} to read the model data from.
+     * @param useDefaultShaders If true, shaders will be set up automatically.
      * @return Returns the {@link wrath.client.graphics.Model} object of your model.
      */
-    public static Model loadModel(File modelFile)
+    public static Model loadModel(File modelFile, boolean useDefaultShaders)
     {
         // Obtaining Data
         float[] verticies = new float[0];
         int[] indicies = new int[0];
         
-        return createModel(verticies, indicies);
+        return createModel(verticies, indicies, useDefaultShaders);
     }
  
     private final File modelFile;
@@ -133,7 +135,7 @@ public class Model implements Renderable, Closeable
     {
         float[] def;
         if(InstanceRegistry.getGameInstance().getRenderMode() == RenderMode.Mode2D) def = new float[]{0f,0f,0f,1f,1f,1f,1f,0f};
-        else def = new float[0];
+        else def = new float[]{0f,0f,0f,1f,1f,1f,1f,0f};
         attachTexture(texture, def);
     }
     
@@ -146,10 +148,7 @@ public class Model implements Renderable, Closeable
     public void attachTexture(Texture texture, float[] textureCoords)
     {
         this.texture = texture;
-        if(shader == null)
-        {
-            InstanceRegistry.getGameInstance().getLogger().log("Warning: If no shader is present to pass texture co-ordinates, then the texture will not render!");
-        }
+        if(shader == null) InstanceRegistry.getGameInstance().getLogger().log("Warning: If no shader is present to pass texture co-ordinates, then the texture will not render!");
         GL30.glBindVertexArray(vao);
         int vboid = GL15.glGenBuffers();
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboid);
@@ -230,8 +229,7 @@ public class Model implements Renderable, Closeable
         if(texture != null)
         {
             GL20.glEnableVertexAttribArray(TEXTURE_ATTRIB_INDEX);
-            if(InstanceRegistry.getGameInstance().getRenderMode() == RenderMode.Mode2D) GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture.getTextureID());
-            else GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture.getTextureID());
+            texture.bindTexture();
         }
         if(shader != null) GL20.glUseProgram(shader.getProgramID());
         
@@ -239,7 +237,7 @@ public class Model implements Renderable, Closeable
         
         GL20.glUseProgram(0);
         if(texture != null) GL20.glDisableVertexAttribArray(TEXTURE_ATTRIB_INDEX);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+        Texture.unbindTextures();
         GL20.glDisableVertexAttribArray(VERTICIES_ATTRIB_INDEX);
         GL30.glBindVertexArray(0);
     }

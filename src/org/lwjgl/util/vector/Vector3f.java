@@ -34,13 +34,11 @@ package org.lwjgl.util.vector;
 import java.io.Serializable;
 import java.nio.FloatBuffer;
 
-import org.lwjgl.util.vector.Vector3f;
-
 /**
  *
  * Holds a 3-tuple vector.
  *
- * @author cix_foo <cix_foo@users.sourceforge.net>
+ * @author cix_foo
  * @version $Revision$
  * $Id$
  */

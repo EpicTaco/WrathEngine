@@ -1,4 +1,5 @@
 Things to fix/edit:
+- Add 3D texture loading in ClientUtils and Texture
 - Use Model and Texture system for Background rendering.
 
 Things to add:

@@ -62,6 +62,23 @@ public class ClientUtils
         return ret;
     }
     
+    public static Matrix4f createProjectionMatrix(int displayWidth, int displayHeight, float fov)
+    {
+        float aspectRatio = (float) displayWidth / (float) displayHeight;
+        float yscale = (float) ((1f / Math.tan(Math.toRadians(fov / 2f))) * 2f);
+        float xscale = yscale / aspectRatio;
+        float field_len = Game.RenderManager.FAR_PLANE - Game.RenderManager.NEAR_PLANE;
+        
+        Matrix4f ret = new Matrix4f();
+        ret.m00 = xscale;
+        ret.m11 = yscale;
+        ret.m22 = -((Game.RenderManager.FAR_PLANE + Game.RenderManager.NEAR_PLANE) / field_len);
+        ret.m23 = -1;
+        ret.m32 = -((2 * Game.RenderManager.FAR_PLANE * Game.RenderManager.NEAR_PLANE) / field_len);
+        ret.m33 = 0f;
+        return ret;
+    }
+    
     /**
      * Creates a {@link org.lwjgl.util.vector.Matrix4f} representing the screen position of an object.
      * @param translation The {@link org.lwjgl.util.vector.Vector3f} representing the movement on the x-y-z plane.

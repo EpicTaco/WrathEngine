@@ -17,6 +17,7 @@
  */
 package wrath.client.graphics;
 
+import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 import wrath.client.ClientUtils;
 import wrath.common.entities.Entity;
@@ -29,7 +30,7 @@ public class EntityRenderer implements Renderable
 {
     private final Entity entity;
     private Model model;
-    private float rx, ry, rz;
+    private final Vector3f rotation;
     private float scale = 1f;
     private final Vector3f screenPosition = new Vector3f(0f,0f,0f);
     
@@ -40,9 +41,7 @@ public class EntityRenderer implements Renderable
     public EntityRenderer(Entity entity)
     {
         this.entity = entity;
-        this.rx = 0f;
-        this.ry = 0f;
-        this.rz = 0f;
+        this.rotation = new Vector3f(0f,0f,0f);
     }
     
     /**
@@ -52,6 +51,15 @@ public class EntityRenderer implements Renderable
     public void bindModel(Model model)
     {
         this.model = model;
+    }
+    
+    /**
+     * Gets the {@link wrath.common.entities.Entity} linked to this renderer.
+     * @return Returns the {@link wrath.common.entities.Entity} linked to this renderer.
+     */
+    public Entity getEntity()
+    {
+        return entity;
     }
     
     /**
@@ -78,9 +86,9 @@ public class EntityRenderer implements Renderable
      */
     public void setRotation(float rx, float ry, float rz)
     {
-        this.rx = rx;
-        this.ry = ry;
-        this.rz = rz;
+        this.rotation.x = rx;
+        this.rotation.y = ry;
+        this.rotation.z = rz;
     }
     
     /**
@@ -113,9 +121,9 @@ public class EntityRenderer implements Renderable
      */
     public void transformRotation(float drx, float dry, float drz)
     {
-        rx += drx;
-        ry += dry;
-        rz += drz;
+        rotation.x += drx;
+        rotation.y += dry;
+        rotation.z += drz;
     }
     
     /**
@@ -136,6 +144,18 @@ public class EntityRenderer implements Renderable
      */
     public void updateTransformationMatrix()
     {
-        if(model.getShader() != null) model.getShader().setTransformationMatrix(ClientUtils.createTransformationMatrix(screenPosition, rx, ry, rz, scale));
+        if(model.getShader() != null) model.getShader().setTransformationMatrix(ClientUtils.createTransformationMatrix(screenPosition, rotation.x, rotation.y, rotation.z, scale));
+    }
+    
+    /**
+     * Renders an entity without creating an EntityRenderer object.
+     * @param entity The {@link wrath.common.entities.Entity} that is attached to the {@link wrath.client.graphics.Model}.
+     * @param model The {@link wrath.client.graphics.Model} to render.
+     * @param transformationMatrix A {!link org.lwjgl.util.vector.Matrix4f} containing positional data. Should be created with {@link wrath.client.ClientUtils#createTransformationMatrix(org.lwjgl.util.vector.Vector3f, float, float, float, float)}.
+     */
+    public static void renderEntity(Entity entity, Model model, Matrix4f transformationMatrix)
+    {
+        if(model.getShader() != null) model.getShader().setTransformationMatrix(transformationMatrix);
+        model.render();
     }
 }

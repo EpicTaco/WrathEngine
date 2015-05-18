@@ -38,6 +38,8 @@ import wrath.util.Logger;
  */
 public class ShaderProgram implements Closeable
 {
+    public static ShaderProgram DEFAULT_SHADER;
+    
     /**
      * Reads the two specified shader files and compiles the shaders into an OpenGL program format.
      * It is recommended that shaders be stored in the 'assets/shaders' directory (which is not present by default).
@@ -174,14 +176,12 @@ public class ShaderProgram implements Closeable
      */
     public int getUniformVariableLocation(String variableName)
     {
-        if(!finalized) return -1;
-        if(uniformMap.containsKey(variableName)) return uniformMap.get(variableName);
+        if(uniformMap.containsKey(variableName) && uniformMap.get(variableName) != -1) return uniformMap.get(variableName);
         else
         {
             GL20.glUseProgram(programID);
             int ret = GL20.glGetUniformLocation(programID, variableName);
             uniformMap.put(variableName, ret);
-            GL20.glUseProgram(0);
             return ret;
         }
     }
@@ -193,6 +193,20 @@ public class ShaderProgram implements Closeable
     public boolean isFinalized()
     {
         return finalized;
+    }
+    
+    /**
+     * Changes the shader's projection matrix to the one specified.
+     * This will only work with the 3D shader!
+     * @param value The {@link org.lwjgl.util.vector.Matrix4f} object containing the shader projection data.
+     */
+    public void setProjectionMatrix(Matrix4f value)
+    {
+        GL20.glUseProgram(programID);
+        FloatBuffer pbuf = BufferUtils.createFloatBuffer(16);
+        value.store(pbuf);
+        pbuf.flip();
+        GL20.glUniformMatrix4(getUniformVariableLocation("projectionMatrix"), false, pbuf);
     }
     
     /**
@@ -267,6 +281,7 @@ public class ShaderProgram implements Closeable
         GL20.glUseProgram(programID);
         GL20.glLinkProgram(programID);
         GL20.glValidateProgram(programID);
+        setProjectionMatrix(InstanceRegistry.getGameInstance().getRenderer().getProjectionMatrix());
         finalized = true;
         GL20.glUseProgram(0);
     }

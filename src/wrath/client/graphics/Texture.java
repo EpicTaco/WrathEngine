@@ -21,6 +21,7 @@ import java.io.File;
 import org.lwjgl.opengl.GL11;
 import wrath.client.ClientUtils;
 import wrath.client.InstanceRegistry;
+import wrath.client.enums.RenderMode;
 import wrath.common.Closeable;
 
 /**
@@ -49,6 +50,16 @@ public class Texture implements Closeable
         InstanceRegistry.getGameInstance().addToTrashCleanup(this);
     }
     
+    /**
+     * Sets the OpenGL Texture state to point to this texture.
+     * This should not be called by the developer as it is done automatically.
+     */
+    public void bindTexture()
+    {
+        if(InstanceRegistry.getGameInstance().getRenderMode() == RenderMode.Mode2D) GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID);
+        else GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID);
+    }
+    
     @Override
     public void close()
     {
@@ -72,5 +83,24 @@ public class Texture implements Closeable
     public int getTextureID()
     {
         return texID;
+    }
+    
+    /**
+     * Sets the current OpenGL texture to point to nothing.
+     * This should not be called by the developer as it is done automatically.
+     */
+    public void unbindTexture()
+    {
+        unbindTextures();
+    }
+    
+    /**
+     * Sets all current OpenGL textures to point to nothing.
+     * This should not be called by the developer as it is done automatically.
+     */
+    public static void unbindTextures()
+    {
+        GL11.glBindTexture(GL11.GL_TEXTURE_1D, 0);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
     }
 }

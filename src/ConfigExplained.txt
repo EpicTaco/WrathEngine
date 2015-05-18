@@ -41,6 +41,10 @@ WindowResizable: true
 #Default is false
 FullscreenUsesResolution: false
 
+#Determines the Field of View of the camera if the game is in 3D Render-Mode.
+#Only applies to 3D games.
+#Default is 70
+FOV: 70
 
 ### Other Options ###
 

@@ -1,7 +1,5 @@
 #This is the example entry file for the engine. An extension to the wrath.client.Game class must be present.
-#It should also be noted that a global variable named 'parentObject' must be assigned to said Game class for
-#additional scripts to work. Variable 'scriptsManager' is pre-defined for you (Java Object PythonScriptManager).
-#Consult documentation on that class for more information, or take a look at our Wiki on our Github page!
+#The variable 'scriptsManager' is pre-defined for you (Java Object PythonScriptManager).
 #Github Wiki Page: https://github.com/EpicTaco/WrathEngine/wiki/Scripting/
 
 #  Wrath Engine Scripting
@@ -19,19 +17,24 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+from java.io import File
+from org.lwjgl.opengl import GL11
 from wrath.client import Game
 from wrath.client.events import GameEventHandler
 from wrath.client.enums import RenderMode
-from java.io import File
-from wrath.client.graphics import Color
 from wrath.client.graphics import Model
-from org.lwjgl.opengl import GL30
-from org.lwjgl.opengl import GL20
-from org.lwjgl.opengl import GL11
+from wrath.client.graphics import EntityRenderer
+from wrath.client.graphics import ShaderProgram
+from wrath.client.graphics import Texture
 
 gameObject = None
+entity = None
 
-class EventHandler(GameEventHandler):
+class CustomGame(Game, GameEventHandler):
+	def __init__(self):
+		Game.__init__(self, "Test Client", "INDEV", 60.0, RenderMode.Mode3D)
+		self.getEventManager().addGameEventHandler(self)
+		
 	def onGameOpen(self):
 		gameObject.getInputManager().bindDefaultEngineKeys()
 		
@@ -42,28 +45,24 @@ class EventHandler(GameEventHandler):
 		pass
 	
 	def onTick(self):
-		pass
+		entity.transformScreenPosition(0.002, 0.0, -0.1)
+		entity.transformRotation(0.0, 1.0, 0.0)
 		
 	def onResolutionChange(self, oldWidth, oldHeight, newWidth, newHeight):
 		pass
 		
 	def onWindowOpen(self):
+		model = Model.createModel([-0.5, 0.5, 0, -0.5, -0.5, 0, 0.5, -0.5, 0, 0.5, 0.5, 0.0], [0, 1, 3, 3, 1, 2], True)
+		model.attachTexture(Texture(File("assets/textures/texture.png")))
+		entity.bindModel(model)
+		entity.setScreenPosition(-1.0,0.0,-1.0)
 		gameObject.getInputManager().setCursorEnabled(True)
 
-class CustomGame(Game):
-	def __init__(self):
-		Game.__init__(self, "Test Client", "INDEV", 30.0, RenderMode.Mode2D)
-		self.getEventManager().addGameEventHandler(EventHandler())
-		#Setting this object to global variable 'parentObject'
-		scriptsManager.setGlobalVariable("parentObject", self)
-		
 	def render(self):
-		pass
-	
-	def getWorld(self):
-		pass
+		entity.render()
 
 gameObject = CustomGame()
+entity = EntityRenderer(None)
 
 scriptsManager.loadScriptsFromDirectory(File("etc/scripts/autoexec"), True, True)
 gameObject.start()

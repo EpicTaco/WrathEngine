@@ -39,11 +39,13 @@ import org.lwjgl.openal.ALContext;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLContext;
 import org.lwjgl.system.MemoryUtil;
+import org.lwjgl.util.vector.Matrix4f;
 import wrath.client.enums.ImageFormat;
 import wrath.client.events.InputEventHandler;
 import wrath.client.events.PlayerEventHandler;
 import wrath.client.graphics.Color;
 import wrath.client.graphics.Renderable;
+import wrath.client.graphics.ShaderProgram;
 import wrath.client.graphics.TextRenderer;
 import wrath.common.Closeable;
 import wrath.common.javaloader.JarLoader;
@@ -653,12 +655,17 @@ public class Game
     
     public class RenderManager
     {
+        public static final float FAR_PLANE = 1000f;
+        public static final float NEAR_PLANE = 0.1f;
+        
         private double avgFps = 0;
         private final Background back = new Background();
         private Color color = Color.WHITE;
+        private float fov = gameConfig.getFloat("FOV", 70f);
         private double fps = 0;
         private double fpsBuf = 0.0;
         private final GUI front = new GUI();
+        private Matrix4f projMatrix = new Matrix4f();
         private boolean renderFps = false;
         private TextRenderer text = null;
         private int totalFramesRendered = 0;
@@ -694,6 +701,15 @@ public class Game
         }
     
         /**
+         * Gets the defined 3D Field-of-View.
+         * @return Returns the defined 3D Field-of-View.
+         */
+        public float getFOV()
+        {
+            return fov;
+        }
+        
+        /**
         * Gets the last recorded Frames-Per-Second count.
         * @return Returns the last FPS count.
         */
@@ -709,6 +725,15 @@ public class Game
         public GUI getGUI()
         {
             return front;
+        }
+        
+        /**
+         * Gets the {@link org.lwjgl.util.vector.Matrix4f} object of the 3D projection matrix.
+         * @return Returns the {@link org.lwjgl.util.vector.Matrix4f} object of the 3D projection matrix.
+         */
+        public Matrix4f getProjectionMatrix()
+        {
+            return projMatrix;
         }
         
         /**
@@ -776,6 +801,18 @@ public class Game
                 fpsBuf++;
                 totalFramesRendered++;
             }
+        }
+        
+        /**
+         * Changes the 3D Field-of-View.
+         * @param fov The 3D Field-of-View angle.
+         */
+        public void setFOV(float fov)
+        {
+            this.fov = fov;
+            gameConfig.setProperty("FOV", fov);
+            winManager.closeWindow();
+            winManager.openWindow();
         }
         
         /**
@@ -1139,11 +1176,15 @@ public class Game
             if(renManager.text == null) renManager.text = new TextRenderer(new File("assets/fonts/arial.png"), 0.75f);
             else renManager.text.refreshRenderer();
             
+            if(MODE == RenderMode.Mode3D) renManager.projMatrix = ClientUtils.createProjectionMatrix(width, height, renManager.fov);
+            if(MODE == RenderMode.Mode2D) ShaderProgram.DEFAULT_SHADER = ShaderProgram.loadShaderProgram(new File("assets/shaders/2D/defaultshader.vert"), new File("assets/shaders/2D/defaultshader.frag"));
+            else ShaderProgram.DEFAULT_SHADER = ShaderProgram.loadShaderProgram(new File("assets/shaders/3D/defaultshader.vert"), new File("assets/shaders/3D/defaultshader.frag"));
+            
+            
             centerWindow();
             
-            evManager.getGameEventHandler().onWindowOpen();
-
             windowOpen = true;
+            evManager.getGameEventHandler().onWindowOpen();
         }
 
         /**
