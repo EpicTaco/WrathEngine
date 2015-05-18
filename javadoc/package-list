@@ -1,0 +1,12 @@
+org.lwjgl.util.vector
+wrath.client
+wrath.client.enums
+wrath.client.events
+wrath.client.graphics
+wrath.client.input
+wrath.common
+wrath.common.entities
+wrath.common.javaloader
+wrath.common.scheduler
+wrath.common.scripts
+wrath.common.world
