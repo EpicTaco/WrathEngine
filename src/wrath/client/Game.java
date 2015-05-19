@@ -48,8 +48,6 @@ import wrath.client.graphics.Color;
 import wrath.client.graphics.Renderable;
 import wrath.client.graphics.ShaderProgram;
 import wrath.client.graphics.TextRenderer;
-import wrath.client.input.Key;
-import wrath.client.input.KeyAction;
 import wrath.common.Closeable;
 import wrath.common.entities.Player;
 import wrath.common.javaloader.JarLoader;
@@ -84,10 +82,10 @@ public class Game
     private final RenderManager renManager;
     private final WindowManager winManager;
     
-    private final TrashCollector trashCollector = new TrashCollector();
+    private final TrashCollector trashCollector;
     
-    private final Player player = new Player();
-    private final Camera playerCamera = new Camera(player);
+    private final Player player;
+    private final Camera playerCamera;
     
     /**
      * Constructor.
@@ -104,6 +102,9 @@ public class Game
         VERSION = version;
         TPS = ticksPerSecond;
         InstanceRegistry.setGameInstance(this);
+        this.trashCollector = new TrashCollector();
+        this.player = new Player();
+        this.playerCamera = new Camera(player);
         this.evManager = new EventManager();
         this.inpManager = new InputManager();
         this.renManager = new RenderManager();
@@ -120,25 +121,8 @@ public class Game
         
         File screenshotDir = new File("etc/screenshots");
         if(!screenshotDir.exists()) screenshotDir.mkdirs();
-        
-        //Temp
-        inpManager.bindKey(Key.KEY_W, Key.MOD_NONE, KeyAction.KEY_HOLD_DOWN, () ->
-        {
-            playerCamera.transformPosition(0, 0, -0.02f);
-        });
-        inpManager.bindKey(Key.KEY_A, Key.MOD_NONE, KeyAction.KEY_HOLD_DOWN, () ->
-        {
-            playerCamera.transformPosition(-0.02f, 0, 0);
-        });
-        inpManager.bindKey(Key.KEY_S, Key.MOD_NONE, KeyAction.KEY_HOLD_DOWN, () ->
-        {
-            playerCamera.transformPosition(0, 0, 0.02f);
-        });
-        inpManager.bindKey(Key.KEY_D, Key.MOD_NONE, KeyAction.KEY_HOLD_DOWN, () ->
-        {
-            playerCamera.transformPosition(0.02f, 0, 0);
-        });
     }
+
     
     /**
     * Adds a {@link wrath.common.Closeable} object to be run after the window closes.
@@ -147,7 +131,6 @@ public class Game
     */
     public void addToTrashCleanup(Closeable obj)
     {
-        if(trashCollector == null) System.out.println("shit");
         trashCollector.list.add(obj);
     }
     
@@ -441,7 +424,6 @@ public class Game
             return;
         }
         
-        InstanceRegistry.setGameInstance(this);
         if(gameConfig.getBoolean("AutoLoadJavaPlugins", true))
         {
             Object[] list = JarLoader.loadPluginsDirectory(new File(gameConfig.getString("AutoLoadJavaPluginsDirectory", "etc/plugins")));
@@ -1119,7 +1101,7 @@ public class Game
             GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, ClientUtils.getLWJGLBoolean(gameConfig.getBoolean("WindowResizable", true)));
             GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, ClientUtils.getLWJGLBoolean(gameConfig.getBoolean("APIForwardCompatMode", false)));
             GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_DEBUG_CONTEXT, ClientUtils.getLWJGLBoolean(gameConfig.getBoolean("DebugMode", false)));
-            GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, gameConfig.getInt("DisplaySamples", 0));
+            GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, gameConfig.getInt("DisplaySamples", 1));
             GLFW.glfwWindowHint(GLFW.GLFW_REFRESH_RATE, gameConfig.getInt("DisplayRefreshRate", 0));
 
             windowState = WindowState.valueOf(gameConfig.getString("WindowState", "fullscreen_windowed").toUpperCase());
@@ -1131,8 +1113,8 @@ public class Game
                 int theight = GLFWvidmode.height(videomode);
                 if(!gameConfig.getBoolean("FullscreenUsesResolution", false))
                 {
-                    gameConfig.setProperty("Width", twidth + "");
-                    gameConfig.setProperty("Height", theight + "");
+                    gameConfig.setProperty("Width", twidth);
+                    gameConfig.setProperty("Height", theight);
                     width = twidth;
                     height = theight;
                 }
@@ -1175,12 +1157,12 @@ public class Game
 
             inpManager.openInput();
 
+            
             GLFW.glfwMakeContextCurrent(window);
             if(gameConfig.getBoolean("DisplayVsync", false)) GLFW.glfwSwapInterval(1);
             else GLFW.glfwSwapInterval(0);
-            
-            GLFW.glfwShowWindow(window);
             GLContext.createFromCurrent();
+            
             audiocontext = ALContext.create();
             audiocontext.makeCurrent();
 
@@ -1224,11 +1206,9 @@ public class Game
             if(MODE == RenderMode.Mode2D) ShaderProgram.DEFAULT_SHADER = ShaderProgram.loadShaderProgram(new File("assets/shaders/2D/defaultshader.vert"), new File("assets/shaders/2D/defaultshader.frag"));
             else ShaderProgram.DEFAULT_SHADER = ShaderProgram.loadShaderProgram(new File("assets/shaders/3D/defaultshader.vert"), new File("assets/shaders/3D/defaultshader.frag"));
             
-            
-            centerWindow();
-            
             windowOpen = true;
             evManager.getGameEventHandler().onWindowOpen();
+            GLFW.glfwShowWindow(window);
         }
 
         /**

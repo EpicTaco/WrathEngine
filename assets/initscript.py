@@ -36,7 +36,7 @@ class CustomGame(Game, GameEventHandler):
 		self.getEventManager().addGameEventHandler(self)
 		
 	def onGameOpen(self):
-		gameObject.getInputManager().bindKeysToEngineDefault()
+		gameObject.getInputManager().setEngineKeysToDefault()
 		
 	def onGameClose(self):
 		pass
@@ -55,7 +55,6 @@ class CustomGame(Game, GameEventHandler):
 		model.attachTexture(Texture(File("assets/textures/texture.png")), [0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0])
 		entity.bindModel(model)
 		entity.setScreenPosition(0.0,0.0,-5.0)
-		gameObject.getInputManager().setCursorEnabled(True)
 
 	def render(self):
 		entity.render()

@@ -103,7 +103,6 @@ public class TextRenderer implements Closeable
     public void refreshRenderer()
     {
         spaceMap.clear();
-        setDefaultMetrics();
         fontTex = ClientUtils.get2DTexture(ClientUtils.loadImageFromFile(file));
         File metricsFile = new File(file.getParentFile().getPath() + "/" + file.getName().split(".png")[0] + ".metrics");
         if(!metricsFile.exists()) spaceMap.putAll(DEF_SPACE_MAP);
@@ -112,10 +111,8 @@ public class TextRenderer implements Closeable
             //Fill spacing map.
         }
         
-        if(fontTex != 0)
-            InstanceRegistry.getGameInstance().getLogger().log("Loaded font from '" + file.getName() + "'!");
-        else
-            Logger.getErrorLogger().log("Could not load font from '" + file.getName() + "'! Unknown error!");
+        if(fontTex != 0 && fontTex != -1) InstanceRegistry.getGameInstance().getLogger().log("Loaded font from '" + file.getName() + "'!");
+        else Logger.getErrorLogger().log("Could not load font from '" + file.getName() + "'! Unknown error!");
     }
     
     /**

@@ -29,8 +29,8 @@ Height: 600
 DisplayRefreshRate: 0
 
 #Determines the number of samples to be used in the window for multi-sampling. When set to 0, sampling is disabled. 
-#Default is 0
-DisplaySamples: 0
+#Default is 1
+DisplaySamples: 1
 
 #Determines whether or not the window should be re-sizable by the user. Only applies in the Windowed WindowState.
 #Default is true

@@ -37,6 +37,7 @@ import org.lwjgl.glfw.GLFWMouseButtonCallback;
 import org.lwjgl.glfw.GLFWScrollCallback;
 import wrath.client.InstanceRegistry;
 import wrath.client.enums.ImageFormat;
+import wrath.client.enums.RenderMode;
 import wrath.client.enums.WindowState;
 import wrath.common.Closeable;
 import wrath.util.Logger;
@@ -97,7 +98,7 @@ public class InputManager implements Closeable
     private void afterConstructor()
     {
         InstanceRegistry.getGameInstance().addToTrashCleanup(this);
-        
+        savedFuncMap.clear();
         addSavedFunction("stop", () ->
         {
             InstanceRegistry.getGameInstance().stop();
@@ -158,6 +159,36 @@ public class InputManager implements Closeable
         addSavedFunction("toggle_cursor", () ->
         {
             setCursorEnabled(!isCursorEnabled());
+        });
+        
+        addSavedFunction("move_forward", () ->
+        {
+            InstanceRegistry.getGameInstance().getPlayerCamera().transformPosition(0, 0, -0.02f);
+        });
+        
+        addSavedFunction("move_left", () ->
+        {
+            InstanceRegistry.getGameInstance().getPlayerCamera().transformPosition(-0.02f, 0, 0);
+        });
+        
+        addSavedFunction("move_backward", () ->
+        {
+            InstanceRegistry.getGameInstance().getPlayerCamera().transformPosition(0, 0, 0.02f);
+        });
+        
+        addSavedFunction("move_right", () ->
+        {
+            InstanceRegistry.getGameInstance().getPlayerCamera().transformPosition(0.02f, 0, 0);
+        });
+        
+        addSavedFunction("move_up", () ->
+        {
+            InstanceRegistry.getGameInstance().getPlayerCamera().transformPosition(0, 0.02f, 0);
+        });
+        
+        addSavedFunction("move_down", () ->
+        {
+            InstanceRegistry.getGameInstance().getPlayerCamera().transformPosition(0, -0.02f, 0);
         });
     }
     
@@ -330,28 +361,31 @@ public class InputManager implements Closeable
     public void bindKeysToEngineDefault()
     {
         bindKey(Key.KEY_ESCAPE, Key.MOD_SHIFT, KeyAction.KEY_PRESS, "stop");
-        
         bindKey(Key.KEY_F3, Key.MOD_NONE, KeyAction.KEY_PRESS, "toggle_fps");
-        
         bindKey(Key.KEY_F12, Key.MOD_NONE, KeyAction.KEY_PRESS, "screenshot");
-        
         bindKey(Key.KEY_ENTER, Key.MOD_ALT, KeyAction.KEY_PRESS, "toggle_windowstate_fullscreen");
-        
         bindKey(Key.KEY_ENTER, Key.MOD_SHIFT, KeyAction.KEY_PRESS, "center_window");
-        
         bindKey(Key.KEY_UP, Key.MOD_ALT, KeyAction.KEY_PRESS, "toggle_windowstate_fullwindowed");
-        
         bindKey(Key.KEY_DOWN, Key.MOD_ALT, KeyAction.KEY_PRESS, "minimize_window");
-        
         bindKey(Key.KEY_HOME, Key.MOD_CTRL + Key.MOD_SHIFT, KeyAction.KEY_PRESS, "bind_keys_to_defaults");
-        
         bindKey(Key.KEY_HOME, Key.MOD_CTRL + Key.MOD_ALT + Key.MOD_SHIFT, KeyAction.KEY_PRESS, "reset_keys");
-        
         bindKey(Key.KEY_S, Key.MOD_CTRL + Key.MOD_ALT, KeyAction.KEY_PRESS, "save_internals");
-        
         bindKey(Key.KEY_C, Key.MOD_ALT, KeyAction.KEY_PRESS, "toggle_cursor");
+        
+        if(InstanceRegistry.getGameInstance().getRenderMode() == RenderMode.Mode3D)
+        {
+            bindKey(Key.KEY_W, Key.MOD_NONE, KeyAction.KEY_PRESS, "move_forward");
+            bindKey(Key.KEY_S, Key.MOD_NONE, KeyAction.KEY_PRESS, "move_backward");
+        }
+        else
+        {
+            bindKey(Key.KEY_W, Key.MOD_NONE, KeyAction.KEY_PRESS, "move_up");
+            bindKey(Key.KEY_S, Key.MOD_NONE, KeyAction.KEY_PRESS, "move_down");
+        }
+        bindKey(Key.KEY_A, Key.MOD_NONE, KeyAction.KEY_PRESS, "move_left");
+        bindKey(Key.KEY_D, Key.MOD_NONE, KeyAction.KEY_PRESS, "move_right");
     }
-
+    
     @Override
     public void close()
     {
@@ -629,17 +663,48 @@ public class InputManager implements Closeable
 
     /**
      * Enables or disables the cursor.
-     * @param cursorEnabled Whether the cursor should be enabled or
+     * @param cursorEnable Whether the cursor should be enabled or
      * disabled.
      */
-    public void setCursorEnabled(boolean cursorEnabled)
+    public void setCursorEnabled(boolean cursorEnable)
     {
-        if(cursorEnabled)
+        if(cursorEnable)
             GLFW.glfwSetInputMode(InstanceRegistry.getGameInstance().getWindowManager().getWindowID(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
         else
             GLFW.glfwSetInputMode(InstanceRegistry.getGameInstance().getWindowManager().getWindowID(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
     }
 
+    /**
+     * Sets all the default engine functions and bindings to the default keys.
+     * For further reference, refer to DefaultKeyBindings.txt in the default package.
+     */
+    public void setEngineKeysToDefault()
+    {
+        addDefaultKeyBinding(Key.KEY_ESCAPE, Key.MOD_SHIFT, KeyAction.KEY_PRESS, "stop");
+        addDefaultKeyBinding(Key.KEY_F3, Key.MOD_NONE, KeyAction.KEY_PRESS, "toggle_fps");
+        addDefaultKeyBinding(Key.KEY_F12, Key.MOD_NONE, KeyAction.KEY_PRESS, "screenshot");
+        addDefaultKeyBinding(Key.KEY_ENTER, Key.MOD_ALT, KeyAction.KEY_PRESS, "toggle_windowstate_fullscreen");
+        addDefaultKeyBinding(Key.KEY_ENTER, Key.MOD_SHIFT, KeyAction.KEY_PRESS, "center_window");
+        addDefaultKeyBinding(Key.KEY_UP, Key.MOD_ALT, KeyAction.KEY_PRESS, "toggle_windowstate_fullwindowed");
+        addDefaultKeyBinding(Key.KEY_DOWN, Key.MOD_ALT, KeyAction.KEY_PRESS, "minimize_window");
+        addDefaultKeyBinding(Key.KEY_HOME, Key.MOD_CTRL + Key.MOD_SHIFT, KeyAction.KEY_PRESS, "bind_keys_to_defaults");
+        addDefaultKeyBinding(Key.KEY_HOME, Key.MOD_CTRL + Key.MOD_ALT + Key.MOD_SHIFT, KeyAction.KEY_PRESS, "reset_keys");
+        addDefaultKeyBinding(Key.KEY_S, Key.MOD_CTRL + Key.MOD_ALT, KeyAction.KEY_PRESS, "save_internals");
+        addDefaultKeyBinding(Key.KEY_C, Key.MOD_ALT, KeyAction.KEY_PRESS, "toggle_cursor");
+        if(InstanceRegistry.getGameInstance().getRenderMode() == RenderMode.Mode3D)
+        {
+            addDefaultKeyBinding(Key.KEY_W, Key.MOD_NONE, KeyAction.KEY_PRESS, "move_forward");
+            addDefaultKeyBinding(Key.KEY_S, Key.MOD_NONE, KeyAction.KEY_PRESS, "move_backward");
+        }
+        else
+        {
+            addDefaultKeyBinding(Key.KEY_W, Key.MOD_NONE, KeyAction.KEY_PRESS, "move_up");
+            addDefaultKeyBinding(Key.KEY_S, Key.MOD_NONE, KeyAction.KEY_PRESS, "move_down");
+        }
+        addDefaultKeyBinding(Key.KEY_A, Key.MOD_NONE, KeyAction.KEY_PRESS, "move_left");
+        addDefaultKeyBinding(Key.KEY_D, Key.MOD_NONE, KeyAction.KEY_PRESS, "move_right");
+    }
+    
     /**
      * Clears all defined key bindings.
      * This DOES NOT set them to default, refer to {@link wrath.client.input.InputManager#bindKeysToDefaults()}.
