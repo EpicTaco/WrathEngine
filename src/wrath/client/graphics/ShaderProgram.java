@@ -28,6 +28,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
+import wrath.client.ClientUtils;
 import wrath.client.InstanceRegistry;
 import wrath.common.Closeable;
 import wrath.util.Logger;
@@ -126,7 +127,7 @@ public class ShaderProgram implements Closeable
     
     private boolean finalized = false;
     private final int programID, vertShaderID, fragShaderID;
-    private final FloatBuffer matrixBuf = BufferUtils.createFloatBuffer(16);
+    private static final FloatBuffer matrixBuf = BufferUtils.createFloatBuffer(16);
     private final HashMap<String, Integer> uniformMap = new HashMap<>();
     
     private ShaderProgram(int programID, int vertShaderID, int fragShaderID)
@@ -219,7 +220,6 @@ public class ShaderProgram implements Closeable
         value.store(matrixBuf);
         matrixBuf.flip();
         GL20.glUniformMatrix4(getUniformVariableLocation("transformationMatrix"), false, matrixBuf);
-        GL20.glUseProgram(0);
     }
     
     /**
@@ -283,6 +283,17 @@ public class ShaderProgram implements Closeable
         GL20.glValidateProgram(programID);
         setProjectionMatrix(InstanceRegistry.getGameInstance().getRenderer().getProjectionMatrix());
         finalized = true;
-        GL20.glUseProgram(0);
+    }
+    
+    /**
+     * Updates to the specified camera's current View Matrix.
+     * This is automatic.
+     */
+    public void updateViewMatrix()
+    {
+        GL20.glUseProgram(programID);
+        ClientUtils.createViewMatrix(InstanceRegistry.getGameInstance().getPlayerCamera()).store(matrixBuf);
+        matrixBuf.flip();
+        GL20.glUniformMatrix4(getUniformVariableLocation("viewMatrix"), false, matrixBuf);
     }
 }

@@ -148,6 +148,7 @@ public class TextRenderer implements Closeable
         GL11.glPushAttrib(GL11.GL_TEXTURE_BIT | GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT);
         GL11.glEnable(GL11.GL_CULL_FACE);
         GL11.glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, fontTex);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
@@ -166,19 +167,19 @@ public class TextRenderer implements Closeable
             float cellY = ((int) ascii / gridSize) * cellSize;
             //(0, 1) bottom left
             GL11.glTexCoord2f(cellX, cellY + cellSize);
-            GL11.glVertex2f(curPos, y - characterHeight);
+            GL11.glVertex3f(curPos, y - characterHeight, 0);
             
             //(1, 1) bottom right
             GL11.glTexCoord2f(cellX + cellSize, cellY + cellSize);
-            GL11.glVertex2f(curPos + characterWidth / 2, y - characterHeight);
+            GL11.glVertex3f(curPos + characterWidth / 2, y - characterHeight, 0);
             
             //(1, 0) top right 
             GL11.glTexCoord2f(cellX + cellSize, cellY);
-            GL11.glVertex2f(curPos + characterWidth / 2, y);
+            GL11.glVertex3f(curPos + characterWidth / 2, y, 0);
             
             //(0, 0) top left
             GL11.glTexCoord2f(cellX, cellY);
-            GL11.glVertex2f(curPos, y);
+            GL11.glVertex3f(curPos, y, 0);
 
             if(spaceMap.containsKey(string.charAt(i))) charWidth = spaceMap.get(string.charAt(i));
             else charWidth = 1.0f;
@@ -198,6 +199,7 @@ public class TextRenderer implements Closeable
         GL11.glDisable(GL11.GL_BLEND);
         GL11.glDisable(GL11.GL_TEXTURE_2D);
         GL11.glDisable(GL11.GL_CULL_FACE);
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
     }
     
     /**

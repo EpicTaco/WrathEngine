@@ -36,6 +36,7 @@ import org.lwjgl.opengl.GL12;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 import wrath.client.enums.PopupMessageType;
+import wrath.client.graphics.Camera;
 import wrath.util.Logger;
 
 /**
@@ -97,6 +98,22 @@ public class ClientUtils
         Matrix4f.rotate((float) Math.toRadians(rotateY), new Vector3f(0,1,0), ret, ret);
         Matrix4f.rotate((float) Math.toRadians(rotateZ), new Vector3f(0,0,1), ret, ret);
         Matrix4f.scale(new Vector3f(scale, scale, scale), ret, ret);
+        return ret;
+    }
+    
+    /**
+     * Creates a {@link org.lwjgl.util.vector.Matrix4f} representing the screen position of the Player {@link wrath.client.graphics.Camera}.
+     * @param camera The Player's {@link wrath.client.graphics.Camera}.
+     * @return Returns a fully-loaded {@link org.lwjgl.util.vector.Matrix4f} object ready to be loaded onto the shader.
+     */
+    public static Matrix4f createViewMatrix(Camera camera)
+    {
+        Matrix4f ret = new Matrix4f();
+        ret.setIdentity();
+        Matrix4f.rotate((float) Math.toRadians(camera.getOrientation().x), new Vector3f(1,0,0), ret, ret);
+        Matrix4f.rotate((float) Math.toRadians(camera.getOrientation().y), new Vector3f(0,1,0), ret, ret);
+        Vector3f negCam = new Vector3f(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
+        Matrix4f.translate(negCam, ret, ret);
         return ret;
     }
     

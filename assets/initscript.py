@@ -36,7 +36,7 @@ class CustomGame(Game, GameEventHandler):
 		self.getEventManager().addGameEventHandler(self)
 		
 	def onGameOpen(self):
-		gameObject.getInputManager().bindDefaultEngineKeys()
+		gameObject.getInputManager().bindKeysToEngineDefault()
 		
 	def onGameClose(self):
 		pass
@@ -45,17 +45,16 @@ class CustomGame(Game, GameEventHandler):
 		pass
 	
 	def onTick(self):
-		entity.transformScreenPosition(0.002, 0.0, -0.1)
-		entity.transformRotation(0.0, 1.0, 0.0)
+		entity.transformRotation(1.0, 1.0, 0.0)
 		
 	def onResolutionChange(self, oldWidth, oldHeight, newWidth, newHeight):
 		pass
 		
 	def onWindowOpen(self):
-		model = Model.createModel([-0.5, 0.5, 0, -0.5, -0.5, 0, 0.5, -0.5, 0, 0.5, 0.5, 0.0], [0, 1, 3, 3, 1, 2], True)
-		model.attachTexture(Texture(File("assets/textures/texture.png")))
+		model = Model.createModel([-0.5,0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5,-0.5,0.5,0.5,-0.5,-0.5,0.5,0.5,-0.5,-0.5,0.5,0.5,-0.5,0.5,0.5,0.5,0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,0.5,0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,0.5,0.5,-0.5,-0.5,0.5,-0.5,-0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,0.5], [0,1,3,3,1,2,4,5,7,7,5,6,8,9,11,11,9,10,12,13,15,15,13,14,16,17,19,19,17,18,20,21,23,23,21,22], True)
+		model.attachTexture(Texture(File("assets/textures/texture.png")), [0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0])
 		entity.bindModel(model)
-		entity.setScreenPosition(-1.0,0.0,-1.0)
+		entity.setScreenPosition(0.0,0.0,-5.0)
 		gameObject.getInputManager().setCursorEnabled(True)
 
 	def render(self):

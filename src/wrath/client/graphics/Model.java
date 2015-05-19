@@ -45,6 +45,18 @@ public class Model implements Renderable, Closeable
      * Models are always assumed to be made with triangles, and will be rendered as such.
      * @param verticies The list of verticies in the model. One point is represented by (x, y, z), and there must be at least 3 points.
      * @param indicies The list of points to connect for OpenGL. Look up indicies in OpenGL for reference.
+     * @return Returns the {@link wrath.client.graphics.Model} object of your model.
+     */
+    public static Model createModel(float[] verticies, int[] indicies)
+    {
+        return createModel(verticies, indicies, true);
+    }
+    
+    /**
+     * Creates a 2D or 3D model from a list of verticies.
+     * Models are always assumed to be made with triangles, and will be rendered as such.
+     * @param verticies The list of verticies in the model. One point is represented by (x, y, z), and there must be at least 3 points.
+     * @param indicies The list of points to connect for OpenGL. Look up indicies in OpenGL for reference.
      * @param useDefaultShaders If true, shaders will be set up automatically.
      * @return Returns the {@link wrath.client.graphics.Model} object of your model.
      */
@@ -81,6 +93,17 @@ public class Model implements Renderable, Closeable
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
         InstanceRegistry.getGameInstance().addToTrashCleanup(model);
         return model;
+    }
+    
+    /**
+     * Loads a 2D or 3D model from specified {@link java.io.File}.
+     * Models are always assumed to be made with triangles, and will be rendered as such.
+     * @param modelFile The {@link java.io.File} to read the model data from.
+     * @return Returns the {@link wrath.client.graphics.Model} object of your model.
+     */
+    public static Model loadModel(File modelFile)
+    {
+        return loadModel(modelFile, true);
     }
     
     /**
@@ -231,7 +254,11 @@ public class Model implements Renderable, Closeable
             GL20.glEnableVertexAttribArray(TEXTURE_ATTRIB_INDEX);
             texture.bindTexture();
         }
-        if(shader != null) GL20.glUseProgram(shader.getProgramID());
+        if(shader != null)
+        {
+            GL20.glUseProgram(shader.getProgramID());
+            shader.updateViewMatrix();
+        }
         
         GL11.glDrawElements(GL11.GL_TRIANGLES, vertexCount, GL11.GL_UNSIGNED_INT, 0);
         

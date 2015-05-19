@@ -50,8 +50,9 @@ FOV: 70
 
 #Determines how many times the engine should check to see if a key is still held down in a second. Increasing this will increase CPU strain, but also
 #result in more accurate input handling. Value can NOT be greater than the Game's pre-defined Ticks-per-second value (which is usually 30-60).
-#Default is 10.0
-PersistentInputChecksPerSecond: 10.0
+#Setting value to 0 will set the game to check for input every tick.
+#Default is 0
+PersistentInputChecksPerSecond: 0
 
 #If true, the game will attempt to load and execute jar-format java plugins in the 'AutoLoadJavaPluginsDirectory' folder.
 #Default is true

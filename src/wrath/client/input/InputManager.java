@@ -90,13 +90,75 @@ public class InputManager implements Closeable
      * Constructor.
      */
     public InputManager()
-    {
+    {   
         afterConstructor();
     }
     
     private void afterConstructor()
     {
         InstanceRegistry.getGameInstance().addToTrashCleanup(this);
+        
+        addSavedFunction("stop", () ->
+        {
+            InstanceRegistry.getGameInstance().stop();
+        });
+        
+        addSavedFunction("toggle_fps", () ->
+        {
+            InstanceRegistry.getGameInstance().getRenderer().setRenderFPS(!InstanceRegistry.getGameInstance().getRenderer().isRenderingFPS());
+        });
+        
+        addSavedFunction("screenshot", () ->
+        {
+            DateFormat format = new SimpleDateFormat("MM_dd_yyyy___HHmmss");
+            Calendar now = Calendar.getInstance();
+            InstanceRegistry.getGameInstance().getWindowManager().screenShot("screenshot_" + format.format(now.getTime()), ImageFormat.PNG);
+        });
+        
+        addSavedFunction("toggle_windowstate_fullscreen", () ->
+        {
+            if(InstanceRegistry.getGameInstance().getWindowManager().getWindowState() == WindowState.FULLSCREEN) InstanceRegistry.getGameInstance().getWindowManager().setWindowState(WindowState.WINDOWED);
+            else InstanceRegistry.getGameInstance().getWindowManager().setWindowState(WindowState.FULLSCREEN);
+        });
+        
+        addSavedFunction("center_window", () ->
+        {
+            InstanceRegistry.getGameInstance().getWindowManager().centerWindow();
+        });
+        
+        addSavedFunction("toggle_windowstate_fullwindowed", () ->
+        {
+            if(InstanceRegistry.getGameInstance().getWindowManager().getWindowState() == WindowState.FULLSCREEN_WINDOWED) InstanceRegistry.getGameInstance().getWindowManager().setWindowState(WindowState.WINDOWED);
+            else InstanceRegistry.getGameInstance().getWindowManager().setWindowState(WindowState.FULLSCREEN_WINDOWED);
+        });
+        
+        addSavedFunction("minimize_window", () ->
+        {
+            InstanceRegistry.getGameInstance().getWindowManager().minimizeWindow();
+        });
+        
+        addSavedFunction("bind_keys_to_defaults", () ->
+        {
+            bindKeysToDefaults();
+        });
+        
+        addSavedFunction("reset_keys", () ->
+        {
+            unbindAllKeys();
+            bindKeysToEngineDefault();
+            bindKeysToDefaults();
+        });
+        
+        addSavedFunction("save_internals", () ->
+        {
+            saveKeys();
+            InstanceRegistry.getGameInstance().getConfig().save();
+        });
+        
+        addSavedFunction("toggle_cursor", () ->
+        {
+            setCursorEnabled(!isCursorEnabled());
+        });
     }
     
     /**
@@ -163,75 +225,6 @@ public class InputManager implements Closeable
     public void addDefaultKeyBinding(int key, int keyMod, KeyAction action, String functionID)
     {
         defaults.add(new KeyData(key, keyMod, action, functionID));
-    }
-    
-    /**
-     * Binds all default engine functions to keys.
-     * For further reference, refer to DefaultKeyBindings.txt in the default package.
-     */
-    public void bindDefaultEngineKeys()
-    {
-        bindKey(Key.KEY_ESCAPE, Key.MOD_SHIFT, KeyAction.KEY_PRESS, () ->
-        {
-            InstanceRegistry.getGameInstance().stop();
-        });
-        
-        bindKey(Key.KEY_F3, Key.MOD_NONE, KeyAction.KEY_PRESS, () ->
-        {
-            InstanceRegistry.getGameInstance().getRenderer().setRenderFPS(!InstanceRegistry.getGameInstance().getRenderer().isRenderingFPS());
-        });
-        
-        bindKey(Key.KEY_F12, Key.MOD_NONE, KeyAction.KEY_PRESS, () ->
-        {
-            DateFormat format = new SimpleDateFormat("MM_dd_yyyy___HHmmss");
-            Calendar now = Calendar.getInstance();
-            InstanceRegistry.getGameInstance().getWindowManager().screenShot("screenshot_" + format.format(now.getTime()), ImageFormat.PNG);
-        });
-        
-        bindKey(Key.KEY_ENTER, Key.MOD_ALT, KeyAction.KEY_PRESS, () ->
-        {
-            if(InstanceRegistry.getGameInstance().getWindowManager().getWindowState() == WindowState.FULLSCREEN) InstanceRegistry.getGameInstance().getWindowManager().setWindowState(WindowState.WINDOWED);
-            else InstanceRegistry.getGameInstance().getWindowManager().setWindowState(WindowState.FULLSCREEN);
-        });
-        
-        bindKey(Key.KEY_ENTER, Key.MOD_SHIFT, KeyAction.KEY_PRESS, () ->
-        {
-            InstanceRegistry.getGameInstance().getWindowManager().centerWindow();
-        });
-        
-        bindKey(Key.KEY_UP, Key.MOD_ALT, KeyAction.KEY_PRESS, () ->
-        {
-            if(InstanceRegistry.getGameInstance().getWindowManager().getWindowState() == WindowState.FULLSCREEN_WINDOWED) InstanceRegistry.getGameInstance().getWindowManager().setWindowState(WindowState.WINDOWED);
-            else InstanceRegistry.getGameInstance().getWindowManager().setWindowState(WindowState.FULLSCREEN_WINDOWED);
-        });
-        
-        bindKey(Key.KEY_DOWN, Key.MOD_ALT, KeyAction.KEY_PRESS, () ->
-        {
-            InstanceRegistry.getGameInstance().getWindowManager().minimizeWindow();
-        });
-        
-        bindKey(Key.KEY_HOME, Key.MOD_CTRL + Key.MOD_SHIFT, KeyAction.KEY_PRESS, () ->
-        {
-            bindKeysToDefaults();
-        });
-        
-        bindKey(Key.KEY_HOME, Key.MOD_CTRL + Key.MOD_ALT + Key.MOD_SHIFT, KeyAction.KEY_PRESS, () ->
-        {
-            unbindAllKeys();
-            bindDefaultEngineKeys();
-            bindKeysToDefaults();
-        });
-        
-        bindKey(Key.KEY_S, Key.MOD_CTRL + Key.MOD_ALT, KeyAction.KEY_PRESS, () ->
-        {
-            saveKeys();
-            InstanceRegistry.getGameInstance().getConfig().save();
-        });
-        
-        bindKey(Key.KEY_C, Key.MOD_ALT, KeyAction.KEY_PRESS, () ->
-        {
-            setCursorEnabled(!isCursorEnabled());
-        });
     }
     
     /**
@@ -328,6 +321,35 @@ public class InputManager implements Closeable
             }
             else keyMap.put(d.getKey(), new KeyList(d));
         });
+    }
+    
+    /**
+     * Binds all default engine functions to keys.
+     * For further reference, refer to DefaultKeyBindings.txt in the default package.
+     */
+    public void bindKeysToEngineDefault()
+    {
+        bindKey(Key.KEY_ESCAPE, Key.MOD_SHIFT, KeyAction.KEY_PRESS, "stop");
+        
+        bindKey(Key.KEY_F3, Key.MOD_NONE, KeyAction.KEY_PRESS, "toggle_fps");
+        
+        bindKey(Key.KEY_F12, Key.MOD_NONE, KeyAction.KEY_PRESS, "screenshot");
+        
+        bindKey(Key.KEY_ENTER, Key.MOD_ALT, KeyAction.KEY_PRESS, "toggle_windowstate_fullscreen");
+        
+        bindKey(Key.KEY_ENTER, Key.MOD_SHIFT, KeyAction.KEY_PRESS, "center_window");
+        
+        bindKey(Key.KEY_UP, Key.MOD_ALT, KeyAction.KEY_PRESS, "toggle_windowstate_fullwindowed");
+        
+        bindKey(Key.KEY_DOWN, Key.MOD_ALT, KeyAction.KEY_PRESS, "minimize_window");
+        
+        bindKey(Key.KEY_HOME, Key.MOD_CTRL + Key.MOD_SHIFT, KeyAction.KEY_PRESS, "bind_keys_to_defaults");
+        
+        bindKey(Key.KEY_HOME, Key.MOD_CTRL + Key.MOD_ALT + Key.MOD_SHIFT, KeyAction.KEY_PRESS, "reset_keys");
+        
+        bindKey(Key.KEY_S, Key.MOD_CTRL + Key.MOD_ALT, KeyAction.KEY_PRESS, "save_internals");
+        
+        bindKey(Key.KEY_C, Key.MOD_ALT, KeyAction.KEY_PRESS, "toggle_cursor");
     }
 
     @Override

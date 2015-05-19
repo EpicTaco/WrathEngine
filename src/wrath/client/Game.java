@@ -43,11 +43,15 @@ import org.lwjgl.util.vector.Matrix4f;
 import wrath.client.enums.ImageFormat;
 import wrath.client.events.InputEventHandler;
 import wrath.client.events.PlayerEventHandler;
+import wrath.client.graphics.Camera;
 import wrath.client.graphics.Color;
 import wrath.client.graphics.Renderable;
 import wrath.client.graphics.ShaderProgram;
 import wrath.client.graphics.TextRenderer;
+import wrath.client.input.Key;
+import wrath.client.input.KeyAction;
 import wrath.common.Closeable;
+import wrath.common.entities.Player;
 import wrath.common.javaloader.JarLoader;
 import wrath.common.scheduler.Scheduler;
 import wrath.common.scripts.ScriptManager;
@@ -82,6 +86,9 @@ public class Game
     
     private final TrashCollector trashCollector = new TrashCollector();
     
+    private final Player player = new Player();
+    private final Camera playerCamera = new Camera(player);
+    
     /**
      * Constructor.
      * Describes all the essential and unmodifiable variables of the Game.
@@ -113,6 +120,24 @@ public class Game
         
         File screenshotDir = new File("etc/screenshots");
         if(!screenshotDir.exists()) screenshotDir.mkdirs();
+        
+        //Temp
+        inpManager.bindKey(Key.KEY_W, Key.MOD_NONE, KeyAction.KEY_HOLD_DOWN, () ->
+        {
+            playerCamera.transformPosition(0, 0, -0.02f);
+        });
+        inpManager.bindKey(Key.KEY_A, Key.MOD_NONE, KeyAction.KEY_HOLD_DOWN, () ->
+        {
+            playerCamera.transformPosition(-0.02f, 0, 0);
+        });
+        inpManager.bindKey(Key.KEY_S, Key.MOD_NONE, KeyAction.KEY_HOLD_DOWN, () ->
+        {
+            playerCamera.transformPosition(0, 0, 0.02f);
+        });
+        inpManager.bindKey(Key.KEY_D, Key.MOD_NONE, KeyAction.KEY_HOLD_DOWN, () ->
+        {
+            playerCamera.transformPosition(0.02f, 0, 0);
+        });
     }
     
     /**
@@ -180,6 +205,24 @@ public class Game
     public LWJGLUtil.Platform getOS()
     {
         return LWJGLUtil.getPlatform();
+    }
+    
+    /**
+     * Gets the {@link wrath.common.entities.Player} object representing the player!
+     * @return Returns the {@link wrath.common.entities.Player} object representing the player!
+     */
+    public Player getPlayer()
+    {
+        return player;
+    }
+    
+    /**
+     * Gets the {@link wrath.client.graphics.Camera} associated with the player.
+     * @return Returns the {@link wrath.client.graphics.Camera} associated with the player.
+     */
+    public Camera getPlayerCamera()
+    {
+        return playerCamera;
     }
     
     /**
@@ -280,8 +323,8 @@ public class Game
         
         //Input Checking
         int inpCount = 0;
-        double checksPerSec = gameConfig.getDouble("PersistentInputChecksPerSecond", 10.0);
-        if(checksPerSec > TPS) checksPerSec = TPS;
+        double checksPerSec = gameConfig.getDouble("PersistentInputChecksPerSecond", 0);
+        if(checksPerSec > TPS || checksPerSec < 1) checksPerSec = TPS;
         final double INPUT_CHECK_TICKS = TPS / checksPerSec;
         
         //Timings
@@ -1172,6 +1215,7 @@ public class Game
             GL11.glLoadIdentity();
             GL11.glMatrixMode(GL11.GL_MODELVIEW);
             GL11.glLoadIdentity();
+            GL11.glEnable(GL11.GL_DEPTH_TEST);
             
             if(renManager.text == null) renManager.text = new TextRenderer(new File("assets/fonts/arial.png"), 0.75f);
             else renManager.text.refreshRenderer();
@@ -1203,12 +1247,11 @@ public class Game
          */
         public void screenShot(String saveToName, ImageFormat format)
         {
-            File saveTo = new File("etc/screenshots/" + saveToName + "." + format.name().toLowerCase());
-
             GL11.glReadBuffer(GL11.GL_FRONT);
             ByteBuffer buffer = BufferUtils.createByteBuffer(width * height * 4);
             GL11.glReadPixels(0, 0, width, height, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
-
+            
+            File saveTo = new File("etc/screenshots/" + saveToName + "." + format.name().toLowerCase());
             Thread t = new Thread(() -> 
             {
                 BufferedImage image = ClientUtils.getByteBufferToImage(buffer, width, height);
