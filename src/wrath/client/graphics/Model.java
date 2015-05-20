@@ -27,7 +27,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
-import wrath.client.InstanceRegistry;
+import wrath.client.Game;
 import wrath.client.enums.RenderMode;
 import wrath.common.Closeable;
 
@@ -85,13 +85,13 @@ public class Model implements Renderable, Closeable
         
         // Creating Model Object
         Model model = new Model(null, vaoid, new Integer[]{vtvboid, invboid}, indicies.length);
-        InstanceRegistry.getGameInstance().getLogger().log("Loaded model from verticies map!");
+        Game.getCurrentInstance().getLogger().log("Loaded model from verticies map!");
         if(useDefaultShaders) model.attachShader(ShaderProgram.DEFAULT_SHADER);
         
         // Unbinding OpenGL Objects
         GL30.glBindVertexArray(0);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
-        InstanceRegistry.getGameInstance().addToTrashCleanup(model);
+        Game.getCurrentInstance().addToTrashCleanup(model);
         return model;
     }
     
@@ -157,7 +157,7 @@ public class Model implements Renderable, Closeable
     public void attachTexture(Texture texture)
     {
         float[] def;
-        if(InstanceRegistry.getGameInstance().getRenderMode() == RenderMode.Mode2D) def = new float[]{0f,0f,0f,1f,1f,1f,1f,0f};
+        if(Game.getCurrentInstance().getRenderMode() == RenderMode.Mode2D) def = new float[]{0f,0f,0f,1f,1f,1f,1f,0f};
         else def = new float[]{0f,0f,0f,1f,1f,1f,1f,0f};
         attachTexture(texture, def);
     }
@@ -171,7 +171,7 @@ public class Model implements Renderable, Closeable
     public void attachTexture(Texture texture, float[] textureCoords)
     {
         this.texture = texture;
-        if(shader == null) InstanceRegistry.getGameInstance().getLogger().log("Warning: If no shader is present to pass texture co-ordinates, then the texture will not render!");
+        if(shader == null) Game.getCurrentInstance().getLogger().log("Warning: If no shader is present to pass texture co-ordinates, then the texture will not render!");
         GL30.glBindVertexArray(vao);
         int vboid = GL15.glGenBuffers();
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboid);
@@ -193,7 +193,7 @@ public class Model implements Renderable, Closeable
         GL30.glDeleteVertexArrays(getVaoID());
         for(Integer i : getVboList())
                 GL15.glDeleteBuffers(i);
-        InstanceRegistry.getGameInstance().removeFromTrashCleanup(this);
+        Game.getCurrentInstance().removeFromTrashCleanup(this);
     }
     
     /**

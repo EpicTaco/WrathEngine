@@ -33,7 +33,6 @@ public class PythonEntryObject implements EntryObject
         ScriptManager.SCRIPT_CONFIG.setProperty("AutoLoadFromDirectory", false);
         ScriptManager.SCRIPT_CONFIG.setProperty("AssignParentObject", false);
         PythonScriptManager scripts = new PythonScriptManager(this);
-        InstanceRegistry.setPythonScriptManager(scripts);
         scripts.loadScript(new File("assets/initscript.py"), true, false).execute();
     }
 }

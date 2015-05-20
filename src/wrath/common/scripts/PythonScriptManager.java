@@ -31,8 +31,18 @@ import wrath.util.Logger;
  */
 public class PythonScriptManager extends ScriptManager
 {
+    private static PythonScriptManager CUR_INSTANCE = null;
     private final PythonInterpreter inter = new PythonInterpreter();
 
+    /**
+     * Gets the current, most recent {@link wrath.common.scripts.PythonScriptManager} object.
+     * @return Returns the current, most recent {@link wrath.common.scripts.PythonScriptManager} object.
+     */
+    public static PythonScriptManager getCurrentInstance()
+    {
+        return CUR_INSTANCE;
+    }
+    
     /**
      * Constructor.
      * @param parentObject The object scripts should refer to. 
@@ -43,8 +53,14 @@ public class PythonScriptManager extends ScriptManager
         if(getScriptConfig().getBoolean("AssignParentObject", true))
             inter.set("parentObject", parentObject);
         inter.set("scriptsManager", this);
+        afterConstructor();
     }
 
+    private void afterConstructor()
+    {
+        CUR_INSTANCE = this;
+    }
+    
     @Override
     public void close()
     {

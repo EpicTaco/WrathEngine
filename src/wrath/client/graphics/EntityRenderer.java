@@ -33,6 +33,7 @@ public class EntityRenderer implements Renderable
     private final Vector3f rotation;
     private float scale = 1f;
     private final Vector3f screenPosition = new Vector3f(0f,0f,0f);
+    private boolean updateMat = true;
     
     /**
      * Constructor.
@@ -86,6 +87,7 @@ public class EntityRenderer implements Renderable
      */
     public void setRotation(float rx, float ry, float rz)
     {
+        updateMat = true;
         this.rotation.x = rx;
         this.rotation.y = ry;
         this.rotation.z = rz;
@@ -97,6 +99,7 @@ public class EntityRenderer implements Renderable
      */
     public void setScale(float scale)
     {
+        updateMat = true;
         this.scale = scale;
     }
     
@@ -108,6 +111,7 @@ public class EntityRenderer implements Renderable
      */
     public void setScreenPosition(float x, float y, float z)
     {
+        updateMat = true;
         screenPosition.x = x;
         screenPosition.y = y;
         screenPosition.z = z;
@@ -121,6 +125,7 @@ public class EntityRenderer implements Renderable
      */
     public void transformRotation(float drx, float dry, float drz)
     {
+        updateMat = true;
         rotation.x += drx;
         rotation.y += dry;
         rotation.z += drz;
@@ -134,6 +139,7 @@ public class EntityRenderer implements Renderable
      */
     public void transformScreenPosition(float dx, float dy, float dz)
     {
+        updateMat = true;
         screenPosition.x += dx;
         screenPosition.y += dy;
         screenPosition.z += dz;
@@ -144,7 +150,11 @@ public class EntityRenderer implements Renderable
      */
     public void updateTransformationMatrix()
     {
-        if(model.getShader() != null) model.getShader().setTransformationMatrix(ClientUtils.createTransformationMatrix(screenPosition, rotation.x, rotation.y, rotation.z, scale));
+        if(model.getShader() != null && updateMat)
+        {
+            model.getShader().setTransformationMatrix(ClientUtils.createTransformationMatrix(screenPosition, rotation.x, rotation.y, rotation.z, scale));
+            updateMat = false;
+        }
     }
     
     /**

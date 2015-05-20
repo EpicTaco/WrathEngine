@@ -20,7 +20,7 @@ package wrath.client.graphics;
 import java.io.File;
 import org.lwjgl.opengl.GL11;
 import wrath.client.ClientUtils;
-import wrath.client.InstanceRegistry;
+import wrath.client.Game;
 import wrath.client.enums.RenderMode;
 import wrath.common.Closeable;
 
@@ -41,13 +41,13 @@ public class Texture implements Closeable
     {
         this.file = textureFile;
         this.texID = ClientUtils.get2DTexture(ClientUtils.loadImageFromFile(textureFile));
-        InstanceRegistry.getGameInstance().getLogger().log("Created texture ID '" + texID + "' from file '" + file.getName() + "'!");
+        Game.getCurrentInstance().getLogger().log("Created texture ID '" + texID + "' from file '" + file.getName() + "'!");
         afterConstructor();
     }
     
     private void afterConstructor()
     {
-        InstanceRegistry.getGameInstance().addToTrashCleanup(this);
+        Game.getCurrentInstance().addToTrashCleanup(this);
     }
     
     /**
@@ -56,7 +56,7 @@ public class Texture implements Closeable
      */
     public void bindTexture()
     {
-        if(InstanceRegistry.getGameInstance().getRenderMode() == RenderMode.Mode2D) GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID);
+        if(Game.getCurrentInstance().getRenderMode() == RenderMode.Mode2D) GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID);
         else GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID);
     }
     
@@ -64,7 +64,7 @@ public class Texture implements Closeable
     public void close()
     {
         GL11.glDeleteTextures(texID);
-        InstanceRegistry.getGameInstance().removeFromTrashCleanup(this);
+        Game.getCurrentInstance().removeFromTrashCleanup(this);
     }
     
     /**

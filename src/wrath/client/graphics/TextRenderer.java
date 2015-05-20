@@ -21,7 +21,7 @@ import java.io.File;
 import java.util.HashMap;
 import org.lwjgl.opengl.GL11;
 import wrath.client.ClientUtils;
-import wrath.client.InstanceRegistry;
+import wrath.client.Game;
 import wrath.common.Closeable;
 import wrath.util.Logger;
 
@@ -61,7 +61,7 @@ public class TextRenderer implements Closeable
         this.fontSize = fontSize;
         fontTex = ClientUtils.get2DTexture(ClientUtils.loadImageFromFile(ttfFile));
         if(fontTex != 0)
-            InstanceRegistry.getGameInstance().getLogger().log("Loaded font from '" + ttfFile.getName() + "'!");
+            Game.getCurrentInstance().getLogger().log("Loaded font from '" + ttfFile.getName() + "'!");
         else
             Logger.getErrorLogger().log("Could not load font from '" + ttfFile.getName() + "'! Unknown error!");
         
@@ -70,7 +70,7 @@ public class TextRenderer implements Closeable
     
     private void afterConstructor()
     {
-        InstanceRegistry.getGameInstance().addToTrashCleanup(this);
+        Game.getCurrentInstance().addToTrashCleanup(this);
     }
     
     @Override
@@ -111,7 +111,7 @@ public class TextRenderer implements Closeable
             //Fill spacing map.
         }
         
-        if(fontTex != 0 && fontTex != -1) InstanceRegistry.getGameInstance().getLogger().log("Loaded font from '" + file.getName() + "'!");
+        if(fontTex != 0 && fontTex != -1) Game.getCurrentInstance().getLogger().log("Loaded font from '" + file.getName() + "'!");
         else Logger.getErrorLogger().log("Could not load font from '" + file.getName() + "'! Unknown error!");
     }
     

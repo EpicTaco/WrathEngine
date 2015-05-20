@@ -42,7 +42,6 @@ import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.util.vector.Matrix4f;
 import wrath.client.enums.ImageFormat;
 import wrath.client.events.InputEventHandler;
-import wrath.client.events.PlayerEventHandler;
 import wrath.client.graphics.Camera;
 import wrath.client.graphics.Color;
 import wrath.client.graphics.Renderable;
@@ -62,6 +61,17 @@ import wrath.util.Logger;
  */
 public class Game 
 {
+    private static Game GAME_INSTANCE = null;
+    
+    /**
+     * Gets the current, primary {@link wrath.client.Game} instance.
+     * @return Returns the current, primary {@link wrath.client.Game} instance.
+     */
+    public static Game getCurrentInstance()
+    {
+        return GAME_INSTANCE;
+    }
+    
     private final RenderMode MODE;
     private final String TITLE;
     private final double TPS;
@@ -101,7 +111,7 @@ public class Game
         TITLE = gameTitle;
         VERSION = version;
         TPS = ticksPerSecond;
-        InstanceRegistry.setGameInstance(this);
+        duringConstructor();
         this.trashCollector = new TrashCollector();
         this.player = new Player();
         this.playerCamera = new Camera(player);
@@ -132,6 +142,11 @@ public class Game
     public void addToTrashCleanup(Closeable obj)
     {
         trashCollector.list.add(obj);
+    }
+    
+    private void duringConstructor()
+    {
+        GAME_INSTANCE = this;
     }
     
     /**
@@ -470,120 +485,6 @@ public class Game
     }
     
     /**
-     * Class to define the background of the game.
-     */
-    public class Background
-    {
-        private int backTexture = 0;
-        private Color color;
-        private boolean def = true;
-        private final Color defColor = new Color(1, 1, 1, 0);
-        
-        /**
-         * Used to render user-set background.
-         */
-        private void renderBackground()
-        {
-            if(def) return;
-           
-            GL11.glEnable(GL11.GL_TEXTURE_2D);
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, backTexture);
-            GL11.glColor4f(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
-            GL11.glBegin(GL11.GL_QUADS);
-            {
-                //Top Left
-                GL11.glTexCoord2f(0f, 0f);
-                GL11.glVertex2f(-1f, 1f);
-
-                //Top Right
-                GL11.glTexCoord2f(1f, 0f);
-                GL11.glVertex2f(1f, 1f);
-
-                //Bottom Right
-                GL11.glTexCoord2f(1f, 1f);
-                GL11.glVertex2f(1f, -1f);
-
-                //Bottom Left
-                GL11.glTexCoord2f(0f, 1f);
-                GL11.glVertex2f(-1f, -1f);
-            }
-            GL11.glEnd();
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
-            GL11.glColor4f(1, 1, 1, 0);
-        }
-        
-        /**
-         * Gets the {@link wrath.client.graphics.Color} value of the background.
-         * @return Returns the {@link wrath.client.graphics.Color} value of the background.
-         */
-        public Color getBackgroundColor()
-        {
-            return color;
-        }
-        
-        /**
-         * Gets the OpenGL Texture ID of the background image.
-         * @return Returns the OpenGL Texture ID of the background image, 0 if no image was set.
-         */
-        public int getBackgroundTextureID()
-        {
-            return backTexture;
-        }
-        
-        /**
-         * Changes the static background image.
-         * @param imageFile The file to load the background texture from.
-         * @return Returns the OpenGL Texture ID number for the background image being set.
-         */
-        public int setBackgroundImage(File imageFile)
-        {
-             return setBackgroundImage(ClientUtils.loadImageFromFile(imageFile));
-        }
-
-        /**
-         * Changes the static background image.
-         * @param image The image to load the background texture from.
-         * @return Returns the OpenGL Texture ID number for the background image being set.
-         */
-        public int setBackgroundImage(BufferedImage image)
-        {
-            int tex = ClientUtils.get2DTexture(image);
-            setBackgroundImage(tex);
-            return tex;
-        }
-
-        /**
-         * Changes the static background image.
-         * @param texture The texture ID of the background image, 0 is clear.
-         */
-        public void setBackgroundImage(int texture)
-        {
-            def = color == defColor && texture == 0;
-            backTexture = texture;
-        }
-
-        /**
-         * Changes the background color to the values defined in the specified {@link wrath.client.graphics.Color}.
-         * @param color The {@link wrath.client.graphics.Color} object representing the background color.
-         */
-        public void setBackgroundColor(Color color)
-        {
-            def = color == defColor && backTexture == 0;
-            this.color = color;
-        }
-
-        /**
-         * Resets the background to a state where it is not rendered.
-         */
-        public void setBackgroundToDefault()
-        {
-            def = true;
-            color = defColor;
-            backTexture = 0;
-        }
-    }
-    
-    /**
      * Class to manage all event handlers from the {@link wrath.client.events} package.
      */
     public class EventManager
@@ -596,11 +497,9 @@ public class Game
         
         private final ArrayList<GameEventHandler> gameHandlers = new ArrayList<>();
         private final ArrayList<InputEventHandler> inpHandlers = new ArrayList<>();
-        private final ArrayList<PlayerEventHandler> plrHandlers = new ArrayList<>();
         
         private final RootGameEventHandler ghan = new RootGameEventHandler();
         private final RootInputEventHandler ihan = new RootInputEventHandler();
-        private final RootPlayerEventHandler phan = new RootPlayerEventHandler();
         
         /**
          * Adds a {@link wrath.client.events.GameEventHandler} to associate with this Game.
@@ -621,15 +520,6 @@ public class Game
         }
         
         /**
-         * Adds a {@link wrath.client.events.PlayerEventHandler} to associate with the player.
-         * @param handler The {@link wrath.client.events.PlayerEventHandler} to add to the list of handlers that handles all of the Player's events.
-         */
-        public void addPlayerEventHandler(PlayerEventHandler handler)
-        {
-            plrHandlers.add(handler);
-        }
-        
-        /**
          * Gets the root {@link wrath.client.events.GameEventHandler} linked to this Game.
          * @return Returns the root {@link wrath.client.events.GameEventHandler} linked to this Game.
          */
@@ -645,15 +535,6 @@ public class Game
         public InputEventHandler getInputEventHandler()
         {
             return ihan;
-        }
-        
-        /**
-         * Gets the root {@link wrath.client.events.PlayerEventHandler} linked to the player.
-         * @return Returns the {@link wrath.client.events.GameEventHandler}s linked to the player.
-         */
-        public PlayerEventHandler getPlayerEventHandler()
-        {
-            return phan;
         }
     }
     
@@ -684,7 +565,6 @@ public class Game
         public static final float NEAR_PLANE = 0.1f;
         
         private double avgFps = 0;
-        private final Background back = new Background();
         private Color color = Color.WHITE;
         private float fov = gameConfig.getFloat("FOV", 70f);
         private double fps = 0;
@@ -714,15 +594,6 @@ public class Game
         public double getAverageFPS()
         {
             return avgFps;
-        }
-        
-        /**
-         * Gets the {@link wrath.client.Game.Background} linked to this Window.
-         * @return Returns the {@link wrath.client.Game.Background} linked to this Window.
-         */
-        public Background getBackground()
-        {
-            return back;
         }
     
         /**
@@ -805,7 +676,6 @@ public class Game
             if(winManager.windowOpen)
             {
                 GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-                back.renderBackground();
                 GL11.glColor4f(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
                 renderQueue.stream().map((ren) -> 
                 {
@@ -816,7 +686,7 @@ public class Game
                     ren.render();
                 });
                 renderQueue.clear();
-                InstanceRegistry.getGameInstance().render();
+                GAME_INSTANCE.render();
                 front.renderGUI();
                 if(renderFps) text.renderString(fps + "", -1f, 1f, 0.8f, new Color(0.57f, 2.37f, 0.4f));
                 GL11.glFlush();
@@ -956,11 +826,6 @@ public class Game
                 handler.onScroll(xoffset, yoffset);
             });
         }
-        
-    }
-    
-    private class RootPlayerEventHandler implements PlayerEventHandler
-    {
         
     }
     

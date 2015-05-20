@@ -29,7 +29,7 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 import wrath.client.ClientUtils;
-import wrath.client.InstanceRegistry;
+import wrath.client.Game;
 import wrath.common.Closeable;
 import wrath.util.Logger;
 
@@ -121,7 +121,7 @@ public class ShaderProgram implements Closeable
         GL20.glAttachShader(prog, frag);
         
         ShaderProgram ret = new ShaderProgram(prog, vert, frag);
-        InstanceRegistry.getGameInstance().addToTrashCleanup(ret);
+        Game.getCurrentInstance().addToTrashCleanup(ret);
         return ret;
     }
     
@@ -158,7 +158,7 @@ public class ShaderProgram implements Closeable
         GL20.glDeleteShader(vertShaderID);
         GL20.glDeleteShader(fragShaderID);
         GL20.glDeleteProgram(programID);
-        InstanceRegistry.getGameInstance().removeFromTrashCleanup(this);
+        Game.getCurrentInstance().removeFromTrashCleanup(this);
     }
     
     /**
@@ -281,7 +281,7 @@ public class ShaderProgram implements Closeable
         GL20.glUseProgram(programID);
         GL20.glLinkProgram(programID);
         GL20.glValidateProgram(programID);
-        setProjectionMatrix(InstanceRegistry.getGameInstance().getRenderer().getProjectionMatrix());
+        setProjectionMatrix(Game.getCurrentInstance().getRenderer().getProjectionMatrix());
         finalized = true;
     }
     
@@ -289,11 +289,8 @@ public class ShaderProgram implements Closeable
      * Updates to the specified camera's current View Matrix.
      * This is automatic.
      */
-    public void updateViewMatrix()
+    protected void updateViewMatrix()
     {
-        GL20.glUseProgram(programID);
-        ClientUtils.createViewMatrix(InstanceRegistry.getGameInstance().getPlayerCamera()).store(matrixBuf);
-        matrixBuf.flip();
-        GL20.glUniformMatrix4(getUniformVariableLocation("viewMatrix"), false, matrixBuf);
+        Game.getCurrentInstance().getPlayerCamera().updateViewMatrix(this);
     }
 }
