@@ -6,6 +6,7 @@ wrath.client.graphics
 wrath.client.input
 wrath.common
 wrath.common.entities
+wrath.common.entities.events
 wrath.common.javaloader
 wrath.common.scheduler
 wrath.common.scripts
