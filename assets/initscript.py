@@ -45,7 +45,7 @@ class CustomGame(Game, GameEventHandler):
 		pass
 	
 	def onTick(self):
-		entity.transformRotation(2.0, 2.0, 0.0)
+		entity.transformRotation(1.5, 1.5, 0.0)
 		
 	def onResolutionChange(self, oldWidth, oldHeight, newWidth, newHeight):
 		pass

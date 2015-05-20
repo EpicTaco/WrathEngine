@@ -36,6 +36,8 @@ public class EntityRenderer implements Renderable
     private final Vector3f screenPosition = new Vector3f(0f,0f,0f);
     private boolean updateMat = true;
     
+    private boolean tmpBool = true;
+    
     /**
      * Constructor.
      * @param entity The {@link wrath.common.entities.Entity} to be rendered.
@@ -153,6 +155,12 @@ public class EntityRenderer implements Renderable
     {
         if(model.getShader() != null)
         {
+            if(tmpBool)
+            {
+                updateMat = true;
+                tmpBool = false;
+            }
+            
             if(updateMat)
             {
                 mat = ClientUtils.createTransformationMatrix(screenPosition, rotation.x, rotation.y, rotation.z, scale);
