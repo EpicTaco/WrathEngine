@@ -17,6 +17,8 @@
  */
 package wrath.client.graphics;
 
+import org.lwjgl.opengl.GL11;
+
 /**
  * Class to help specify RGBA values in one object.
  * @author Trent Spears
@@ -56,6 +58,14 @@ public class Color
     }
     
     /**
+     * Sets OpenGL to render using this color.
+     */
+    public void bindColor()
+    {
+        GL11.glColor4f(r, g, b, a);
+    }
+    
+    /**
      * Gets the color's alpha (transparency) value.
      * @return Returns a float on a scale of 0.0 (transparent) to 1.0 (opaque).
      */
@@ -89,5 +99,13 @@ public class Color
     public float getRed()
     {
         return r;
+    }
+    
+    /**
+     * Sets OpenGL to use no color.
+     */
+    public void unbindColor()
+    {
+        GL11.glColor4f(1, 1, 1, 0);
     }
 }

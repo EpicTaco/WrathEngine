@@ -164,11 +164,11 @@ public class Camera
     {
         if(updateMat == true)
         {
-            GL20.glUseProgram(shader.getProgramID());
             ClientUtils.createViewMatrix(Game.getCurrentInstance().getPlayerCamera()).store(matrixBuf);
             matrixBuf.flip();
-            GL20.glUniformMatrix4(shader.getUniformVariableLocation("viewMatrix"), false, matrixBuf);
             updateMat = false;
         }
+        GL20.glUniformMatrix4(shader.getUniformVariableLocation("viewMatrix"), false, matrixBuf);
+        GL20.glUseProgram(0);
     }
 }

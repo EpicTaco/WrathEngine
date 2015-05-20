@@ -676,10 +676,10 @@ public class Game
             if(winManager.windowOpen)
             {
                 GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-                GL11.glColor4f(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
+                color.bindColor();
                 renderQueue.stream().map((ren) -> 
                 {
-                    GL11.glColor4f(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
+                    color.bindColor();
                     return ren;
                 }).forEach((ren) -> 
                 {

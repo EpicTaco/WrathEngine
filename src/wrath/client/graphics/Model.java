@@ -122,6 +122,7 @@ public class Model implements Renderable, Closeable
         return createModel(verticies, indicies, useDefaultShaders);
     }
  
+    private Color color = Color.DEFAULT;
     private final File modelFile;
     private ShaderProgram shader = null;
     private Texture texture = null;
@@ -197,6 +198,15 @@ public class Model implements Renderable, Closeable
     }
     
     /**
+     * Gets the {@link wrath.client.graphics.Color} the model should be rendered in.
+     * @return Returns the {@link wrath.client.graphics.Color} the model will be rendered in.
+     */
+    public Color getColor()
+    {
+        return color;
+    }
+    
+    /**
      * Gets the {@link wrath.client.graphics.ShaderProgram} attached to this model. 
      * @return Returns the {@link wrath.client.graphics.ShaderProgram} attached to this model.
      */
@@ -247,6 +257,8 @@ public class Model implements Renderable, Closeable
     public void render()
     {
         if(!shader.isFinalized()) shader.finish();
+        
+        color.bindColor();
         GL30.glBindVertexArray(vao);
         GL20.glEnableVertexAttribArray(VERTICIES_ATTRIB_INDEX);
         if(texture != null)
@@ -256,16 +268,26 @@ public class Model implements Renderable, Closeable
         }
         if(shader != null)
         {
-            GL20.glUseProgram(shader.getProgramID());
             shader.updateViewMatrix();
+            GL20.glUseProgram(shader.getProgramID());
         }
         
         GL11.glDrawElements(GL11.GL_TRIANGLES, vertexCount, GL11.GL_UNSIGNED_INT, 0);
         
         GL20.glUseProgram(0);
         if(texture != null) GL20.glDisableVertexAttribArray(TEXTURE_ATTRIB_INDEX);
+        color.unbindColor();
         Texture.unbindTextures();
         GL20.glDisableVertexAttribArray(VERTICIES_ATTRIB_INDEX);
         GL30.glBindVertexArray(0);
+    }
+    
+    /**
+     * Sets the {@link wrath.client.graphics.Color} of the model.
+     * @param color The {@link wrath.client.graphics.Color} to render the model in.
+     */
+    public void setColor(Color color)
+    {
+        this.color = color;
     }
 }

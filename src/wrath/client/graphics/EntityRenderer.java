@@ -29,6 +29,7 @@ import wrath.common.entities.Entity;
 public class EntityRenderer implements Renderable
 {
     private final Entity entity;
+    private Matrix4f mat;
     private Model model;
     private final Vector3f rotation;
     private float scale = 1f;
@@ -150,11 +151,16 @@ public class EntityRenderer implements Renderable
      */
     public void updateTransformationMatrix()
     {
-        if(model.getShader() != null && updateMat)
+        if(model.getShader() != null)
         {
-            model.getShader().setTransformationMatrix(ClientUtils.createTransformationMatrix(screenPosition, rotation.x, rotation.y, rotation.z, scale));
-            updateMat = false;
+            if(updateMat)
+            {
+                mat = ClientUtils.createTransformationMatrix(screenPosition, rotation.x, rotation.y, rotation.z, scale);
+                updateMat = false;
+            }
+            model.getShader().setTransformationMatrix(mat);
         }
+        
     }
     
     /**
