@@ -17,8 +17,10 @@
  */
 package wrath.common.entities;
 
+import java.util.ArrayList;
 import org.lwjgl.util.vector.Vector2f;
 import org.lwjgl.util.vector.Vector3f;
+import wrath.common.entities.events.EntityEventHandler;
 import wrath.common.world.World;
 
 /**
@@ -27,6 +29,14 @@ import wrath.common.world.World;
  */
 public abstract class Entity
 {
+    private static final ArrayList<EntityEventHandler> entHandlers = new ArrayList<>();
+    private static RootEntityEventHandler roothandler = null;
+    
+    public static void addEntityEventHandler(EntityEventHandler handler)
+    {
+        entHandlers.add(handler);
+    }
+    
     private final CollisionBox collision;
     private Vector3f location;
     private Vector2f orientation;
@@ -45,6 +55,8 @@ public abstract class Entity
         this.orientation = new Vector2f(0f,0f);
         this.speed = 0f;
         this.world = world;
+        
+        if(roothandler == null) roothandler = new RootEntityEventHandler();
     }
     
     /**
@@ -148,5 +160,13 @@ public abstract class Entity
     public void setWorld(World world)
     {
         this.world = world;
+    }
+    
+    
+    
+    
+    private class RootEntityEventHandler implements EntityEventHandler
+    {
+        
     }
 }

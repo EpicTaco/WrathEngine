@@ -17,7 +17,9 @@
  */
 package wrath.common.entities;
 
+import java.util.ArrayList;
 import org.lwjgl.util.vector.Vector3f;
+import wrath.common.entities.events.PlayerEventHandler;
 import wrath.common.world.World;
 
 /**
@@ -26,6 +28,17 @@ import wrath.common.world.World;
  */
 public class Player extends Entity
 {   
+    private static final ArrayList<PlayerEventHandler> plrHandlers = new ArrayList<>();
+    private static RootPlayerEventHandler roothandler = null;
+    
+    public static void addPlayerEventHandler(PlayerEventHandler handler)
+    {
+        plrHandlers.add(handler);
+    }
+    
+    
+    
+    
     public Player()
     {
         this(null, null);
@@ -34,5 +47,15 @@ public class Player extends Entity
     public Player(Vector3f worldLocation, World world)
     {
         super(worldLocation, world);
+        if(roothandler == null) roothandler = new RootPlayerEventHandler();
+    }
+    
+    
+    
+    
+    
+    private class RootPlayerEventHandler implements PlayerEventHandler
+    {
+        
     }
 }
