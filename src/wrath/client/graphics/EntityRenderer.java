@@ -67,6 +67,15 @@ public class EntityRenderer implements Renderable
     }
     
     /**
+     * Gets the linked {@link wrath.client.graphics.Model}.
+     * @return Returns the linked {@link wrath.client.graphics.Model}.
+     */
+    public Model getModel()
+    {
+        return model;
+    }
+    
+    /**
      * Gets the 3-dimensional position of the model to the screen.
      * @return Returns a {@link org.lwjgl.util.vector.Vector3f} object representing the 3-dimensional position of the model to the screen.
      */

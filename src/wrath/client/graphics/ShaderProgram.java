@@ -28,7 +28,6 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
-import wrath.client.ClientUtils;
 import wrath.client.Game;
 import wrath.common.Closeable;
 import wrath.util.Logger;
@@ -177,14 +176,16 @@ public class ShaderProgram implements Closeable
      */
     public int getUniformVariableLocation(String variableName)
     {
-        if(uniformMap.containsKey(variableName) && uniformMap.get(variableName) != -1) return uniformMap.get(variableName);
-        else
+        if(uniformMap.containsKey(variableName))
         {
-            GL20.glUseProgram(programID);
-            int ret = GL20.glGetUniformLocation(programID, variableName);
-            uniformMap.put(variableName, ret);
-            return ret;
+            int ret = uniformMap.get(variableName);
+            if(ret != -1) return ret; 
         }
+        
+        GL20.glUseProgram(programID);
+        int ret = GL20.glGetUniformLocation(programID, variableName);
+        uniformMap.put(variableName, ret);
+        return ret;
     }
     
     /**

@@ -225,7 +225,7 @@ public class ClientUtils
      * @param image The {@link java.awt.image.BufferedImage} version of the Texture.
      * @return Returns the LWJGL texture id.
      */
-    public static int get2DTexture(BufferedImage image)
+    public static int getTexture(BufferedImage image)
     {
         if(image == null) return 0;
         

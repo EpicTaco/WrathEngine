@@ -17,7 +17,10 @@
  */
 package wrath.client.graphics;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
@@ -27,9 +30,11 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
+import org.lwjgl.util.vector.Vector2f;
+import org.lwjgl.util.vector.Vector3f;
 import wrath.client.Game;
-import wrath.client.enums.RenderMode;
 import wrath.common.Closeable;
+import wrath.util.Logger;
 
 /**
  * Class to represent a Model (both 2D and 3D).
@@ -98,7 +103,7 @@ public class Model implements Renderable, Closeable
     /**
      * Loads a 2D or 3D model from specified {@link java.io.File}.
      * Models are always assumed to be made with triangles, and will be rendered as such.
-     * @param modelFile The {@link java.io.File} to read the model data from.
+     * @param modelFile The .OBJ {@link java.io.File} to read the model data from.
      * @return Returns the {@link wrath.client.graphics.Model} object of your model.
      */
     public static Model loadModel(File modelFile)
@@ -109,23 +114,94 @@ public class Model implements Renderable, Closeable
     /**
      * Loads a 2D or 3D model from specified {@link java.io.File}.
      * Models are always assumed to be made with triangles, and will be rendered as such.
-     * @param modelFile The {@link java.io.File} to read the model data from.
+     * @param modelFile The .OBJ {@link java.io.File} to read the model data from.
      * @param useDefaultShaders If true, shaders will be set up automatically.
      * @return Returns the {@link wrath.client.graphics.Model} object of your model.
      */
     public static Model loadModel(File modelFile, boolean useDefaultShaders)
     {
-        // Obtaining Data
-        float[] verticies = new float[0];
-        int[] indicies = new int[0];
+        ArrayList<Vector3f> verticies = new ArrayList<>();
+        ArrayList<Vector2f> texCoords = new ArrayList<>();
+        ArrayList<Vector3f> normals = new ArrayList<>();
+        ArrayList<Integer> indicies = new ArrayList<>();
+        float[] varray = null;
+        float[] narray = null;
+        float[] tarray = null;
         
-        return createModel(verticies, indicies, useDefaultShaders);
+        try
+        {
+            BufferedReader in = new BufferedReader(new FileReader(modelFile));
+            String inp;
+            boolean tmp = true;
+            while((inp = in.readLine()) != null)
+            {
+                String[] buf = inp.split(" ");
+                if(inp.startsWith("v ")) verticies.add(new Vector3f(Float.parseFloat(buf[1]), Float.parseFloat(buf[2]), Float.parseFloat(buf[3])));
+                else if(inp.startsWith("vt ")) texCoords.add(new Vector2f(Float.parseFloat(buf[1]), Float.parseFloat(buf[2])));
+                else if(inp.startsWith("vn ")) normals.add(new Vector3f(Float.parseFloat(buf[1]), Float.parseFloat(buf[2]), Float.parseFloat(buf[3])));
+                else if(inp.startsWith("f "))
+                {
+                    if(tmp)
+                    {
+                        varray = new float[verticies.size() * 3];
+                        narray = new float[verticies.size() * 3];
+                        tarray = new float[verticies.size() * 2];
+                        tmp = false;
+                    }
+                    String[] vert1 = buf[1].split("/");
+                    String[] vert2 = buf[2].split("/");
+                    String[] vert3 = buf[3].split("/");
+                    
+                    for(int x = 1; x <= 3; x++)
+                    {
+                        String[] curDat = null;
+                        if(x == 1) curDat = vert1;
+                        else if(x == 2) curDat = vert2;
+                        else if(x == 3) curDat = vert3;
+                        
+                        int ptr = Integer.parseInt(curDat[0]) - 1;
+                        indicies.add(ptr);
+                        Vector2f tex = texCoords.get(Integer.parseInt(curDat[1]) - 1);
+                        tarray[ptr*2] = tex.x;
+                        tarray[ptr*2 + 1] = 1 - tex.y;
+                        Vector3f norm = normals.get(Integer.parseInt(curDat[2]) - 1);
+                        narray[ptr*3] = norm.x;
+                        narray[ptr*3 + 1] = norm.y;
+                        narray[ptr*3 + 2] = norm.z;
+                    }
+                }
+            }
+            in.close();
+        }
+        catch(IOException e)
+        {
+            Logger.getErrorLogger().log("Could not load model from file '" + modelFile.getName() + "'! I/O Error!");
+            return null;
+        }
+        
+        
+        int i = 0;
+        for(Vector3f ve : verticies)
+        {
+            varray[i] = ve.x;
+            varray[i + 1] = ve.y;
+            varray[i + 2] = ve.z;
+            i += 3;
+        }
+        int[] iarray = new int[indicies.size()];
+        for(int z = 0; z < indicies.size(); z++)
+            iarray[z] = indicies.get(z);
+        
+        Model m = createModel(varray, iarray, useDefaultShaders);
+        m.textureCoords = tarray;
+        return m;
     }
  
     private Color color = Color.DEFAULT;
     private final File modelFile;
     private ShaderProgram shader = null;
     private Texture texture = null;
+    private float[] textureCoords = null;
     private final int vao;
     private final ArrayList<Integer> vbos = new ArrayList<>();
     private final int vertexCount;
@@ -157,10 +233,7 @@ public class Model implements Renderable, Closeable
      */
     public void attachTexture(Texture texture)
     {
-        float[] def;
-        if(Game.getCurrentInstance().getRenderMode() == RenderMode.Mode2D) def = new float[]{0f,0f,0f,1f,1f,1f,1f,0f};
-        else def = new float[]{0f,0f,0f,1f,1f,1f,1f,0f};
-        attachTexture(texture, def);
+        attachTexture(texture, new float[0]);
     }
     
     /**
@@ -172,6 +245,7 @@ public class Model implements Renderable, Closeable
     public void attachTexture(Texture texture, float[] textureCoords)
     {
         this.texture = texture;
+        if(this.textureCoords != null) textureCoords = this.textureCoords;
         if(shader == null) Game.getCurrentInstance().getLogger().log("Warning: If no shader is present to pass texture co-ordinates, then the texture will not render!");
         GL30.glBindVertexArray(vao);
         int vboid = GL15.glGenBuffers();

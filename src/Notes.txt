@@ -1,6 +1,5 @@
 Things to fix/edit:
-- Add 3D texture loading in ClientUtils and Texture
-- Use Model and Texture system for Background rendering.
+
 
 Things to add:
 - Audio
@@ -12,3 +11,13 @@ Things to add:
 
 - Native World/Player Systems
 	|-- This is also just the foundation, no operations will be available yet.
+
+- Add GUI System
+        |-- Use 2D overlay rendering to create a GUI-window system.
+            This is to be made BEFORE the Console.
+
+- Console
+        |-- Add a text game console in-game.
+
+Inefficient Methods:
+  - In Matrix4f, rotate() is slow. See if anything can be done about this.

@@ -474,6 +474,7 @@ public class Game
         
         gameConfig.save();
         inpManager.saveKeys();
+        gameLogger.log("Average FPS throughout session: " + renManager.avgFps);
         gameLogger.log("Stopping '" + TITLE + "' Client v." + VERSION + "!");
         if(gameLogger != null && !gameLogger.isClosed()) gameLogger.close();
         errStr.release();

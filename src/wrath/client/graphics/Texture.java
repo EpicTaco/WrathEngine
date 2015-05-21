@@ -21,7 +21,6 @@ import java.io.File;
 import org.lwjgl.opengl.GL11;
 import wrath.client.ClientUtils;
 import wrath.client.Game;
-import wrath.client.enums.RenderMode;
 import wrath.common.Closeable;
 
 /**
@@ -40,7 +39,7 @@ public class Texture implements Closeable
     public Texture(File textureFile)
     {
         this.file = textureFile;
-        this.texID = ClientUtils.get2DTexture(ClientUtils.loadImageFromFile(textureFile));
+        this.texID = ClientUtils.getTexture(ClientUtils.loadImageFromFile(textureFile));
         Game.getCurrentInstance().getLogger().log("Created texture ID '" + texID + "' from file '" + file.getName() + "'!");
         afterConstructor();
     }
@@ -56,8 +55,7 @@ public class Texture implements Closeable
      */
     public void bindTexture()
     {
-        if(Game.getCurrentInstance().getRenderMode() == RenderMode.Mode2D) GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID);
-        else GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID);
     }
     
     @Override

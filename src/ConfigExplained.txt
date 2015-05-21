@@ -46,6 +46,11 @@ FullscreenUsesResolution: false
 #Default is 70
 FOV: 70
 
+#If true, a filter will be applied to text to make it look smoother.
+#Disabling this will give a noticeable FPS boost if text is being rendered.
+#Default is true
+AntiAliasText: true
+
 ### Other Options ###
 
 #Determines how many times the engine should check to see if a key is still held down in a second. Increasing this will increase CPU strain, but also

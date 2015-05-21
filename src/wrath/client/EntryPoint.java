@@ -33,7 +33,7 @@ public class EntryPoint
     {
         if(!new File("assets/init").exists())
             ClientUtils.throwInternalError("assets/init file is missing!", false);
-        
+
         try
         {
             String fline;

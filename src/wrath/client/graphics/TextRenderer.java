@@ -59,7 +59,7 @@ public class TextRenderer implements Closeable
         }
         
         this.fontSize = fontSize;
-        fontTex = ClientUtils.get2DTexture(ClientUtils.loadImageFromFile(ttfFile));
+        fontTex = ClientUtils.getTexture(ClientUtils.loadImageFromFile(ttfFile));
         if(fontTex != 0)
             Game.getCurrentInstance().getLogger().log("Loaded font from '" + ttfFile.getName() + "'!");
         else
@@ -103,7 +103,7 @@ public class TextRenderer implements Closeable
     public void refreshRenderer()
     {
         spaceMap.clear();
-        fontTex = ClientUtils.get2DTexture(ClientUtils.loadImageFromFile(file));
+        fontTex = ClientUtils.getTexture(ClientUtils.loadImageFromFile(file));
         File metricsFile = new File(file.getParentFile().getPath() + "/" + file.getName().split(".png")[0] + ".metrics");
         if(!metricsFile.exists()) spaceMap.putAll(DEF_SPACE_MAP);
         else
@@ -142,20 +142,20 @@ public class TextRenderer implements Closeable
         final float characterWidth = fontSize * 0.1f;
         final float characterHeight = characterWidth * 0.75f;
         
-        GL11.glPushAttrib(GL11.GL_TEXTURE_BIT | GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT);
-        GL11.glEnable(GL11.GL_CULL_FACE);
         GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glDisable(GL11.GL_DEPTH_TEST);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, fontTex);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+        if(Game.getCurrentInstance().getConfig().getBoolean("AntiAliasText", true))
+        {
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+        }
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ONE);
-        GL11.glPushMatrix();
-        GL11.glColor4f(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
-        GL11.glBegin(GL11.GL_QUADS);
+        color.bindColor();
         float curPos = x;
         float charWidth;
+        GL11.glBegin(GL11.GL_QUADS);
         for(int i = 0; i < string.length(); i++)
         {
             int ascii = (int) string.charAt(i);
@@ -188,14 +188,11 @@ public class TextRenderer implements Closeable
             }
         }
         GL11.glEnd();
-        GL11.glPopMatrix();
-        GL11.glPopAttrib();
         
-        GL11.glColor4f(1, 1, 1, 0);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+        color.unbindColor();
+        Texture.unbindTextures();
         GL11.glDisable(GL11.GL_BLEND);
         GL11.glDisable(GL11.GL_TEXTURE_2D);
-        GL11.glDisable(GL11.GL_CULL_FACE);
         GL11.glEnable(GL11.GL_DEPTH_TEST);
     }
     
