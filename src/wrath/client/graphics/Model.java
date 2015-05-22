@@ -148,26 +148,35 @@ public class Model implements Renderable, Closeable
                         tarray = new float[verticies.size() * 2];
                         tmp = false;
                     }
-                    String[] vert1 = buf[1].split("/");
-                    String[] vert2 = buf[2].split("/");
-                    String[] vert3 = buf[3].split("/");
                     
                     for(int x = 1; x <= 3; x++)
                     {
-                        String[] curDat = null;
-                        if(x == 1) curDat = vert1;
-                        else if(x == 2) curDat = vert2;
-                        else if(x == 3) curDat = vert3;
+                        String[] curDat;
+                        if(buf[x].contains("//"))
+                        {
+                            curDat = buf[x].split("//");
+                            
+                            int ptr = Integer.parseInt(curDat[0]) - 1;
+                            indicies.add(ptr);
+                            Vector3f norm = normals.get(Integer.parseInt(curDat[1]) - 1);
+                            narray[ptr*3] = norm.x;
+                            narray[ptr*3 + 1] = norm.y;
+                            narray[ptr*3 + 2] = norm.z;
+                        }
+                        else
+                        {   
+                            curDat = buf[x].split("/");
                         
-                        int ptr = Integer.parseInt(curDat[0]) - 1;
-                        indicies.add(ptr);
-                        Vector2f tex = texCoords.get(Integer.parseInt(curDat[1]) - 1);
-                        tarray[ptr*2] = tex.x;
-                        tarray[ptr*2 + 1] = 1 - tex.y;
-                        Vector3f norm = normals.get(Integer.parseInt(curDat[2]) - 1);
-                        narray[ptr*3] = norm.x;
-                        narray[ptr*3 + 1] = norm.y;
-                        narray[ptr*3 + 2] = norm.z;
+                            int ptr = Integer.parseInt(curDat[0]) - 1;
+                            indicies.add(ptr);
+                            Vector2f tex = texCoords.get(Integer.parseInt(curDat[1]) - 1);
+                            tarray[ptr*2] = tex.x;
+                            tarray[ptr*2 + 1] = 1 - tex.y;
+                            Vector3f norm = normals.get(Integer.parseInt(curDat[2]) - 1);
+                            narray[ptr*3] = norm.x;
+                            narray[ptr*3 + 1] = norm.y;
+                            narray[ptr*3 + 2] = norm.z;
+                        }
                     }
                 }
             }
@@ -194,10 +203,10 @@ public class Model implements Renderable, Closeable
         
         Model m = createModel(varray, iarray, useDefaultShaders);
         m.textureCoords = tarray;
+        Game.getCurrentInstance().getLogger().log("Loaded Model from file '" + modelFile.getName() + "' with " + (verticies.size() / 3) + " verticies, " + (normals.size() / 3) + " normals, " + indicies.size() + " indicies and " + (texCoords.size() / 2) + " texture coordinates.");
         return m;
     }
  
-    private Color color = Color.DEFAULT;
     private final File modelFile;
     private ShaderProgram shader = null;
     private Texture texture = null;
@@ -272,15 +281,6 @@ public class Model implements Renderable, Closeable
     }
     
     /**
-     * Gets the {@link wrath.client.graphics.Color} the model should be rendered in.
-     * @return Returns the {@link wrath.client.graphics.Color} the model will be rendered in.
-     */
-    public Color getColor()
-    {
-        return color;
-    }
-    
-    /**
      * Gets the {@link wrath.client.graphics.ShaderProgram} attached to this model. 
      * @return Returns the {@link wrath.client.graphics.ShaderProgram} attached to this model.
      */
@@ -332,7 +332,6 @@ public class Model implements Renderable, Closeable
     {
         if(!shader.isFinalized()) shader.finish();
         
-        color.bindColor();
         GL30.glBindVertexArray(vao);
         GL20.glEnableVertexAttribArray(VERTICIES_ATTRIB_INDEX);
         if(texture != null)
@@ -345,23 +344,16 @@ public class Model implements Renderable, Closeable
             shader.updateViewMatrix();
             GL20.glUseProgram(shader.getProgramID());
         }
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+        GL11.glEnable(GL11.GL_CULL_FACE);
         
         GL11.glDrawElements(GL11.GL_TRIANGLES, vertexCount, GL11.GL_UNSIGNED_INT, 0);
         
         GL20.glUseProgram(0);
         if(texture != null) GL20.glDisableVertexAttribArray(TEXTURE_ATTRIB_INDEX);
-        color.unbindColor();
         Texture.unbindTextures();
         GL20.glDisableVertexAttribArray(VERTICIES_ATTRIB_INDEX);
         GL30.glBindVertexArray(0);
     }
-    
-    /**
-     * Sets the {@link wrath.client.graphics.Color} of the model.
-     * @param color The {@link wrath.client.graphics.Color} to render the model in.
-     */
-    public void setColor(Color color)
-    {
-        this.color = color;
-    }
+
 }

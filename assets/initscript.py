@@ -26,6 +26,7 @@ from wrath.client.graphics import Model
 from wrath.client.graphics import EntityRenderer
 from wrath.client.graphics import ShaderProgram
 from wrath.client.graphics import Texture
+from wrath.client.graphics import Color
 
 gameObject = None
 entity = None

@@ -23,6 +23,7 @@ import wrath.common.javaloader.JarLoader;
 
 /**
  * The class to launch the game off of a Java jar called 'game.jar' in the 'assets' folder.
+ * Do not implement this class. This is done automatically.
  * @author Trent Spears
  */
 public class JavaEntryObject implements EntryObject

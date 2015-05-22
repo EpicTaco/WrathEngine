@@ -35,7 +35,7 @@ public class TextRenderer implements Closeable
     
     private final HashMap<Character, Float> spaceMap = new HashMap<>();
     
-    private Color color;
+    private Color color = Color.WHITE;
     private final File file;
     private float fontSize;
     private int fontTex;
@@ -123,7 +123,7 @@ public class TextRenderer implements Closeable
      */
     public void renderString(String string, float x, float y) 
     {
-        renderString(string, x, y, fontSize, color);
+        renderString(string, x, y, fontSize, getColor());
     }
     
     /**
@@ -192,7 +192,6 @@ public class TextRenderer implements Closeable
         color.unbindColor();
         Texture.unbindTextures();
         GL11.glDisable(GL11.GL_BLEND);
-        GL11.glDisable(GL11.GL_TEXTURE_2D);
         GL11.glEnable(GL11.GL_DEPTH_TEST);
     }
     
@@ -242,7 +241,7 @@ public class TextRenderer implements Closeable
         DEF_SPACE_MAP.put('K', 0.85f);
         DEF_SPACE_MAP.put('k', 0.6f);
         DEF_SPACE_MAP.put('L', 0.675f);
-        DEF_SPACE_MAP.put('l', 0.35f);
+        DEF_SPACE_MAP.put('l', 0.25f);
         DEF_SPACE_MAP.put('M', 1.0f);
         DEF_SPACE_MAP.put('m', 0.9f);
         DEF_SPACE_MAP.put('N', 0.75f);

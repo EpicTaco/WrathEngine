@@ -18,7 +18,7 @@
 package wrath.common.entities.events;
 
 /**
- * Interface to handle all event from {@link wrath.common.entities.events.Player} entities.
+ * Interface to handle all event from {@link wrath.common.entities.Player} entities.
  * @author Trent Spears
  */
 public interface PlayerEventHandler

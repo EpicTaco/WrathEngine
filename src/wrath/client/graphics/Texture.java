@@ -55,6 +55,7 @@ public class Texture implements Closeable
      */
     public void bindTexture()
     {
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID);
     }
     

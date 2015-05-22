@@ -29,6 +29,10 @@ import java.io.IOException;
  */
 public class EntryPoint
 {
+    /**
+     * The entry point of the program.
+     * @param args The command-line arguments from the console.
+     */
     public static void main(String[] args)
     {
         if(!new File("assets/init").exists())

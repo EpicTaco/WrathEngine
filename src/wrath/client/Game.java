@@ -128,9 +128,6 @@ public class Game
         }
            
         System.setProperty("org.lwjgl.librarypath", "assets/native");
-        
-        File screenshotDir = new File("etc/screenshots");
-        if(!screenshotDir.exists()) screenshotDir.mkdirs();
     }
 
     
@@ -321,7 +318,7 @@ public class Game
         
         //Input Checking
         int inpCount = 0;
-        double checksPerSec = gameConfig.getDouble("PersistentInputChecksPerSecond", 0);
+        double checksPerSec = gameConfig.getDouble("PersistentInputChecksPerSecond", 0.0);
         if(checksPerSec > TPS || checksPerSec < 1) checksPerSec = TPS;
         final double INPUT_CHECK_TICKS = TPS / checksPerSec;
         
@@ -393,7 +390,7 @@ public class Game
     /**
      * Override-able method that is called as much as possible to issue rendering commands.
      */
-    protected void render(){} //TODO: Add Rendering Pipeline (kind of a biggie)
+    protected void render(){}
     
     /**
      * Method that is used to load the game and all of it's resources.
@@ -409,17 +406,7 @@ public class Game
      */
     public void start(String[] args)
     {
-        isRunning = true;
-        gameLogger.log("Launching '" + TITLE + "' Client v." + VERSION + " on '" + LWJGLUtil.getPlatformName() +"' platform with LWJGL v." + Sys.getVersion() + "!");
-        
-        //Interpret command-line arguments
-        for(String a : args)
-        {
-            String[] b = a.split("=", 2);
-            if(b.length <= 1) continue;
-            
-            gameConfig.setProperty(b[0], b[1]);
-        }
+        gameLogger.log("Launching '" + TITLE + "' Client v." + VERSION + " on '" + LWJGLUtil.getPlatformName().toUpperCase() +"' platform with LWJGL v." + Sys.getVersion() + "!");
 
         //Initialize GLFW and OpenGL
         GLFW.glfwSetErrorCallback((errStr = new GLFWErrorCallback()
@@ -436,15 +423,27 @@ public class Game
             Logger.getErrorLogger().log("Could not initialize GLFW! Unknown Error!");
             ClientUtils.throwInternalError("Failed to initialize GLFW!", false);
             stopImpl();
-            return;
         }
         
+        //Interpret command-line arguments.
+        for(String a : args)
+        {
+            String[] b = a.split("=", 2);
+            if(b.length <= 1) continue;
+            
+            gameConfig.setProperty(b[0], b[1]);
+            gameLogger.log("Set property '" + b[0] + "' to value '" + b[1] + "'!");
+        }
+        
+        //Auto-loads Java Plugins from specified directory.
         if(gameConfig.getBoolean("AutoLoadJavaPlugins", true))
         {
             Object[] list = JarLoader.loadPluginsDirectory(new File(gameConfig.getString("AutoLoadJavaPluginsDirectory", "etc/plugins")));
             for(Object obj : list) evManager.getGameEventHandler().onLoadJavaPlugin(obj);
+            if(list.length != 0) gameLogger.log("Loaded " + list.length + " plugins from the directory '" + gameConfig.getString("AutoLoadJavaPluginsDirectory", "etc/plugins") + "'!");
         }
         
+        isRunning = true;
         winManager.openWindow();
         
         evManager.getGameEventHandler().onGameOpen();
@@ -565,11 +564,11 @@ public class Game
         public static final float FAR_PLANE = 1000f;
         public static final float NEAR_PLANE = 0.1f;
         
-        private double avgFps = 0;
+        private int avgFps = 0;
         private Color color = Color.WHITE;
         private float fov = gameConfig.getFloat("FOV", 70f);
-        private double fps = 0;
-        private double fpsBuf = 0.0;
+        private int fps = 0;
+        private int fpsBuf = 0;
         private final GUI front = new GUI();
         private Matrix4f projMatrix = new Matrix4f();
         private boolean renderFps = false;
@@ -967,7 +966,7 @@ public class Game
             GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, ClientUtils.getLWJGLBoolean(gameConfig.getBoolean("WindowResizable", true)));
             GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, ClientUtils.getLWJGLBoolean(gameConfig.getBoolean("APIForwardCompatMode", false)));
             GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_DEBUG_CONTEXT, ClientUtils.getLWJGLBoolean(gameConfig.getBoolean("DebugMode", false)));
-            GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, gameConfig.getInt("DisplaySamples", 1));
+            GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, gameConfig.getInt("DisplaySamples", 3));
             GLFW.glfwWindowHint(GLFW.GLFW_REFRESH_RATE, gameConfig.getInt("DisplayRefreshRate", 0));
 
             windowState = WindowState.valueOf(gameConfig.getString("WindowState", "fullscreen_windowed").toUpperCase());
@@ -1022,7 +1021,6 @@ public class Game
             gameLogger.log("Opened window [" + width + "x" + height + "] in " + windowState.toString().toUpperCase() + " mode.");
 
             inpManager.openInput();
-
             
             GLFW.glfwMakeContextCurrent(window);
             if(gameConfig.getBoolean("DisplayVsync", false)) GLFW.glfwSwapInterval(1);
@@ -1097,9 +1095,12 @@ public class Game
             ByteBuffer buffer = BufferUtils.createByteBuffer(width * height * 4);
             GL11.glReadPixels(0, 0, width, height, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
             
-            File saveTo = new File("etc/screenshots/" + saveToName + "." + format.name().toLowerCase());
+            
             Thread t = new Thread(() -> 
             {
+                File screenshotDir = new File("etc/screenshots");
+                if(!screenshotDir.exists()) screenshotDir.mkdirs();
+                File saveTo = new File("etc/screenshots/" + saveToName + "." + format.name().toLowerCase());
                 BufferedImage image = ClientUtils.getByteBufferToImage(buffer, width, height);
                 try 
                 {

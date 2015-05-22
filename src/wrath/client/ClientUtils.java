@@ -63,6 +63,13 @@ public class ClientUtils
         return ret;
     }
     
+    /**
+     * Creates a Creates a {@link org.lwjgl.util.vector.Matrix4f} representing the depth of the screen.
+     * @param displayWidth The Width of the window.
+     * @param displayHeight The Height of the window.
+     * @param fov The angle of the camera's view.
+     * @return Returns a {@link org.lwjgl.util.vector.Matrix4f} representing the depth of the screen.
+     */
     public static Matrix4f createProjectionMatrix(int displayWidth, int displayHeight, float fov)
     {
         float aspectRatio = (float) displayWidth / (float) displayHeight;
@@ -82,6 +89,7 @@ public class ClientUtils
     
     /**
      * Creates a {@link org.lwjgl.util.vector.Matrix4f} representing the screen position of an object.
+     * This is all done automatically.
      * @param translation The {@link org.lwjgl.util.vector.Vector3f} representing the movement on the x-y-z plane.
      * @param rotateX The degrees (in radians) that X should be rotated.
      * @param rotateY The degrees (in radians) that Y should be rotated.

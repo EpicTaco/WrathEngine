@@ -23,6 +23,7 @@ import wrath.common.scripts.ScriptManager;
 
 /**
  * The class to launch the game off of a python script called 'initscript.py' in the 'assets' folder.
+ * Do not implement this class. This is done automatically.
  * @author Trent Spears
  */
 public class PythonEntryObject implements EntryObject
