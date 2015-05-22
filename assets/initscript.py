@@ -30,7 +30,6 @@ from wrath.client.graphics import Color
 
 gameObject = None
 entity = None
-entitytwo = None
 
 class CustomGame(Game, GameEventHandler):
 	def __init__(self):
@@ -48,30 +47,22 @@ class CustomGame(Game, GameEventHandler):
 	
 	def onTick(self):
 		entity.transformRotation(0.0, 1.0, 0.0)
-		entitytwo.transformRotation(0.0, 1.0, 0.0)
 		
 	def onResolutionChange(self, oldWidth, oldHeight, newWidth, newHeight):
 		pass
 		
 	def onWindowOpen(self):
-		texture = Texture(File("assets/textures/texture.png"))
 		model = Model.loadModel(File("assets/models/body.obj"))
-		model.attachTexture(texture)
+		model.attachTexture(Texture(File("assets/textures/texture.png")))
 		entity.bindModel(model)
-		entity.setScreenPosition(-3.0, -3.2, -10.0)
-		entity.setScale(2.0)
-		entitytwo.bindModel(model)
-		entitytwo.setScreenPosition(3.0, -3.2, -10.0)
-		entitytwo.setScale(2.0)
-		entitytwo.setRotation(0.0, 180.0, 0.0)
+		entity.setScreenPosition(0.0, -1.0, -10.0)
+		entity.setScale(1.0)
 
 	def render(self):
 		entity.render()
-		entitytwo.render()
 
 gameObject = CustomGame()
 entity = EntityRenderer(None)
-entitytwo = EntityRenderer(None)
 
-scriptsManager.loadScriptsFromDirectory(File("etc/scripts/autoexec"), True, True)
+#scriptsManager.loadScriptsFromDirectory(File("etc/scripts/autoexec"), True, True)
 gameObject.start()

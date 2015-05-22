@@ -36,6 +36,7 @@ import org.lwjgl.opengl.GL12;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 import wrath.client.enums.PopupMessageType;
+import wrath.client.enums.RenderMode;
 import wrath.client.graphics.Camera;
 import wrath.util.Logger;
 
@@ -72,6 +73,7 @@ public class ClientUtils
      */
     public static Matrix4f createProjectionMatrix(int displayWidth, int displayHeight, float fov)
     {
+        if(Game.getCurrentInstance().getRenderMode() == RenderMode.Mode2D) return (Matrix4f)(new Matrix4f().setIdentity());
         float aspectRatio = (float) displayWidth / (float) displayHeight;
         float yscale = (float) ((1f / Math.tan(Math.toRadians(fov / 2f))) * 2f);
         float xscale = yscale / aspectRatio;

@@ -29,11 +29,12 @@ import wrath.common.entities.Entity;
 public class EntityRenderer implements Renderable
 {
     private final Entity entity;
-    private Matrix4f mat;
-    private Model model;
-    private final Vector3f rotation;
+    private Light light = null;
+    private Matrix4f mat = new Matrix4f();
+    private Model model = null;
+    private final Vector3f rotation = new Vector3f(0,0,0);
     private float scale = 1f;
-    private final Vector3f screenPosition = new Vector3f(0f,0f,0f);
+    private final Vector3f screenPosition = new Vector3f(0,0,0);
     private boolean updateMat = true;
     
     private boolean tmpBool = true;
@@ -45,7 +46,15 @@ public class EntityRenderer implements Renderable
     public EntityRenderer(Entity entity)
     {
         this.entity = entity;
-        this.rotation = new Vector3f(0f,0f,0f);
+    }
+    
+    /**
+     * Links a {@link wrath.client.graphics.Light} to the described entity.
+     * @param light The {@link wrath.client.graphics.Light} to link with the entity.
+     */
+    public void bindLight(Light light)
+    {
+        this.light = light;
     }
     
     /**
@@ -87,7 +96,7 @@ public class EntityRenderer implements Renderable
     @Override
     public void render()
     {
-        updateTransformationMatrix();
+        update();
         model.render();
     }
     
@@ -158,9 +167,9 @@ public class EntityRenderer implements Renderable
     }
     
     /**
-     * Changes the shader's Matrix to fit the current settings.
+     * Changes the shader's settings to fit the current settings.
      */
-    public void updateTransformationMatrix()
+    public void update()
     {
         if(model.getShader() != null)
         {
@@ -176,15 +185,20 @@ public class EntityRenderer implements Renderable
                 updateMat = false;
             }
             model.getShader().setTransformationMatrix(mat);
+            
+            if(light != null)
+            {
+                model.getShader().setUniformVariable(model.getShader().getUniformVariableLocation("lightPosition"), light.getPosition());
+                model.getShader().setUniformVariable(model.getShader().getUniformVariableLocation("lightColor"), new Vector3f(light.getColor().getRed(), light.getColor().getGreen(), light.getColor().getBlue()));
+            }
         }
-        
     }
     
     /**
      * Renders an entity without creating an EntityRenderer object.
      * @param entity The {@link wrath.common.entities.Entity} that is attached to the {@link wrath.client.graphics.Model}.
      * @param model The {@link wrath.client.graphics.Model} to render.
-     * @param transformationMatrix A {!link org.lwjgl.util.vector.Matrix4f} containing positional data. Should be created with {@link wrath.client.ClientUtils#createTransformationMatrix(org.lwjgl.util.vector.Vector3f, float, float, float, float)}.
+     * @param transformationMatrix A {@link org.lwjgl.util.vector.Matrix4f} containing positional data. Should be created with {@link wrath.client.ClientUtils#createTransformationMatrix(org.lwjgl.util.vector.Vector3f, float, float, float, float)}.
      */
     public static void renderEntity(Entity entity, Model model, Matrix4f transformationMatrix)
     {

@@ -162,7 +162,29 @@ public abstract class Entity
         this.world = world;
     }
     
+    /**
+     * Increments the position of the entity by the specified amount.
+     * @param dx The amount to increase the position on the X-Axis.
+     * @param dy The amount to increase the position on the Y-Axis.
+     * @param dz The amount to increase the position on the Z-Axis.
+     */
+    public void transformLocation(float dx, float dy, float dz)
+    {
+        this.location.x += dx;
+        this.location.y += dy;
+        this.location.z += dz;
+    }
     
+    /**
+     * Increments the orientation of the entity by the specified amount.
+     * @param dx The amount to increase the pitch.
+     * @param dy The amount to increase the yaw.
+     */
+    public void transformOrientation(float dx, float dy)
+    {
+        this.orientation.x += dx;
+        this.orientation.y += dy;
+    }
     
     
     private class RootEntityEventHandler implements EntityEventHandler

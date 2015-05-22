@@ -42,6 +42,7 @@ import wrath.util.Logger;
  */
 public class Model implements Renderable, Closeable
 {
+    private static final int NORMALS_ATTRIB_INDEX = 2;
     private static final int TEXTURE_ATTRIB_INDEX = 1;
     private static final int VERTICIES_ATTRIB_INDEX = 0;
     
@@ -50,11 +51,12 @@ public class Model implements Renderable, Closeable
      * Models are always assumed to be made with triangles, and will be rendered as such.
      * @param verticies The list of verticies in the model. One point is represented by (x, y, z), and there must be at least 3 points.
      * @param indicies The list of points to connect for OpenGL. Look up indicies in OpenGL for reference.
+     * @param normals The list of 3 float vectors describing the normal vector of the model's surface.
      * @return Returns the {@link wrath.client.graphics.Model} object of your model.
      */
-    public static Model createModel(float[] verticies, int[] indicies)
+    public static Model createModel(float[] verticies, int[] indicies, float[] normals)
     {
-        return createModel(verticies, indicies, true);
+        return createModel(verticies, indicies, normals, true);
     }
     
     /**
@@ -62,10 +64,11 @@ public class Model implements Renderable, Closeable
      * Models are always assumed to be made with triangles, and will be rendered as such.
      * @param verticies The list of verticies in the model. One point is represented by (x, y, z), and there must be at least 3 points.
      * @param indicies The list of points to connect for OpenGL. Look up indicies in OpenGL for reference.
+     * @param normals The list of 3 float vectors describing the normal vector of the model's surface.
      * @param useDefaultShaders If true, shaders will be set up automatically.
      * @return Returns the {@link wrath.client.graphics.Model} object of your model.
      */
-    public static Model createModel(float[] verticies, int[] indicies, boolean useDefaultShaders)
+    public static Model createModel(float[] verticies, int[] indicies, float[] normals, boolean useDefaultShaders)
     {
         // Generating VAO
         int vaoid = GL30.glGenVertexArrays();
@@ -80,6 +83,15 @@ public class Model implements Renderable, Closeable
         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, vbuffer, GL15.GL_STATIC_DRAW);
         GL20.glVertexAttribPointer(VERTICIES_ATTRIB_INDEX, 3, GL11.GL_FLOAT, false, 0, 0);
         
+        // Generating Normals VBO
+        int nmvboid = GL15.glGenBuffers();
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, nmvboid);
+        FloatBuffer nbuffer = BufferUtils.createFloatBuffer(normals.length);
+        nbuffer.put(normals);
+        nbuffer.flip();
+        GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, nbuffer, GL15.GL_STATIC_DRAW);
+        GL20.glVertexAttribPointer(NORMALS_ATTRIB_INDEX, 3, GL11.GL_FLOAT, false, 0, 0);
+        
         // Generating Indicies VBO
         int invboid = GL15.glGenBuffers();
         GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, invboid);
@@ -89,7 +101,7 @@ public class Model implements Renderable, Closeable
         GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, ibuffer, GL15.GL_STATIC_DRAW);
         
         // Creating Model Object
-        Model model = new Model(null, vaoid, new Integer[]{vtvboid, invboid}, indicies.length);
+        Model model = new Model(null, vaoid, new Integer[]{vtvboid, invboid, nmvboid}, indicies.length);
         Game.getCurrentInstance().getLogger().log("Loaded model from verticies map!");
         if(useDefaultShaders) model.attachShader(ShaderProgram.DEFAULT_SHADER);
         
@@ -188,7 +200,6 @@ public class Model implements Renderable, Closeable
             return null;
         }
         
-        
         int i = 0;
         for(Vector3f ve : verticies)
         {
@@ -201,9 +212,9 @@ public class Model implements Renderable, Closeable
         for(int z = 0; z < indicies.size(); z++)
             iarray[z] = indicies.get(z);
         
-        Model m = createModel(varray, iarray, useDefaultShaders);
+        Model m = createModel(varray, iarray, narray, useDefaultShaders);
         m.textureCoords = tarray;
-        Game.getCurrentInstance().getLogger().log("Loaded Model from file '" + modelFile.getName() + "' with " + (verticies.size() / 3) + " verticies, " + (normals.size() / 3) + " normals, " + indicies.size() + " indicies and " + (texCoords.size() / 2) + " texture coordinates.");
+        Game.getCurrentInstance().getLogger().log("Loaded Model from file '" + modelFile.getName() + "' with " + verticies.size() + " verticies, " + normals.size() + " normals, " + indicies.size() + " indicies and " + texCoords.size() + " texture coordinates.");
         return m;
     }
  
@@ -231,6 +242,7 @@ public class Model implements Renderable, Closeable
     public void attachShader(ShaderProgram shader)
     {
         shader.bindAttribute(VERTICIES_ATTRIB_INDEX, "in_Position");
+        shader.bindAttribute(NORMALS_ATTRIB_INDEX, "in_Normals");
         if(texture != null) shader.bindAttribute(TEXTURE_ATTRIB_INDEX, "in_TextureCoord");
         this.shader = shader;
     }
@@ -334,6 +346,7 @@ public class Model implements Renderable, Closeable
         
         GL30.glBindVertexArray(vao);
         GL20.glEnableVertexAttribArray(VERTICIES_ATTRIB_INDEX);
+        GL20.glEnableVertexAttribArray(NORMALS_ATTRIB_INDEX);
         if(texture != null)
         {
             GL20.glEnableVertexAttribArray(TEXTURE_ATTRIB_INDEX);
@@ -353,6 +366,7 @@ public class Model implements Renderable, Closeable
         if(texture != null) GL20.glDisableVertexAttribArray(TEXTURE_ATTRIB_INDEX);
         Texture.unbindTextures();
         GL20.glDisableVertexAttribArray(VERTICIES_ATTRIB_INDEX);
+        GL20.glDisableVertexAttribArray(NORMALS_ATTRIB_INDEX);
         GL30.glBindVertexArray(0);
     }
 

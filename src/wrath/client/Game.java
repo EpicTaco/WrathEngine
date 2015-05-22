@@ -1061,14 +1061,12 @@ public class Game
             GL11.glLoadIdentity();
             GL11.glMatrixMode(GL11.GL_MODELVIEW);
             GL11.glLoadIdentity();
-            GL11.glEnable(GL11.GL_DEPTH_TEST);
             
             if(renManager.text == null) renManager.text = new TextRenderer(new File("assets/fonts/arial.png"), 0.75f);
             else renManager.text.refreshRenderer();
             
             if(MODE == RenderMode.Mode3D) renManager.projMatrix = ClientUtils.createProjectionMatrix(width, height, renManager.fov);
-            if(MODE == RenderMode.Mode2D) ShaderProgram.DEFAULT_SHADER = ShaderProgram.loadShaderProgram(new File("assets/shaders/2D/defaultshader.vert"), new File("assets/shaders/2D/defaultshader.frag"));
-            else ShaderProgram.DEFAULT_SHADER = ShaderProgram.loadShaderProgram(new File("assets/shaders/3D/defaultshader.vert"), new File("assets/shaders/3D/defaultshader.frag"));
+            ShaderProgram.DEFAULT_SHADER = ShaderProgram.loadShaderProgram(new File("assets/shaders/defaultshader.vert"), new File("assets/shaders/defaultshader.frag"));
             
             windowOpen = true;
             evManager.getGameEventHandler().onWindowOpen();
