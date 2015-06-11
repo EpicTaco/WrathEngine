@@ -53,18 +53,6 @@ public class ClientUtils
     private ClientUtils(){}
     
     /**
-     * Converts an array of primitive bytes to a {@link java.nio.ByteBuffer}.
-     * @param data The byte array to convert.
-     * @return Returns the {@link java.nio.ByteBuffer} form of the byte array.
-     */
-    public static ByteBuffer byteArrayToByteBuffer(byte[] data)
-    {
-        ByteBuffer ret = ByteBuffer.allocateDirect(data.length).order(ByteOrder.nativeOrder());
-        ret.put(data).flip();
-        return ret;
-    }
-    
-    /**
      * Creates a Creates a {@link org.lwjgl.util.vector.Matrix4f} representing the depth of the screen.
      * @param displayWidth The Width of the window.
      * @param displayHeight The Height of the window.
@@ -148,18 +136,6 @@ public class ClientUtils
     }
     
     /**
-     * Converts an array of primitive floats to a {@link java.nio.FloatBuffer}.
-     * @param data The float array to convert.
-     * @return Returns the {@link java.nio.FloatBuffer} form of the float array.
-     */
-    public static FloatBuffer floatArrayToFloatBuffer(float[] data)
-    {
-        FloatBuffer ret = ByteBuffer.allocateDirect(data.length << 2).order(ByteOrder.nativeOrder()).asFloatBuffer();
-        ret.put(data).flip();
-        return ret;
-    }
-    
-    /**
      * Converts a ByteBuffer (Used in OpenGL) to a BufferedImage.
      * @param buffer The ByteBuffer that contains the image data.
      * @param width The Width (in pixels) of the image.
@@ -224,7 +200,7 @@ public class ClientUtils
      * @param bool The primitive Java boolean value.
      * @return Returns the LWJGL version of the boolean.
      */
-    public static int getLWJGLBoolean(boolean bool)
+    public static int getOpenGLBoolean(boolean bool)
     {
         if(bool) return GL11.GL_TRUE;
         else return GL11.GL_FALSE;
@@ -266,18 +242,6 @@ public class ClientUtils
         GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, image.getWidth(), image.getHeight(), 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
         return id;
-    }
-    
-    /**
-     * Converts an array of primitive ints to a {@link java.nio.IntBuffer}.
-     * @param data The int array to convert.
-     * @return Returns the {@link java.nio.IntBuffer} form of the int array.
-     */
-    public static IntBuffer intArrayToIntBuffer(int[] data)
-    {
-        IntBuffer ret = ByteBuffer.allocateDirect(data.length << 2).order(ByteOrder.nativeOrder()).asIntBuffer();
-        ret.put(data).flip();
-        return ret;
     }
     
     /**
