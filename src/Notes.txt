@@ -18,7 +18,4 @@ Things to add:
             This is to be made BEFORE the Console.
 
 - Console
-        |-- Add a text game console in-game.
-
-Inefficient Methods:
-  - In Matrix4f, rotate() is slow. See if anything can be done about this.
+        |-- Add a text game console in-game. (Integrate with GUI)

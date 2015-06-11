@@ -19,6 +19,7 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from java.io import File
 from org.lwjgl.opengl import GL11
+from org.lwjgl.util.vector import Vector3f
 from wrath.client import Game
 from wrath.client.events import GameEventHandler
 from wrath.client.enums import RenderMode
@@ -27,6 +28,7 @@ from wrath.client.graphics import EntityRenderer
 from wrath.client.graphics import ShaderProgram
 from wrath.client.graphics import Texture
 from wrath.client.graphics import Color
+from wrath.client.graphics import Light
 
 gameObject = None
 entity = None
@@ -42,7 +44,7 @@ class CustomGame(Game, GameEventHandler):
 	def onGameClose(self):
 		pass
 	
-	def onLoadJavaPlugin(self, object):
+	def onLoadJavaPlugin(self, loadedObject):
 		pass
 	
 	def onTick(self):
@@ -52,11 +54,12 @@ class CustomGame(Game, GameEventHandler):
 		pass
 		
 	def onWindowOpen(self):
-		model = Model.loadModel(File("assets/models/body.obj"))
+		model = Model.loadModel(File("assets/models/flashbang.obj"))
 		model.attachTexture(Texture(File("assets/textures/texture.png")))
+		entity.bindLight(Light(Vector3f(0.0, 1.0, -8.0), Color(1.0,1.0,1.0)))
 		entity.bindModel(model)
 		entity.setScreenPosition(0.0, -1.0, -10.0)
-		entity.setScale(1.0)
+		entity.setScale(0.1)
 
 	def render(self):
 		entity.render()

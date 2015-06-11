@@ -25,7 +25,7 @@ import org.lwjgl.util.vector.Vector3f;
  */
 public class Light
 {
-    private Vector3f position;
+    private final Vector3f position;
     private Color color;
     
     /**
