@@ -162,6 +162,7 @@ public class Camera
      */
     public void updateViewMatrix(ShaderProgram shader)
     {
+        GL20.glUseProgram(shader.getProgramID());
         if(updateMat == true)
         {
             ClientUtils.createViewMatrix(Game.getCurrentInstance().getPlayerCamera()).store(matrixBuf);

@@ -48,6 +48,7 @@ import wrath.client.graphics.Renderable;
 import wrath.client.graphics.ShaderProgram;
 import wrath.client.graphics.TextRenderer;
 import wrath.common.Closeable;
+import wrath.common.Reloadable;
 import wrath.common.entities.Player;
 import wrath.common.javaloader.JarLoader;
 import wrath.common.scheduler.Scheduler;
@@ -92,6 +93,7 @@ public class Game
     private final RenderManager renManager;
     private final WindowManager winManager;
     
+    private final RefreshManager refresher;
     private final TrashCollector trashCollector;
     
     private final Player player;
@@ -112,6 +114,7 @@ public class Game
         VERSION = version;
         TPS = ticksPerSecond;
         duringConstructor();
+        this.refresher = new RefreshManager();
         this.trashCollector = new TrashCollector();
         this.player = new Player();
         this.playerCamera = new Camera(player);
@@ -130,6 +133,15 @@ public class Game
         System.setProperty("org.lwjgl.librarypath", "assets/native");
     }
 
+    /**
+    * Adds a {@link wrath.common.Reloadable} object to be run after the window opens.
+    * Note that the window opening is NOT the start of the program.
+    * @param obj The {@link wrath.common.Reloadable} object to run after the window opens.
+    */
+    public void addToRefreshList(Reloadable obj)
+    {
+        refresher.list.add(obj);
+    }
     
     /**
     * Adds a {@link wrath.common.Closeable} object to be run after the window closes.
@@ -379,6 +391,15 @@ public class Game
     }
     
     /**
+     * Removes a {@link wrath.common.Reloadable} object from the refresh list.
+     * @param obj The {@link wrath.common.Reloadable} object to remove from refresh list.
+     */
+    public void removeFromRefreshList(Reloadable obj)
+    {
+        refresher.list.remove(obj);
+    }
+    
+    /**
      * Removes a {@link wrath.common.Closeable} object from the cleanup list.
      * @param obj The {@link wrath.common.Closeable} object to remove from cleanup list.
      */
@@ -559,6 +580,19 @@ public class Game
         }
     }
     
+    private class RefreshManager
+    {
+        private final ArrayList<Reloadable> list = new ArrayList<>();
+        
+        public void run()
+        {
+            list.stream().forEach((r) -> 
+            {
+                r.reload();
+            });
+        }
+    }
+    
     public class RenderManager
     {
         public static final float FAR_PLANE = 1000f;
@@ -570,11 +604,14 @@ public class Game
         private int fps = 0;
         private int fpsBuf = 0;
         private final GUI front = new GUI();
+        private int maxFps = getConfig().getInt("MaxFps", 300);
         private Matrix4f projMatrix = new Matrix4f();
         private boolean renderFps = false;
         private TextRenderer text = null;
         private int totalFramesRendered = 0;
         
+        private boolean shouldRender = true;
+        private long next = 0;
         
         private final ArrayList<Renderable> renderQueue = new ArrayList<>();
         
@@ -621,6 +658,15 @@ public class Game
         public GUI getGUI()
         {
             return front;
+        }
+        
+        /**
+         * Gets the maximum amount of times the game will render to the screen in one second.
+         * @return Returns the maximum amount of times the game will render to the screen in one second.
+         */
+        public int getMaxFPS()
+        {
+            return maxFps;
         }
         
         /**
@@ -673,28 +719,43 @@ public class Game
          */
         private void render()
         {
+            if(maxFps != 0)
+            {
+                if(next == 0 || System.nanoTime() >= next)
+                {
+                    if(next == 0) next = System.nanoTime();
+                    next = next + (long)Math.round(((float)1.0/maxFps * 1000000000.0));
+                    shouldRender = true;
+                }
+                else shouldRender = false;
+            }
+            
             if(winManager.windowOpen)
             {
-                GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-                color.bindColor();
-                renderQueue.stream().map((ren) -> 
+                if(shouldRender)
                 {
+                    GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
                     color.bindColor();
-                    return ren;
-                }).forEach((ren) -> 
-                {
-                    ren.render();
-                });
-                renderQueue.clear();
-                GAME_INSTANCE.render();
-                front.renderGUI();
-                if(renderFps) text.renderString(fps + "", -1f, 1f, 0.8f, new Color(0.57f, 2.37f, 0.4f));
-                GL11.glFlush();
-                GLFW.glfwSwapBuffers(winManager.window);
+                    renderQueue.stream().map((ren) -> 
+                    {
+                        color.bindColor();
+                        return ren;
+                    }).forEach((ren) -> 
+                    {
+                        ren.render();
+                    });
+                    renderQueue.clear();
+                    GAME_INSTANCE.render();
+                    front.renderGUI();
+                    if(renderFps) text.renderString(fps + "", -1f, 1f, 0.5f, new Color(0.57f, 2.37f, 0.4f));
+                    GL11.glFlush();
+                    GLFW.glfwSwapBuffers(winManager.window);
             
+                    fpsBuf++;
+                    totalFramesRendered++;
+                }
+                
                 GLFW.glfwPollEvents();
-                fpsBuf++;
-                totalFramesRendered++;
             }
         }
         
@@ -708,6 +769,17 @@ public class Game
             gameConfig.setProperty("FOV", fov);
             winManager.closeWindow();
             winManager.openWindow();
+        }
+        
+        /**
+         * Changes the max FPS the game is allowed to render at.
+         * When 0, there is no limit.
+         * @param max The maximum number of frames that should be rendered in a second.
+         */
+        public void setMaxFPS(int max)
+        {
+            getConfig().setProperty("MaxFps", max);
+            maxFps = max;
         }
         
         /**
@@ -854,6 +926,8 @@ public class Game
      */
     public class WindowManager
     {
+        private boolean firstOpen = true;
+        
         private long window;
         private boolean windowOpen = false;
         private WindowState windowState = null;
@@ -962,11 +1036,13 @@ public class Game
             if(windowOpen) return;
             
             GLFW.glfwDefaultWindowHints();
+            GLFW.glfwWindowHint(GLFW.GLFW_DOUBLE_BUFFER, ClientUtils.getOpenGLBoolean(gameConfig.getBoolean("DoubleBuffered", true)));
+            GLFW.glfwWindowHint(GLFW.GLFW_STEREO, ClientUtils.getOpenGLBoolean(gameConfig.getBoolean("RenderStereostopic", false)));
             GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GL11.GL_FALSE);
             GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, ClientUtils.getOpenGLBoolean(gameConfig.getBoolean("WindowResizable", true)));
             GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, ClientUtils.getOpenGLBoolean(gameConfig.getBoolean("APIForwardCompatMode", false)));
             GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_DEBUG_CONTEXT, ClientUtils.getOpenGLBoolean(gameConfig.getBoolean("DebugMode", false)));
-            GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, gameConfig.getInt("DisplaySamples", 3));
+            GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, gameConfig.getInt("DisplaySamples", 4));
             GLFW.glfwWindowHint(GLFW.GLFW_REFRESH_RATE, gameConfig.getInt("DisplayRefreshRate", 0));
 
             windowState = WindowState.valueOf(gameConfig.getString("WindowState", "fullscreen_windowed").toUpperCase());
@@ -1063,10 +1139,12 @@ public class Game
             GL11.glLoadIdentity();
             
             if(renManager.text == null) renManager.text = new TextRenderer(new File("assets/fonts/arial.png"), 0.75f);
-            else renManager.text.refreshRenderer();
             
             if(MODE == RenderMode.Mode3D) renManager.projMatrix = ClientUtils.createProjectionMatrix(width, height, renManager.fov);
             ShaderProgram.DEFAULT_SHADER = ShaderProgram.loadShaderProgram(new File("assets/shaders/defaultshader.vert"), new File("assets/shaders/defaultshader.frag"));
+            
+            if(firstOpen) firstOpen = false;
+            else refresher.run();
             
             windowOpen = true;
             evManager.getGameEventHandler().onWindowOpen();

@@ -33,14 +33,16 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.util.vector.Vector2f;
 import org.lwjgl.util.vector.Vector3f;
 import wrath.client.Game;
+import wrath.client.enums.RenderMode;
 import wrath.common.Closeable;
+import wrath.common.Reloadable;
 import wrath.util.Logger;
 
 /**
  * Class to represent a Model (both 2D and 3D).
  * @author Trent Spears
  */
-public class Model implements Renderable, Closeable
+public class Model implements Renderable, Closeable, Reloadable
 {
     private static final int NORMALS_ATTRIB_INDEX = 2;
     private static final int TEXTURE_ATTRIB_INDEX = 1;
@@ -101,14 +103,15 @@ public class Model implements Renderable, Closeable
         GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, ibuffer, GL15.GL_STATIC_DRAW);
         
         // Creating Model Object
-        Model model = new Model(null, vaoid, new Integer[]{vtvboid, invboid, nmvboid}, indicies.length);
-        Game.getCurrentInstance().getLogger().log("Loaded model from verticies map!");
+        Model model = new Model(vaoid, new Integer[]{vtvboid, invboid, nmvboid}, verticies, indicies, normals, useDefaultShaders);
+        Game.getCurrentInstance().getLogger().log("Loaded model with " + verticies.length + " verticies, " + indicies.length + " indicies, and " + normals.length + " normals.");
         if(useDefaultShaders) model.attachShader(ShaderProgram.DEFAULT_SHADER);
         
         // Unbinding OpenGL Objects
         GL30.glBindVertexArray(0);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
         Game.getCurrentInstance().addToTrashCleanup(model);
+        Game.getCurrentInstance().addToRefreshList(model);
         return model;
     }
     
@@ -142,57 +145,58 @@ public class Model implements Renderable, Closeable
         
         try
         {
-            BufferedReader in = new BufferedReader(new FileReader(modelFile));
-            String inp;
-            boolean tmp = true;
-            while((inp = in.readLine()) != null)
+            try(BufferedReader in = new BufferedReader(new FileReader(modelFile)))
             {
-                String[] buf = inp.split(" ");
-                if(inp.startsWith("v ")) verticies.add(new Vector3f(Float.parseFloat(buf[1]), Float.parseFloat(buf[2]), Float.parseFloat(buf[3])));
-                else if(inp.startsWith("vt ")) texCoords.add(new Vector2f(Float.parseFloat(buf[1]), Float.parseFloat(buf[2])));
-                else if(inp.startsWith("vn ")) normals.add(new Vector3f(Float.parseFloat(buf[1]), Float.parseFloat(buf[2]), Float.parseFloat(buf[3])));
-                else if(inp.startsWith("f "))
+                String inp;
+                boolean tmp = true;
+                while((inp = in.readLine()) != null)
                 {
-                    if(tmp)
+                    String[] buf = inp.split(" ");
+                    if(inp.startsWith("v ")) verticies.add(new Vector3f(Float.parseFloat(buf[1]), Float.parseFloat(buf[2]), Float.parseFloat(buf[3])));
+                    else if(inp.startsWith("vt ")) texCoords.add(new Vector2f(Float.parseFloat(buf[1]), Float.parseFloat(buf[2])));
+                    else if(inp.startsWith("vn ")) normals.add(new Vector3f(Float.parseFloat(buf[1]), Float.parseFloat(buf[2]), Float.parseFloat(buf[3])));
+                    else if(inp.startsWith("f "))
                     {
-                        varray = new float[verticies.size() * 3];
-                        narray = new float[verticies.size() * 3];
-                        tarray = new float[verticies.size() * 2];
-                        tmp = false;
-                    }
-                    
-                    for(int x = 1; x <= 3; x++)
-                    {
-                        String[] curDat;
-                        if(buf[x].contains("//"))
+                        if(tmp)
                         {
-                            curDat = buf[x].split("//");
-                            
-                            int ptr = Integer.parseInt(curDat[0]) - 1;
-                            indicies.add(ptr);
-                            Vector3f norm = normals.get(Integer.parseInt(curDat[1]) - 1);
-                            narray[ptr*3] = norm.x;
-                            narray[ptr*3 + 1] = norm.y;
-                            narray[ptr*3 + 2] = norm.z;
+                            varray = new float[verticies.size() * 3];
+                            narray = new float[verticies.size() * 3];
+                            tarray = new float[verticies.size() * 2];
+                            tmp = false;
                         }
-                        else
-                        {   
-                            curDat = buf[x].split("/");
                         
-                            int ptr = Integer.parseInt(curDat[0]) - 1;
-                            indicies.add(ptr);
-                            Vector2f tex = texCoords.get(Integer.parseInt(curDat[1]) - 1);
-                            tarray[ptr*2] = tex.x;
-                            tarray[ptr*2 + 1] = 1 - tex.y;
-                            Vector3f norm = normals.get(Integer.parseInt(curDat[2]) - 1);
-                            narray[ptr*3] = norm.x;
-                            narray[ptr*3 + 1] = norm.y;
-                            narray[ptr*3 + 2] = norm.z;
+                        for(int x = 1; x <= 3; x++)
+                        {
+                            String[] curDat;
+                            if(buf[x].contains("//"))
+                            {
+                                curDat = buf[x].split("//");
+                                
+                                int ptr = Integer.parseInt(curDat[0]) - 1;
+                                indicies.add(ptr);
+                                Vector3f norm = normals.get(Integer.parseInt(curDat[1]) - 1);
+                                narray[ptr*3] = norm.x;
+                                narray[ptr*3 + 1] = norm.y;
+                                narray[ptr*3 + 2] = norm.z;
+                            }
+                            else
+                            {
+                                curDat = buf[x].split("/");
+                                
+                                int ptr = Integer.parseInt(curDat[0]) - 1;
+                                indicies.add(ptr);
+                                Vector2f tex = texCoords.get(Integer.parseInt(curDat[1]) - 1);
+                                tarray[ptr*2] = tex.x;
+                                tarray[ptr*2 + 1] = 1 - tex.y;
+                                Vector3f norm = normals.get(Integer.parseInt(curDat[2]) - 1);
+                                narray[ptr*3] = norm.x;
+                                narray[ptr*3 + 1] = norm.y;
+                                narray[ptr*3 + 2] = norm.z;
+                            }
                         }
                     }
                 }
             }
-            in.close();
         }
         catch(IOException e)
         {
@@ -214,24 +218,28 @@ public class Model implements Renderable, Closeable
         
         Model m = createModel(varray, iarray, narray, useDefaultShaders);
         m.textureCoords = tarray;
-        Game.getCurrentInstance().getLogger().log("Loaded Model from file '" + modelFile.getName() + "' with " + verticies.size() + " verticies, " + normals.size() + " normals, " + indicies.size() + " indicies and " + texCoords.size() + " texture coordinates.");
+        Game.getCurrentInstance().getLogger().log("Model from file '" + modelFile.getName() + "' loaded!");
         return m;
     }
  
-    private final File modelFile;
+    private final boolean defaultShaders;
+    private final int[] indicies;
+    private final float[] normals;
     private ShaderProgram shader = null;
     private Texture texture = null;
     private float[] textureCoords = null;
-    private final int vao;
+    private int vao;
     private final ArrayList<Integer> vbos = new ArrayList<>();
-    private final int vertexCount;
+    private final float[] verticies;
     
-    private Model(File modelFile, int vao, Integer[] initVbos, int vertexCount)
+    private Model(int vao, Integer[] initVbos, float[] verticies, int[] indicies, float[] normals, boolean defShaders)
     {
-        this.modelFile = modelFile;
         this.vao = vao;
         vbos.addAll(Arrays.asList(initVbos));
-        this.vertexCount = vertexCount;
+        this.verticies = verticies;
+        this.normals = normals;
+        this.indicies = indicies;
+        this.defaultShaders = defShaders;
     }
     
     /**
@@ -287,9 +295,11 @@ public class Model implements Renderable, Closeable
     public void close()
     {
         GL30.glDeleteVertexArrays(getVaoID());
-        for(Integer i : getVboList())
-                GL15.glDeleteBuffers(i);
-        Game.getCurrentInstance().removeFromTrashCleanup(this);
+        vbos.stream().forEach((i) -> 
+        {
+            GL15.glDeleteBuffers(i);
+        });
+        vbos.clear();
     }
     
     /**
@@ -336,9 +346,65 @@ public class Model implements Renderable, Closeable
      */
     public int getVertexCount()
     {
-        return vertexCount;
+        return indicies.length;
     }
    
+    @Override
+    public void reload()
+    {
+        // Generating VAO
+        vao = GL30.glGenVertexArrays();
+        GL30.glBindVertexArray(vao);
+        
+        // Generating Verticies VBO
+        int vtvboid = GL15.glGenBuffers();
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vtvboid);
+        FloatBuffer vbuffer = BufferUtils.createFloatBuffer(verticies.length);
+        vbuffer.put(verticies);
+        vbuffer.flip();
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, vbuffer, GL15.GL_STATIC_DRAW);
+        GL20.glVertexAttribPointer(VERTICIES_ATTRIB_INDEX, 3, GL11.GL_FLOAT, false, 0, 0);
+        
+        // Generating Normals VBO
+        int nmvboid = GL15.glGenBuffers();
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, nmvboid);
+        FloatBuffer nbuffer = BufferUtils.createFloatBuffer(normals.length);
+        nbuffer.put(normals);
+        nbuffer.flip();
+        GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, nbuffer, GL15.GL_STATIC_DRAW);
+        GL20.glVertexAttribPointer(NORMALS_ATTRIB_INDEX, 3, GL11.GL_FLOAT, false, 0, 0);
+        
+        // Generating Indicies VBO
+        int invboid = GL15.glGenBuffers();
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, invboid);
+        IntBuffer ibuffer = BufferUtils.createIntBuffer(indicies.length);
+        ibuffer.put(indicies);
+        ibuffer.flip();
+        GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, ibuffer, GL15.GL_STATIC_DRAW);
+        
+        // Generating Texture VBO
+        GL30.glBindVertexArray(vao);
+        int texvboid = GL15.glGenBuffers();
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, texvboid);
+        FloatBuffer tbuffer = BufferUtils.createFloatBuffer(textureCoords.length);
+        tbuffer.put(textureCoords);
+        tbuffer.flip();
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, tbuffer, GL15.GL_STATIC_DRAW);
+        GL20.glVertexAttribPointer(TEXTURE_ATTRIB_INDEX, 2, GL11.GL_FLOAT, false, 0, 0);
+        
+        // Creating Model Object
+        vbos.add(vtvboid);
+        vbos.add(invboid);
+        vbos.add(nmvboid);
+        vbos.add(texvboid);
+        Game.getCurrentInstance().getLogger().log("Reloaded model with " + verticies.length + " verticies, " + indicies.length + " indicies, and " + normals.length + " normals.");
+        if(defaultShaders) this.attachShader(ShaderProgram.DEFAULT_SHADER);
+        
+        // Unbinding OpenGL Objects
+        GL30.glBindVertexArray(0);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+    }
+    
     @Override
     public void render()
     {
@@ -357,10 +423,14 @@ public class Model implements Renderable, Closeable
             shader.updateViewMatrix();
             GL20.glUseProgram(shader.getProgramID());
         }
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
+        if(Game.getCurrentInstance().getRenderMode() == RenderMode.Mode3D)
+        {
+            GL11.glEnable(GL11.GL_DEPTH_TEST);
+            GL11.glDepthFunc(GL11.GL_LESS);
+        }
         GL11.glEnable(GL11.GL_CULL_FACE);
         
-        GL11.glDrawElements(GL11.GL_TRIANGLES, vertexCount, GL11.GL_UNSIGNED_INT, 0);
+        GL11.glDrawElements(GL11.GL_TRIANGLES, indicies.length, GL11.GL_UNSIGNED_INT, 0);
         
         GL20.glUseProgram(0);
         if(texture != null) GL20.glDisableVertexAttribArray(TEXTURE_ATTRIB_INDEX);
@@ -369,5 +439,4 @@ public class Model implements Renderable, Closeable
         GL20.glDisableVertexAttribArray(NORMALS_ATTRIB_INDEX);
         GL30.glBindVertexArray(0);
     }
-
 }

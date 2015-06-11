@@ -17,19 +17,21 @@
  */
 package wrath.client.graphics;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.HashMap;
 import org.lwjgl.opengl.GL11;
-import wrath.client.ClientUtils;
 import wrath.client.Game;
-import wrath.common.Closeable;
+import wrath.common.Reloadable;
 import wrath.util.Logger;
 
 /**
  * Class to load fonts and manage text rendering.
  * @author Trent Spears
  */
-public class TextRenderer implements Closeable
+public class TextRenderer implements Reloadable
 {
     private static final HashMap<Character, Float> DEF_SPACE_MAP = new HashMap<>();
     
@@ -38,45 +40,47 @@ public class TextRenderer implements Closeable
     private Color color = Color.WHITE;
     private final File file;
     private float fontSize;
-    private int fontTex;
+    private final Texture fontTex;
     
     /**
      * Creates a renderer to render the specified PNG font {@link java.io.File}.
-     * @param ttfFile The {@link java.io.File} containing the font to render.
+     * @param fontFile The {@link java.io.File} containing the font to render.
      * @param fontSize The size of the font. This is NOT standardized!
      */
-    public TextRenderer(File ttfFile, float fontSize)
+    public TextRenderer(File fontFile, float fontSize)
     {
         if(DEF_SPACE_MAP.isEmpty()) setDefaultMetrics();
-        this.file = ttfFile;
+        this.file = fontFile;
         color = new Color(1, 1, 1, 1);
         
-        File metricsFile = new File(ttfFile.getParentFile().getPath() + "/" + ttfFile.getName().split(".png")[0] + ".metrics");
+        File metricsFile = new File(fontFile.getParentFile().getPath() + "/" + fontFile.getName().split(".png")[0] + ".metrics");
         if(!metricsFile.exists()) spaceMap.putAll(DEF_SPACE_MAP);
         else
         {
-            //Fill ratio map.
+            try
+            {
+                BufferedReader in = new BufferedReader(new FileReader(metricsFile));
+                String inp;
+                while((inp = in.readLine()) != null)
+                {
+                    String[] buf = inp.split(":", 2);
+                    if(buf.length < 2) continue;
+                    try
+                    {
+                        spaceMap.put(buf[0].charAt(0), Float.parseFloat(buf[1]));
+                    }
+                    catch(NumberFormatException e){continue;}
+                }
+                in.close();
+            }
+            catch(IOException e)
+            {
+                Logger.getErrorLogger().log("Could not read Metrics File '" + metricsFile.getName() + "'! I/O Error!");
+            }
         }
         
         this.fontSize = fontSize;
-        fontTex = ClientUtils.getTexture(ClientUtils.loadImageFromFile(ttfFile));
-        if(fontTex != 0)
-            Game.getCurrentInstance().getLogger().log("Loaded font from '" + ttfFile.getName() + "'!");
-        else
-            Logger.getErrorLogger().log("Could not load font from '" + ttfFile.getName() + "'! Unknown error!");
-        
-        afterConstructor();
-    }
-    
-    private void afterConstructor()
-    {
-        Game.getCurrentInstance().addToTrashCleanup(this);
-    }
-    
-    @Override
-    public void close()
-    {
-        GL11.glDeleteTextures(fontTex);
+        fontTex = new Texture(fontFile);
     }
     
     /**
@@ -96,23 +100,36 @@ public class TextRenderer implements Closeable
     {
         return fontSize;
     }
-    
-    /**
-     * If the window is to close and re-open, this will be called automatically to re-generate textures.
-     */
-    public void refreshRenderer()
+
+    @Override
+    public void reload()
     {
         spaceMap.clear();
-        fontTex = ClientUtils.getTexture(ClientUtils.loadImageFromFile(file));
         File metricsFile = new File(file.getParentFile().getPath() + "/" + file.getName().split(".png")[0] + ".metrics");
         if(!metricsFile.exists()) spaceMap.putAll(DEF_SPACE_MAP);
         else
         {
-            //Fill spacing map.
+            try
+            {
+                BufferedReader in = new BufferedReader(new FileReader(metricsFile));
+                String inp;
+                while((inp = in.readLine()) != null)
+                {
+                    String[] buf = inp.split(":", 2);
+                    if(buf.length < 2) continue;
+                    try
+                    {
+                        spaceMap.put(buf[0].charAt(0), Float.parseFloat(buf[1]));
+                    }
+                    catch(NumberFormatException e){}
+                }
+                in.close();
+            }
+            catch(IOException e)
+            {
+                Logger.getErrorLogger().log("Could not read Metrics File '" + metricsFile.getName() + "'! I/O Error!");
+            }
         }
-        
-        if(fontTex != 0 && fontTex != -1) Game.getCurrentInstance().getLogger().log("Loaded font from '" + file.getName() + "'!");
-        else Logger.getErrorLogger().log("Could not load font from '" + file.getName() + "'! Unknown error!");
     }
     
     /**
@@ -144,7 +161,7 @@ public class TextRenderer implements Closeable
         
         GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glDisable(GL11.GL_DEPTH_TEST);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, fontTex);
+        fontTex.bindTexture();
         if(Game.getCurrentInstance().getConfig().getBoolean("AntiAliasText", true))
         {
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);

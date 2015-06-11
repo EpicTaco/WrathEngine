@@ -22,15 +22,16 @@ import org.lwjgl.opengl.GL11;
 import wrath.client.ClientUtils;
 import wrath.client.Game;
 import wrath.common.Closeable;
+import wrath.common.Reloadable;
 
 /**
  * Class to describe and load Textures (both 2D and 3D).
  * @author Trent Spears
  */
-public class Texture implements Closeable
+public class Texture implements Closeable, Reloadable
 {  
     private final File file;
-    private final int texID;
+    private int texID;
     
     /**
      * Constructor.
@@ -47,6 +48,7 @@ public class Texture implements Closeable
     private void afterConstructor()
     {
         Game.getCurrentInstance().addToTrashCleanup(this);
+        Game.getCurrentInstance().addToRefreshList(this);
     }
     
     /**
@@ -63,7 +65,6 @@ public class Texture implements Closeable
     public void close()
     {
         GL11.glDeleteTextures(texID);
-        Game.getCurrentInstance().removeFromTrashCleanup(this);
     }
     
     /**
@@ -82,6 +83,13 @@ public class Texture implements Closeable
     public int getTextureID()
     {
         return texID;
+    }
+    
+    @Override
+    public void reload()
+    {
+        this.texID = ClientUtils.getTexture(ClientUtils.loadImageFromFile(file));
+        Game.getCurrentInstance().getLogger().log("Created texture ID '" + texID + "' from file '" + file.getName() + "'!");
     }
     
     /**

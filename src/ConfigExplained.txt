@@ -10,6 +10,7 @@
 #Set to 'true' to enable Vsync with the monitor, otherwise false.
 #Be careful with this, as if the Ticks-per-second (which cannot be set in the config) is set to over your monitor's
 #refresh rate, this can cause issues in timing and animation with the game. Only use if necessary.
+#As an alternative, please use MaxFps instead as that runs independently of the game's timing.
 #Default is false
 DisplayVsync: false
 
@@ -29,8 +30,8 @@ Height: 600
 DisplayRefreshRate: 0
 
 #Determines the number of samples to be used in the window for multi-sampling. When set to 0, sampling is disabled. 
-#Default is 3
-DisplaySamples: 3
+#Default is 4
+DisplaySamples: 4
 
 #Determines whether or not the window should be re-sizable by the user. Only applies in the Windowed WindowState.
 #Default is true
@@ -50,6 +51,20 @@ FOV: 70
 #Disabling this will give a noticeable FPS boost if text is being rendered.
 #Default is true
 AntiAliasText: true
+
+#If true, the game will render with two buffers, a front and back buffer.
+#It is HIGHLY recommended that this remains on, and will offer very little benefit when disabled.
+#Default is true
+DoubleBuffered: true
+
+#If true, the game will render stereostopically.
+#Only turn on in special cases.
+#Default is false
+RenderStereostopic: false
+
+#When not zero, this will determine the maximum amount of times the game should render to the screen in one second.
+#Default is 0
+MaxFps: 0
 
 ### Other Options ###
 
