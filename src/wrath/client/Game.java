@@ -514,7 +514,7 @@ public class Game
          * Constructor.
          * Protected so multiple instances aren't made pointlessly.
          */
-        protected EventManager(){}
+        private EventManager(){}
         
         private final ArrayList<GameEventHandler> gameHandlers = new ArrayList<>();
         private final ArrayList<InputEventHandler> inpHandlers = new ArrayList<>();
@@ -569,7 +569,7 @@ public class Game
          * Constructor.
          * Protected so multiple instances aren't made pointlessly.
          */
-        protected GUI(){}
+        private GUI(){}
         
         /**
          * Method to render the GUI defined by the class.
@@ -604,7 +604,7 @@ public class Game
         private int fps = 0;
         private int fpsBuf = 0;
         private final GUI front = new GUI();
-        private int maxFps = getConfig().getInt("MaxFps", 300);
+        private int maxFps = getConfig().getInt("MaxFps", 0);
         private Matrix4f projMatrix = new Matrix4f();
         private boolean renderFps = false;
         private TextRenderer text = null;
@@ -614,6 +614,8 @@ public class Game
         private long next = 0;
         
         private final ArrayList<Renderable> renderQueue = new ArrayList<>();
+        
+        private RenderManager(){}
         
         /**
          * Adds an object implementing the {@link wrath.client.graphics.Renderable} interface to be rendered next frame.
@@ -812,7 +814,6 @@ public class Game
     
     private class RootGameEventHandler implements GameEventHandler
     {
-
         @Override
         public void onGameClose()
         {
@@ -871,7 +872,6 @@ public class Game
     
     private class RootInputEventHandler implements InputEventHandler
     {
-
         @Override
         public void onCharInput(char c)
         {
@@ -939,7 +939,7 @@ public class Game
          * Constructor.
          * Protected so multiple instances aren't made pointlessly.
          */
-        protected WindowManager(){}
+        private WindowManager(){}
         
         /**
         * Centers the window in the middle of the designated primary monitor.
@@ -1023,7 +1023,6 @@ public class Game
         public void minimizeWindow()
         {
             if(!windowOpen) return;
-            
             GLFW.glfwIconifyWindow(window);
         }
         
@@ -1118,8 +1117,8 @@ public class Game
                     winManager.width = width;
                     winManager.height = height;
 
-                    gameConfig.setProperty("Width", width + "");
-                    gameConfig.setProperty("Height", height + "");
+                    gameConfig.setProperty("Width", width);
+                    gameConfig.setProperty("Height", height);
                     GL11.glViewport(0, 0, width, height);
                     evManager.getGameEventHandler().onResolutionChange(ow, oh, width, height);
                 }
@@ -1204,8 +1203,8 @@ public class Game
             GLFW.glfwSetWindowSize(window, width, height);
             GL11.glViewport(0, 0, width, height);
         
-            gameConfig.setProperty("Width", width + "");
-            gameConfig.setProperty("Height", height + "");
+            gameConfig.setProperty("Width", width);
+            gameConfig.setProperty("Height", height);
         }
     
         /**
