@@ -44,7 +44,6 @@ import wrath.client.enums.ImageFormat;
 import wrath.client.events.InputEventHandler;
 import wrath.client.graphics.Camera;
 import wrath.client.graphics.Color;
-import wrath.client.graphics.Renderable;
 import wrath.client.graphics.ShaderProgram;
 import wrath.client.graphics.TextRenderer;
 import wrath.common.Closeable;
@@ -613,18 +612,7 @@ public class Game
         private boolean shouldRender = true;
         private long next = 0;
         
-        private final ArrayList<Renderable> renderQueue = new ArrayList<>();
-        
         private RenderManager(){}
-        
-        /**
-         * Adds an object implementing the {@link wrath.client.graphics.Renderable} interface to be rendered next frame.
-         * @param obj The {@link wrath.client.graphics.Renderable} object to render.
-         */
-        public void addRenderableObjectToList(Renderable obj)
-        {
-            renderQueue.add(obj);
-        }
         
         /**
          * Gets the average FPS of the game while it has been running.
@@ -738,16 +726,8 @@ public class Game
                 {
                     GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
                     color.bindColor();
-                    renderQueue.stream().map((ren) -> 
-                    {
-                        color.bindColor();
-                        return ren;
-                    }).forEach((ren) -> 
-                    {
-                        ren.render();
-                    });
-                    renderQueue.clear();
                     GAME_INSTANCE.render();
+                    color.bindColor();
                     front.renderGUI();
                     if(renderFps) text.renderString(fps + "", -1f, 1f, 0.5f, new Color(0.57f, 2.37f, 0.4f));
                     GL11.glFlush();

@@ -80,7 +80,7 @@ public class TextRenderer implements Reloadable
         }
         
         this.fontSize = fontSize;
-        fontTex = new Texture(fontFile);
+        fontTex = new Texture(fontFile, Game.getCurrentInstance().getConfig().getBoolean("AntiAliasText", true));
     }
     
     /**
@@ -162,14 +162,8 @@ public class TextRenderer implements Reloadable
         GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glDisable(GL11.GL_DEPTH_TEST);
         fontTex.bindTexture();
-        if(Game.getCurrentInstance().getConfig().getBoolean("AntiAliasText", true))
-        {
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-        }
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ONE);
-        color.bindColor();
         float curPos = x;
         float charWidth;
         GL11.glBegin(GL11.GL_QUADS);
@@ -179,6 +173,7 @@ public class TextRenderer implements Reloadable
             final float cellSize = 1.0f / gridSize;
             float cellX = ((int) ascii % gridSize) * cellSize;
             float cellY = ((int) ascii / gridSize) * cellSize;
+            color.bindColor();
             //(0, 1) bottom left
             GL11.glTexCoord2f(cellX, cellY + cellSize);
             GL11.glVertex3f(curPos, y - characterHeight, 0);
@@ -198,7 +193,7 @@ public class TextRenderer implements Reloadable
             if(spaceMap.containsKey(string.charAt(i))) charWidth = spaceMap.get(string.charAt(i));
             else charWidth = 1.0f;
             curPos = curPos + (charWidth * (fontSize / 48f));
-            if((i + 1) < string.length() && Character.isLetterOrDigit(string.charAt(i + 1)))
+            if((i + 1) < string.length())
             {
                 if(spaceMap.containsKey(string.charAt(i + 1))) curPos = curPos + ((spaceMap.get(string.charAt(i + 1)) * (fontSize / 48f)) / 1.6f);
                 else curPos = curPos + (fontSize / 48f) / 3.5f;
@@ -238,7 +233,7 @@ public class TextRenderer implements Reloadable
         DEF_SPACE_MAP.put('A', 0.8f);
         DEF_SPACE_MAP.put('a', 0.6f);
         DEF_SPACE_MAP.put('B', 0.765f);
-        DEF_SPACE_MAP.put('b', 0.7f);
+        DEF_SPACE_MAP.put('b', 0.65f);
         DEF_SPACE_MAP.put('C', 0.825f);
         DEF_SPACE_MAP.put('c', 0.6f);
         DEF_SPACE_MAP.put('D', 0.9f);
@@ -260,7 +255,7 @@ public class TextRenderer implements Reloadable
         DEF_SPACE_MAP.put('L', 0.675f);
         DEF_SPACE_MAP.put('l', 0.25f);
         DEF_SPACE_MAP.put('M', 1.0f);
-        DEF_SPACE_MAP.put('m', 0.9f);
+        DEF_SPACE_MAP.put('m', 0.85f);
         DEF_SPACE_MAP.put('N', 0.75f);
         DEF_SPACE_MAP.put('n', 0.5f);
         DEF_SPACE_MAP.put('O', 0.925f);
@@ -272,9 +267,9 @@ public class TextRenderer implements Reloadable
         DEF_SPACE_MAP.put('R', 0.7f);
         DEF_SPACE_MAP.put('r', 0.5f);
         DEF_SPACE_MAP.put('S', 0.65f);
-        DEF_SPACE_MAP.put('s', 0.5f);
+        DEF_SPACE_MAP.put('s', 0.475f);
         DEF_SPACE_MAP.put('T', 0.7f);
-        DEF_SPACE_MAP.put('t', 0.35f);
+        DEF_SPACE_MAP.put('t', 0.4f);
         DEF_SPACE_MAP.put('U', 0.78f);
         DEF_SPACE_MAP.put('u', 0.7f);
         DEF_SPACE_MAP.put('V', 0.95f);
@@ -284,7 +279,7 @@ public class TextRenderer implements Reloadable
         DEF_SPACE_MAP.put('X', 0.95f);
         DEF_SPACE_MAP.put('x', 0.65f);
         DEF_SPACE_MAP.put('Y', 0.8f);
-        DEF_SPACE_MAP.put('y', 0.8f);
+        DEF_SPACE_MAP.put('y', 0.7f);
         DEF_SPACE_MAP.put('Z', 0.9f);
         DEF_SPACE_MAP.put('z', 0.75f);
         

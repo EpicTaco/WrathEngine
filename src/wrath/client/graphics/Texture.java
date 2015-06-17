@@ -39,9 +39,27 @@ public class Texture implements Closeable, Reloadable
      */
     public Texture(File textureFile)
     {
+        this(textureFile, true);
+    }
+    
+    /**
+     * Constructor.
+     * @param textureFile The image {@link java.io.File} to load the texture from.
+     * @param antiAliasing If true, this Texture will go through Anti-Aliasing filtering.
+     */
+    public Texture(File textureFile, boolean antiAliasing)
+    {
         this.file = textureFile;
         this.texID = ClientUtils.getTexture(ClientUtils.loadImageFromFile(textureFile));
         Game.getCurrentInstance().getLogger().log("Created texture ID '" + texID + "' from file '" + file.getName() + "'!");
+        if(antiAliasing)
+        {
+            GL11.glEnable(GL11.GL_TEXTURE_2D);
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+        }
         afterConstructor();
     }
     
@@ -68,6 +86,17 @@ public class Texture implements Closeable, Reloadable
     }
     
     /**
+     * Permanently removes the Texture from the game assets.
+     */
+    public void destroyTexture()
+    {
+        unbindTextures();
+        close();
+        Game.getCurrentInstance().removeFromTrashCleanup(this);
+        Game.getCurrentInstance().removeFromRefreshList(this);
+    }
+    
+    /**
      * Gets the {@link java.io.File} that the texture was loaded from.
      * @return Returns the {@link java.io.File} that the texture was loaded from.
      */
@@ -90,6 +119,26 @@ public class Texture implements Closeable, Reloadable
     {
         this.texID = ClientUtils.getTexture(ClientUtils.loadImageFromFile(file));
         Game.getCurrentInstance().getLogger().log("Created texture ID '" + texID + "' from file '" + file.getName() + "'!");
+    }
+    
+    /**
+     * Toggles Anti-Aliasing filters for this Texture.
+     * @param enabled If true, enables Anti-Aliasing.
+     */
+    public void setAntiAliasing(boolean enabled)
+    {
+        bindTexture();
+        if(enabled)
+        {
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+        }
+        else
+        {
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, 0);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, 0);
+        }
+        unbindTexture();
     }
     
     /**
