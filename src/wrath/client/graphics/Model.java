@@ -135,6 +135,7 @@ public class Model implements Renderable, Closeable, Reloadable
      */
     public static Model loadModel(File modelFile, boolean useDefaultShaders)
     {
+        ArrayList<String> src = readObjFile(modelFile);
         ArrayList<Vector3f> verticies = new ArrayList<>();
         ArrayList<Vector2f> texCoords = new ArrayList<>();
         ArrayList<Vector3f> normals = new ArrayList<>();
@@ -142,67 +143,56 @@ public class Model implements Renderable, Closeable, Reloadable
         float[] varray = null;
         float[] narray = null;
         float[] tarray = null;
-        
-        try
+
+        boolean tmp = true;
+        for(String inp : src) 
         {
-            try(BufferedReader in = new BufferedReader(new FileReader(modelFile)))
+            String[] buf = inp.split(" ");
+            if(inp.startsWith("v ")) verticies.add(new Vector3f(Float.parseFloat(buf[1]), Float.parseFloat(buf[2]), Float.parseFloat(buf[3])));
+            else if(inp.startsWith("vt ")) texCoords.add(new Vector2f(Float.parseFloat(buf[1]), Float.parseFloat(buf[2])));
+            else if(inp.startsWith("vn ")) normals.add(new Vector3f(Float.parseFloat(buf[1]), Float.parseFloat(buf[2]), Float.parseFloat(buf[3])));
+            else if(inp.startsWith("f ")) 
             {
-                String inp;
-                boolean tmp = true;
-                while((inp = in.readLine()) != null)
+                if(tmp) 
                 {
-                    String[] buf = inp.split(" ");
-                    if(inp.startsWith("v ")) verticies.add(new Vector3f(Float.parseFloat(buf[1]), Float.parseFloat(buf[2]), Float.parseFloat(buf[3])));
-                    else if(inp.startsWith("vt ")) texCoords.add(new Vector2f(Float.parseFloat(buf[1]), Float.parseFloat(buf[2])));
-                    else if(inp.startsWith("vn ")) normals.add(new Vector3f(Float.parseFloat(buf[1]), Float.parseFloat(buf[2]), Float.parseFloat(buf[3])));
-                    else if(inp.startsWith("f "))
+                    varray = new float[verticies.size() * 3];
+                    narray = new float[verticies.size() * 3];
+                    tarray = new float[verticies.size() * 2];
+                    tmp = false;
+                }
+
+                for(int x = 1; x <= 3; x++) 
+                {
+                    String[] curDat;
+                    if(buf[x].contains("//")) 
                     {
-                        if(tmp)
-                        {
-                            varray = new float[verticies.size() * 3];
-                            narray = new float[verticies.size() * 3];
-                            tarray = new float[verticies.size() * 2];
-                            tmp = false;
-                        }
-                        
-                        for(int x = 1; x <= 3; x++)
-                        {
-                            String[] curDat;
-                            if(buf[x].contains("//"))
-                            {
-                                curDat = buf[x].split("//");
-                                
-                                int ptr = Integer.parseInt(curDat[0]) - 1;
-                                indicies.add(ptr);
-                                Vector3f norm = normals.get(Integer.parseInt(curDat[1]) - 1);
-                                narray[ptr*3] = norm.x;
-                                narray[ptr*3 + 1] = norm.y;
-                                narray[ptr*3 + 2] = norm.z;
-                            }
-                            else
-                            {
-                                curDat = buf[x].split("/");
-                                
-                                int ptr = Integer.parseInt(curDat[0]) - 1;
-                                indicies.add(ptr);
-                                Vector2f tex = texCoords.get(Integer.parseInt(curDat[1]) - 1);
-                                tarray[ptr*2] = tex.x;
-                                tarray[ptr*2 + 1] = 1 - tex.y;
-                                Vector3f norm = normals.get(Integer.parseInt(curDat[2]) - 1);
-                                narray[ptr*3] = norm.x;
-                                narray[ptr*3 + 1] = norm.y;
-                                narray[ptr*3 + 2] = norm.z;
-                            }
-                        }
+                        curDat = buf[x].split("//");
+
+                        int ptr = Integer.parseInt(curDat[0]) - 1;
+                        indicies.add(ptr);
+                        Vector3f norm = normals.get(Integer.parseInt(curDat[1]) - 1);
+                        narray[ptr * 3] = norm.x;
+                        narray[ptr * 3 + 1] = norm.y;
+                        narray[ptr * 3 + 2] = norm.z;
+                    }
+                    else 
+                    {
+                        curDat = buf[x].split("/");
+
+                        int ptr = Integer.parseInt(curDat[0]) - 1;
+                        indicies.add(ptr);
+                        Vector2f tex = texCoords.get(Integer.parseInt(curDat[1]) - 1);
+                        tarray[ptr * 2] = tex.x;
+                        tarray[ptr * 2 + 1] = 1 - tex.y;
+                        Vector3f norm = normals.get(Integer.parseInt(curDat[2]) - 1);
+                        narray[ptr * 3] = norm.x;
+                        narray[ptr * 3 + 1] = norm.y;
+                        narray[ptr * 3 + 2] = norm.z;
                     }
                 }
             }
         }
-        catch(IOException e)
-        {
-            Logger.getErrorLogger().log("Could not load model from file '" + modelFile.getName() + "'! I/O Error!");
-            return null;
-        }
+
         
         int i = 0;
         for(Vector3f ve : verticies)
@@ -222,6 +212,54 @@ public class Model implements Renderable, Closeable, Reloadable
         return m;
     }
  
+    private static ArrayList<String> readObjFile(File file)
+    {
+        ArrayList<String> src = new ArrayList<>();
+        
+        try
+        {
+            String inp;
+            ArrayList<String> f = new ArrayList<>();
+            ArrayList<String> v = new ArrayList<>();
+            ArrayList<String> vt = new ArrayList<>();
+            ArrayList<String> vn = new ArrayList<>();
+            
+            
+            BufferedReader in = new BufferedReader(new FileReader(file));
+            while((inp = in.readLine()) != null)
+            {
+                if(inp.startsWith("f ")) f.add(inp);
+                else if(inp.startsWith("v ")) v.add(inp);
+                else if(inp.startsWith("vt ")) vt.add(inp);
+                else if(inp.startsWith("vn ")) vn.add(inp);
+            }
+            in.close();
+            
+            v.stream().forEach((s) -> 
+            {
+                src.add(s);
+            });
+            vt.stream().forEach((s) -> 
+            {
+                src.add(s);
+            });
+            vn.stream().forEach((s) -> 
+            {
+                src.add(s);
+            });
+            f.stream().forEach((s) -> 
+            {
+                src.add(s);
+            });
+        }
+        catch(IOException e)
+        {
+            Logger.getErrorLogger().log("Could not load model from file '" + file.getName() + "'! I/O Error!");
+        }
+        
+        return src;
+    }
+    
     private final boolean defaultShaders;
     private final int[] indicies;
     private final float[] normals;

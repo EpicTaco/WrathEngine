@@ -40,7 +40,7 @@ public abstract class GuiElement implements Renderable
      * @param initx The X-coordinate of the top-left corner of this GUI element.
      * @param inity The Y-coordinate of the top-left corner of this GUI element.
      * @param resizable If true, the element can be resized by dragging a mouse.
-     * @param texture The {@link wrath.client.graphics.Texture} to render over this GUI element. Cannot be null.
+     * @param texture The {@link wrath.client.graphics.Texture} to render over this GUI element. Can be null.
      */
     protected GuiElement(float width, float height, float initx, float inity, boolean resizable, Texture texture)
     {
@@ -54,7 +54,7 @@ public abstract class GuiElement implements Renderable
      * @param initx The X-coordinate of the top-left corner of this GUI element.
      * @param inity The Y-coordinate of the top-left corner of this GUI element.
      * @param resizable If true, the element can be resized by dragging a mouse.
-     * @param texture The {@link wrath.client.graphics.Texture} to render over this GUI element.
+     * @param texture The {@link wrath.client.graphics.Texture} to render over this GUI element. Can be null.
      * @param color The {@link wrath.client.graphics.Color} of the element.
      */
     protected GuiElement(float width, float height, float initx, float inity, boolean resizable, Texture texture, Color color)
@@ -64,7 +64,7 @@ public abstract class GuiElement implements Renderable
         this.x = initx;
         this.y = inity;
         this.resizable = resizable;
-        this.color = color;
+        if(color != null) this.color = color;
         this.texture = texture;
     }
     
@@ -141,7 +141,8 @@ public abstract class GuiElement implements Renderable
     {
         GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glDisable(GL11.GL_DEPTH_TEST | GL11.GL_BLEND);
-        texture.bindTexture();
+        GL11.glDepthMask(false);
+        if(texture != null) texture.bindTexture();
         
         GL11.glBegin(GL11.GL_QUADS);
         {
@@ -163,6 +164,7 @@ public abstract class GuiElement implements Renderable
         
         color.unbindColor();
         Texture.unbindTextures();
+        GL11.glDepthMask(true);
         GL11.glDisable(GL11.GL_BLEND);
         GL11.glEnable(GL11.GL_DEPTH_TEST);
     }

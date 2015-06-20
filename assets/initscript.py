@@ -30,7 +30,6 @@ from wrath.client.graphics import Light
 from wrath.client.graphics.gui import TestGuiElement
 
 gameObject = None
-gui = None
 entity = None
 
 class CustomGame(Game, GameEventHandler):
@@ -39,10 +38,7 @@ class CustomGame(Game, GameEventHandler):
 		self.getEventManager().addGameEventHandler(self)
 		
 	def onGameOpen(self):
-		global gui
 		tex = Texture(File("assets/textures/white_texture.png"), True)
-		gui = TestGuiElement(0.25, 0.25, 0.0, 0.0, tex)
-		gui.setColor(Color(1.0,0.0,0.0))
 		gameObject.getInputManager().setEngineKeysToDefault()
 		model = Model.loadModel(File("assets/models/body.obj"))
 		model.attachTexture(tex)
@@ -68,7 +64,6 @@ class CustomGame(Game, GameEventHandler):
 
 	def render(self):
 		entity.render()
-		gui.render()
 
 gameObject = CustomGame()
 entity = EntityRenderer(None)
