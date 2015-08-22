@@ -51,26 +51,28 @@ public class Model implements Renderable, Closeable, Reloadable
     /**
      * Creates a 2D or 3D model from a list of verticies.
      * Models are always assumed to be made with triangles, and will be rendered as such.
+     * @param name The {@link java.lang.String} name of the Model.
      * @param verticies The list of verticies in the model. One point is represented by (x, y, z), and there must be at least 3 points.
      * @param indicies The list of points to connect for OpenGL. Look up indicies in OpenGL for reference.
      * @param normals The list of 3 float vectors describing the normal vector of the model's surface.
      * @return Returns the {@link wrath.client.graphics.Model} object of your model.
      */
-    public static Model createModel(float[] verticies, int[] indicies, float[] normals)
+    public static Model createModel(String name, float[] verticies, int[] indicies, float[] normals)
     {
-        return createModel(verticies, indicies, normals, true);
+        return createModel(name, verticies, indicies, normals, true);
     }
     
     /**
      * Creates a 2D or 3D model from a list of verticies.
      * Models are always assumed to be made with triangles, and will be rendered as such.
+     * @param name The {@link java.lang.String} name of the Model.
      * @param verticies The list of verticies in the model. One point is represented by (x, y, z), and there must be at least 3 points.
      * @param indicies The list of points to connect for OpenGL. Look up indicies in OpenGL for reference.
      * @param normals The list of 3 float vectors describing the normal vector of the model's surface.
      * @param useDefaultShaders If true, shaders will be set up automatically.
      * @return Returns the {@link wrath.client.graphics.Model} object of your model.
      */
-    public static Model createModel(float[] verticies, int[] indicies, float[] normals, boolean useDefaultShaders)
+    public static Model createModel(String name, float[] verticies, int[] indicies, float[] normals, boolean useDefaultShaders)
     {
         // Generating VAO
         int vaoid = GL30.glGenVertexArrays();
@@ -103,8 +105,8 @@ public class Model implements Renderable, Closeable, Reloadable
         GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, ibuffer, GL15.GL_STATIC_DRAW);
         
         // Creating Model Object
-        Model model = new Model(vaoid, new Integer[]{vtvboid, invboid, nmvboid}, verticies, indicies, normals, useDefaultShaders);
-        Game.getCurrentInstance().getLogger().log("Loaded model with " + verticies.length + " verticies, " + indicies.length + " indicies, and " + normals.length + " normals.");
+        Model model = new Model(name, vaoid, new Integer[]{vtvboid, invboid, nmvboid}, verticies, indicies, normals, useDefaultShaders);
+        Game.getCurrentInstance().getLogger().log("Loaded model '" + name + "' with " + verticies.length + " verticies, " + indicies.length + " indicies, and " + normals.length + " normals.");
         if(useDefaultShaders) model.attachShader(ShaderProgram.DEFAULT_SHADER);
         
         // Unbinding OpenGL Objects
@@ -206,9 +208,8 @@ public class Model implements Renderable, Closeable, Reloadable
         for(int z = 0; z < indicies.size(); z++)
             iarray[z] = indicies.get(z);
         
-        Model m = createModel(varray, iarray, narray, useDefaultShaders);
+        Model m = createModel(modelFile.getName(), varray, iarray, narray, useDefaultShaders);
         m.textureCoords = tarray;
-        Game.getCurrentInstance().getLogger().log("Model from file '" + modelFile.getName() + "' loaded!");
         return m;
     }
  
@@ -262,6 +263,7 @@ public class Model implements Renderable, Closeable, Reloadable
     
     private final boolean defaultShaders;
     private final int[] indicies;
+    private final String name;
     private final float[] normals;
     private ShaderProgram shader = null;
     private Texture texture = null;
@@ -270,8 +272,9 @@ public class Model implements Renderable, Closeable, Reloadable
     private final ArrayList<Integer> vbos = new ArrayList<>();
     private final float[] verticies;
     
-    private Model(int vao, Integer[] initVbos, float[] verticies, int[] indicies, float[] normals, boolean defShaders)
+    private Model(String name, int vao, Integer[] initVbos, float[] verticies, int[] indicies, float[] normals, boolean defShaders)
     {
+        this.name = name;
         this.vao = vao;
         vbos.addAll(Arrays.asList(initVbos));
         this.verticies = verticies;
@@ -327,6 +330,7 @@ public class Model implements Renderable, Closeable, Reloadable
         GL30.glBindVertexArray(0);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
         vbos.add(vboid);
+        EntityRenderer.preLoadedModels.put(name + "," + texture.getTextureFile().getName(), this);
     }
     
     @Override

@@ -1,5 +1,6 @@
 #This is the example entry file for the engine. An extension to the wrath.client.Game class must be present.
 #The variable 'scriptsManager' is pre-defined for you (Java Object PythonScriptManager).
+#The variable 'launchargs' is also pre-defined if the engine was launched in Python (such as this script). Use this variable in the start() method.
 #Github Wiki Page: https://github.com/EpicTaco/WrathEngine/wiki/Scripting/
 
 #  Wrath Engine Scripting
@@ -17,56 +18,48 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from java.io import File
-from org.lwjgl.util.vector import Vector3f
 from wrath.client import Game
 from wrath.client.events import GameEventHandler
 from wrath.client.enums import RenderMode
-from wrath.client.graphics import Model
+from org.lwjgl.util.vector import Vector3f
+from wrath.common.entities import GenericEntity
 from wrath.client.graphics import EntityRenderer
-from wrath.client.graphics import Texture
-from wrath.client.graphics import Color
-from wrath.client.graphics import Light
-from wrath.client.graphics.gui import TestGuiElement
-
-gameObject = None
-entity = None
+from wrath.common.entities import EntityDescriptor
+from wrath.client.input import Key
+from wrath.client.input import KeyAction
 
 class CustomGame(Game, GameEventHandler):
 	def __init__(self):
-		Game.__init__(self, "Test Client", "INDEV", 60.0, RenderMode.Mode3D)
-		self.getEventManager().addGameEventHandler(self)
+            Game.__init__(self, "Test Client", "INDEV", 60.0, RenderMode.Mode3D)
+            self.getEventManager().addGameEventHandler(self)
 		
 	def onGameOpen(self):
-		tex = Texture(File("assets/textures/white_texture.png"), True)
-		gameObject.getInputManager().setEngineKeysToDefault()
-		model = Model.loadModel(File("assets/models/body.obj"))
-		model.attachTexture(tex)
-		entity.bindLight(Light(Vector3f(0.0, 3.0, -8.0), Color(1.0,1.0,1.0)))
-		entity.bindModel(model)
-		entity.setScreenPosition(0.0, -1.0, -10.0)
-		entity.setScale(1.0)
-		
+            self.getInputManager().setEngineKeysToDefault()
+            self.getInputManager().bindKey(Key.KEY_UP, Key.MOD_SHIFT, KeyAction.KEY_HOLD_DOWN, "move_up")
+            self.getInputManager().bindKey(Key.KEY_DOWN, Key.MOD_SHIFT, KeyAction.KEY_HOLD_DOWN, "move_down")
+            global entity
+            entity = EntityRenderer(GenericEntity(Vector3f(0.0,-1.5,-2.5), None, EntityDescriptor("body.obj", "white_texture.png", None, 0.5, 1.0, 0.0)))
+	    renders.append(entity)
+
 	def onGameClose(self):
-		pass
+            pass
 	
 	def onLoadJavaPlugin(self, loadedObject):
-		pass
+            pass
 	
 	def onTick(self):
-		entity.transformRotation(0.0, 1.0, 0.0)
+	    for obj in renders:
+		obj.getEntity().translateOrientation(0.0, 1.0, 0.0)
 		
 	def onResolutionChange(self, oldWidth, oldHeight, newWidth, newHeight):
-		pass
+            pass
 		
 	def onWindowOpen(self):
-		pass
+            pass
 
 	def render(self):
-		entity.render()
+            for obj in renders:
+	    	obj.render()
 
-gameObject = CustomGame()
-entity = EntityRenderer(None)
-
-#scriptsManager.loadScriptsFromDirectory(File("etc/scripts/autoexec"), True, True)
-gameObject.start()
+scriptsManager.setGlobalVariable("renders", [])
+CustomGame().start(launchargs)

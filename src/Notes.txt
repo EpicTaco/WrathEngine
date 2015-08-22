@@ -1,5 +1,4 @@
 Things to fix/edit:
-- Integrate Entity positions into rendering. e.g. Make Camera use Player locations methods or make EntityRenderer use Entity.getLocation() as position.
 
 Things to add:
 - Audio

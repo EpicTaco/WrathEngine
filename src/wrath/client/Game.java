@@ -37,6 +37,7 @@ import org.lwjgl.glfw.GLFWvidmode;
 import org.lwjgl.openal.AL;
 import org.lwjgl.openal.ALContext;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GLContext;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.util.vector.Matrix4f;
@@ -103,7 +104,7 @@ public class Game
      * Describes all the essential and unmodifiable variables of the Game.
      * @param gameTitle Title of the Game.
      * @param version Version of the Game.
-     * @param ticksPerSecond The amount of times the logic of the game should update in one second. Recommended 30.
+     * @param ticksPerSecond The amount of times the logic of the game should update in one second. Recommended 30-60.
      * @param renderMode Describes how to game should be rendered (2D or 3D).
      */
     public Game(String gameTitle, String version, double ticksPerSecond, RenderMode renderMode)
@@ -125,7 +126,7 @@ public class Game
         File nativeDir = new File("assets/native");
         if(!nativeDir.exists())
         {
-            ClientUtils.throwInternalError("Missing assets folder! Try re-downloading!", false);
+            ClientUtils.throwInternalError("Missing assets folder! Try re-downloading!", true);
             stopImpl();
         }
            
@@ -465,9 +466,8 @@ public class Game
         
         isRunning = true;
         winManager.openWindow();
-        
-        evManager.getGameEventHandler().onGameOpen();
         inpManager.loadKeys();
+        evManager.getGameEventHandler().onGameOpen();
         loop();
     }
     
@@ -494,6 +494,7 @@ public class Game
         gameConfig.save();
         inpManager.saveKeys();
         gameLogger.log("Average FPS throughout session: " + renManager.avgFps);
+        gameLogger.log("Time of Session: " + (double)((double)(System.nanoTime() - EntryPoint.UNIX_START_TIMESTAMP)/1000/1000/1000) + " seconds.");
         gameLogger.log("Stopping '" + TITLE + "' Client v." + VERSION + "!");
         if(gameLogger != null && !gameLogger.isClosed()) gameLogger.close();
         errStr.release();
@@ -709,7 +710,7 @@ public class Game
          */
         private void render()
         {
-            if(maxFps != 0)
+            if(maxFps > 0)
             {
                 if(next == 0 || System.nanoTime() >= next)
                 {
@@ -1021,7 +1022,7 @@ public class Game
             GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, ClientUtils.getOpenGLBoolean(gameConfig.getBoolean("WindowResizable", true)));
             GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, ClientUtils.getOpenGLBoolean(gameConfig.getBoolean("APIForwardCompatMode", false)));
             GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_DEBUG_CONTEXT, ClientUtils.getOpenGLBoolean(gameConfig.getBoolean("DebugMode", false)));
-            GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, gameConfig.getInt("DisplaySamples", 4));
+            GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, gameConfig.getInt("AntiAliasingSamples", 8));
             GLFW.glfwWindowHint(GLFW.GLFW_REFRESH_RATE, gameConfig.getInt("DisplayRefreshRate", 0));
 
             windowState = WindowState.valueOf(gameConfig.getString("WindowState", "fullscreen_windowed").toUpperCase());
@@ -1116,10 +1117,11 @@ public class Game
             GL11.glLoadIdentity();
             GL11.glMatrixMode(GL11.GL_MODELVIEW);
             GL11.glLoadIdentity();
+            if(gameConfig.getInt("AntiAliasingSamples", 8) > 0) GL11.glEnable(GL13.GL_MULTISAMPLE);
             
             if(renManager.text == null) renManager.text = new TextRenderer(new File("assets/fonts/arial.png"), 0.75f);
             
-            if(MODE == RenderMode.Mode3D) renManager.projMatrix = ClientUtils.createProjectionMatrix(width, height, renManager.fov);
+            if(MODE == RenderMode.Mode3D) renManager.projMatrix = ClientUtils.createProjectionMatrix(renManager.fov);
             ShaderProgram.DEFAULT_SHADER = ShaderProgram.loadShaderProgram(new File("assets/shaders/defaultshader.vert"), new File("assets/shaders/defaultshader.frag"));
             
             if(firstOpen) firstOpen = false;

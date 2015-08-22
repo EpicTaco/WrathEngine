@@ -22,7 +22,6 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.util.vector.Vector3f;
 import wrath.client.ClientUtils;
-import wrath.client.Game;
 import wrath.common.entities.Player;
 
 /**
@@ -134,7 +133,7 @@ public class Camera
      * @param dy The amount to increase the yaw by.
      * @param dr The amount to increase the roll by.
      */
-    public void transformOrientation(float dp, float dy, float dr)
+    public void translateOrientation(float dp, float dy, float dr)
     {
         updateMat = true;
         orientation.x += dp;
@@ -148,7 +147,7 @@ public class Camera
      * @param dy The amount to increase the position on the Y-Axis.
      * @param dz The amount to increase the position on the Z-Axis.
      */
-    public void transformPosition(float dx, float dy, float dz)
+    public void translatePosition(float dx, float dy, float dz)
     {
         updateMat = true;
         position.x += dx;
@@ -163,9 +162,9 @@ public class Camera
     public void updateViewMatrix(ShaderProgram shader)
     {
         GL20.glUseProgram(shader.getProgramID());
-        if(updateMat == true)
+        if(updateMat)
         {
-            ClientUtils.createViewMatrix(Game.getCurrentInstance().getPlayerCamera()).store(matrixBuf);
+            ClientUtils.createViewMatrix(this).store(matrixBuf);
             matrixBuf.flip();
             updateMat = false;
         }

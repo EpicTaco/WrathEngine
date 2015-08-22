@@ -163,32 +163,32 @@ public class InputManager implements Closeable
         
         addSavedFunction("move_forward", () ->
         {
-            Game.getCurrentInstance().getPlayerCamera().transformPosition(0, 0, -0.02f);
+            Game.getCurrentInstance().getPlayerCamera().translatePosition(0, 0, -0.02f);
         });
         
         addSavedFunction("move_left", () ->
         {
-            Game.getCurrentInstance().getPlayerCamera().transformPosition(-0.02f, 0, 0);
+            Game.getCurrentInstance().getPlayerCamera().translatePosition(-0.02f, 0, 0);
         });
         
         addSavedFunction("move_backward", () ->
         {
-            Game.getCurrentInstance().getPlayerCamera().transformPosition(0, 0, 0.02f);
+            Game.getCurrentInstance().getPlayerCamera().translatePosition(0, 0, 0.02f);
         });
         
         addSavedFunction("move_right", () ->
         {
-            Game.getCurrentInstance().getPlayerCamera().transformPosition(0.02f, 0, 0);
+            Game.getCurrentInstance().getPlayerCamera().translatePosition(0.02f, 0, 0);
         });
         
         addSavedFunction("move_up", () ->
         {
-            Game.getCurrentInstance().getPlayerCamera().transformPosition(0, 0.02f, 0);
+            Game.getCurrentInstance().getPlayerCamera().translatePosition(0, 0.02f, 0);
         });
         
         addSavedFunction("move_down", () ->
         {
-            Game.getCurrentInstance().getPlayerCamera().transformPosition(0, -0.02f, 0);
+            Game.getCurrentInstance().getPlayerCamera().translatePosition(0, -0.02f, 0);
         });
     }
     

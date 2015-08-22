@@ -80,7 +80,7 @@ public class TextRenderer implements Reloadable
         }
         
         this.fontSize = fontSize;
-        fontTex = new Texture(fontFile, Game.getCurrentInstance().getConfig().getBoolean("AntiAliasText", true));
+        fontTex = Texture.loadTexture(fontFile);
     }
     
     /**
@@ -146,10 +146,10 @@ public class TextRenderer implements Reloadable
     /**
      * Draws the specified string onto the screen at the specified points independent of variables set in this object.
      * The only variable taken from the object in this method is the font itself.
-     * @param string The {Link java.lang.String} to write to the screen.
+     * @param string The {@link java.lang.String} to write to the screen.
      * @param x The X-coordinate of the top left of the message.
      * @param y The Y-coordinate of the top left of the message.
-     * @param fontSize The size of the font. This is NOT standardized!
+     * @param fontSize The size of the font. This is a NON standardized unit!
      * @param color The {@link wrath.client.graphics.Color} to make the rendered text.
      */
     public void renderString(String string, float x, float y, float fontSize, Color color) 
@@ -163,7 +163,7 @@ public class TextRenderer implements Reloadable
         GL11.glDisable(GL11.GL_DEPTH_TEST);
         fontTex.bindTexture();
         GL11.glEnable(GL11.GL_BLEND);
-        GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ONE);
+        GL11.glBlendFunc(GL11.GL_SRC_COLOR, GL11.GL_ONE_MINUS_SRC_COLOR);
         float curPos = x;
         float charWidth;
         GL11.glBegin(GL11.GL_QUADS);
@@ -298,6 +298,5 @@ public class TextRenderer implements Reloadable
         DEF_SPACE_MAP.put('7', 0.7f);
         DEF_SPACE_MAP.put('8', 0.7f);
         DEF_SPACE_MAP.put('9', 0.7f);
-        
     }
 }

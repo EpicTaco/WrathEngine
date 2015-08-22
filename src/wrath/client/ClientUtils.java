@@ -51,16 +51,15 @@ public class ClientUtils
     
     /**
      * Creates a Creates a {@link org.lwjgl.util.vector.Matrix4f} representing the depth of the screen.
-     * @param displayWidth The Width of the window.
-     * @param displayHeight The Height of the window.
      * @param fov The angle of the camera's view.
      * @return Returns a {@link org.lwjgl.util.vector.Matrix4f} representing the depth of the screen.
      */
-    public static Matrix4f createProjectionMatrix(int displayWidth, int displayHeight, float fov)
+    public static Matrix4f createProjectionMatrix(float fov)
     {
         if(Game.getCurrentInstance().getRenderMode() == RenderMode.Mode2D) return (Matrix4f)(new Matrix4f().setIdentity());
-        float aspectRatio = (float) displayWidth / (float) displayHeight;
-        float yscale = (float) ((1f / Math.tan(Math.toRadians(fov / 2f))) * 2f);
+        
+        float aspectRatio = (float) Game.getCurrentInstance().getWindowManager().getWidth() / (float) Game.getCurrentInstance().getWindowManager().getHeight();
+        float yscale = (float)(1f / Math.tan(Math.toRadians(fov / 2f))) * aspectRatio;
         float xscale = yscale / aspectRatio;
         float field_len = Game.RenderManager.FAR_PLANE - Game.RenderManager.NEAR_PLANE;
         
@@ -71,6 +70,7 @@ public class ClientUtils
         ret.m23 = -1;
         ret.m32 = -((2 * Game.RenderManager.FAR_PLANE * Game.RenderManager.NEAR_PLANE) / field_len);
         ret.m33 = 0f;
+        
         return ret;
     }
     
@@ -93,6 +93,7 @@ public class ClientUtils
         Matrix4f.rotate((float) Math.toRadians(rotateY), new Vector3f(0,1,0), ret, ret);
         Matrix4f.rotate((float) Math.toRadians(rotateZ), new Vector3f(0,0,1), ret, ret);
         Matrix4f.scale(new Vector3f(scale, scale, scale), ret, ret);
+        
         return ret;
     }
     
@@ -107,8 +108,10 @@ public class ClientUtils
         ret.setIdentity();
         Matrix4f.rotate((float) Math.toRadians(camera.getOrientation().x), new Vector3f(1,0,0), ret, ret);
         Matrix4f.rotate((float) Math.toRadians(camera.getOrientation().y), new Vector3f(0,1,0), ret, ret);
+        Matrix4f.rotate((float) Math.toRadians(camera.getOrientation().z), new Vector3f(0,0,1), ret, ret);
         Vector3f negCam = new Vector3f(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
         Matrix4f.translate(negCam, ret, ret);
+        
         return ret;
     }
     
@@ -144,7 +147,6 @@ public class ClientUtils
         BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         
         for(int x = 0; x < width; x++) 
-        {
             for(int y = 0; y < height; y++) 
             {
                 int i = (x + (width * y)) * 4;
@@ -153,7 +155,7 @@ public class ClientUtils
                 int b = buffer.get(i + 2) & 0xFF;
                 img.setRGB(x, height - (y + 1), (0xFF << 24) | (r << 16) | (g << 8) | b);
             }
-        }
+        
         
         return img;
     }
@@ -231,11 +233,10 @@ public class ClientUtils
         buffer.flip();
         
         int id = GL11.glGenTextures();
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, id);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
         GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, image.getWidth(), image.getHeight(), 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
         return id;

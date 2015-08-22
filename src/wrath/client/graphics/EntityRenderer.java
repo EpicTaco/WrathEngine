@@ -17,10 +17,13 @@
  */
 package wrath.client.graphics;
 
+import java.io.File;
+import java.util.HashMap;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 import wrath.client.ClientUtils;
 import wrath.common.entities.Entity;
+import wrath.common.entities.EntityDescriptor;
 
 /**
  * Class exclusive to the client to describe Render-able entities.
@@ -28,16 +31,16 @@ import wrath.common.entities.Entity;
  */
 public class EntityRenderer implements Renderable
 {
+    public static final HashMap<String,Model> preLoadedModels = new HashMap<>();
+    
     private final Entity entity;
     private Light light = null;
-    private Matrix4f mat = new Matrix4f();
     private Model model = null;
-    private final Vector3f rotation = new Vector3f(0,0,0);
-    private float scale = 1f;
-    private final Vector3f screenPosition = new Vector3f(0,0,0);
-    private boolean updateMat = true;
     
+    private Matrix4f mat = new Matrix4f();
+    private boolean updateMat = true;
     private boolean tmpBool = true;
+    
     
     /**
      * Constructor.
@@ -46,6 +49,24 @@ public class EntityRenderer implements Renderable
     public EntityRenderer(Entity entity)
     {
         this.entity = entity;
+        
+        if(entity.getEntityDescriptor() != null)
+        {
+            if(preLoadedModels.containsKey(entity.getEntityDescriptor().getModelName() + "," + entity.getEntityDescriptor().getTextureName()))
+                this.bindModel(preLoadedModels.get(entity.getEntityDescriptor().getModelName() + "," + entity.getEntityDescriptor().getTextureName()));
+            else
+            {
+                File modelFile = new File("assets/models/" + entity.getEntityDescriptor().getModelName());
+                File texture = new File("assets/textures/" + entity.getEntityDescriptor().getTextureName());
+                if(modelFile.exists() && texture.exists())
+                {
+                    Model m = Model.loadModel(modelFile);
+                    m.attachTexture(Texture.loadTexture(texture));
+                    this.bindModel(m);
+                    preLoadedModels.put(entity.getEntityDescriptor().getModelName() + "," + entity.getEntityDescriptor().getTextureName(), m);
+                }
+            }
+        }
     }
     
     /**
@@ -59,6 +80,7 @@ public class EntityRenderer implements Renderable
     
     /**
      * Links a {@link wrath.client.graphics.Model} to the described entity.
+     * If a valid {@link wrath.common.entities.EntityDescriptor} was provided to this Entity, this method should not be called as it is all handled automatically.
      * @param model The {@link wrath.client.graphics.Model} to link with the entity.
      */
     public void bindModel(Model model)
@@ -84,92 +106,17 @@ public class EntityRenderer implements Renderable
         return model;
     }
     
-    /**
-     * Gets the 3-dimensional position of the model to the screen.
-     * @return Returns a {@link org.lwjgl.util.vector.Vector3f} object representing the 3-dimensional position of the model to the screen.
-     */
-    public Vector3f getScreenPosition()
-    {
-        return screenPosition;
-    }
-    
     @Override
     public void render()
     {
         update();
         model.render();
     }
-    
+  
     /**
-     * Changes the rotation of the model.
-     * @param rx The X-axis rotation (in radians).
-     * @param ry The Y-axis rotation (in radians).
-     * @param rz The Z-axis rotation (in radians).
+     * Changes the model's shader settings to fit the current settings.
      */
-    public void setRotation(float rx, float ry, float rz)
-    {
-        updateMat = true;
-        this.rotation.x = rx;
-        this.rotation.y = ry;
-        this.rotation.z = rz;
-    }
-    
-    /**
-     * Sets the scale of the model.
-     * @param scale The scale multiplier of the model, 1.0f being the model's natural size.
-     */
-    public void setScale(float scale)
-    {
-        updateMat = true;
-        this.scale = scale;
-    }
-    
-    /**
-     * Sets the model's position on the screen.
-     * @param x The X-coordinate of the model on the screen.
-     * @param y The Y-coordinate of the model on the screen.
-     * @param z The Z-coordinate of the model on the screen.
-     */
-    public void setScreenPosition(float x, float y, float z)
-    {
-        updateMat = true;
-        screenPosition.x = x;
-        screenPosition.y = y;
-        screenPosition.z = z;
-    }
-    
-    /**
-     * Increments the rotation by the specified amount.
-     * @param drx The amount to increase the rotation on the X-Axis.
-     * @param dry The amount to increase the rotation on the Y-Axis.
-     * @param drz The amount to increase the rotation on the Z-Axis.
-     */
-    public void transformRotation(float drx, float dry, float drz)
-    {
-        updateMat = true;
-        rotation.x += drx;
-        rotation.y += dry;
-        rotation.z += drz;
-    }
-    
-    /**
-     * Increments the position of the model by the specified amount.
-     * @param dx The amount to increase the position on the X-Axis.
-     * @param dy The amount to increase the position on the Y-Axis.
-     * @param dz The amount to increase the position on the Z-Axis.
-     */
-    public void transformScreenPosition(float dx, float dy, float dz)
-    {
-        updateMat = true;
-        screenPosition.x += dx;
-        screenPosition.y += dy;
-        screenPosition.z += dz;
-    }
-    
-    /**
-     * Changes the shader's settings to fit the current settings.
-     */
-    public void update()
+    protected void update()
     {
         if(model.getShader() != null)
         {
@@ -179,9 +126,10 @@ public class EntityRenderer implements Renderable
                 tmpBool = false;
             }
             
-            if(updateMat)
+            if(entity.changed() || updateMat)
             {
-                mat = ClientUtils.createTransformationMatrix(screenPosition, rotation.x, rotation.y, rotation.z, scale);
+                mat = ClientUtils.createTransformationMatrix(entity.getLocation(), entity.getOrientation().x, entity.getOrientation().y, entity.getOrientation().z, entity.getSizeScale());
+                entity.resetChangeTracker();
                 updateMat = false;
             }
             model.getShader().setTransformationMatrix(mat);
@@ -202,6 +150,33 @@ public class EntityRenderer implements Renderable
      */
     public static void renderEntity(Entity entity, Model model, Matrix4f transformationMatrix)
     {
+        if(model.getShader() != null) model.getShader().setTransformationMatrix(transformationMatrix);
+        model.render();
+    }
+    
+    /**
+     * Renders an entity without creating an EntityRenderer object.
+     * @param entity The {@link wrath.common.entities.Entity} that is attached to the {@link wrath.client.graphics.Model}.
+     * @param descriptor The {@link wrath.common.entities.EntityDescriptor} describing the assets to render.
+     * @param transformationMatrix A {@link org.lwjgl.util.vector.Matrix4f} containing positional data. Should be created with {@link wrath.client.ClientUtils#createTransformationMatrix(org.lwjgl.util.vector.Vector3f, float, float, float, float)}.
+     */
+    public static void renderEntity(Entity entity, EntityDescriptor descriptor, Matrix4f transformationMatrix)
+    {
+        Model model;
+        if(preLoadedModels.containsKey(entity.getEntityDescriptor().getModelName() + "," + entity.getEntityDescriptor().getTextureName()))
+            model = preLoadedModels.get(entity.getEntityDescriptor().getModelName() + "," + entity.getEntityDescriptor().getTextureName());
+        else
+        {
+            File modelF = new File("assets/models/" + entity.getEntityDescriptor().getModelName());
+            File texture = new File("assets/textures/" + entity.getEntityDescriptor().getTextureName());
+            if(modelF.exists() && texture.exists())
+            {
+                model = Model.loadModel(modelF);
+                model.attachTexture(Texture.loadTexture(texture));
+            }
+            else return;
+        }
+        
         if(model.getShader() != null) model.getShader().setTransformationMatrix(transformationMatrix);
         model.render();
     }

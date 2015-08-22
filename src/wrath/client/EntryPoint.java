@@ -29,12 +29,14 @@ import java.io.IOException;
  */
 public class EntryPoint
 {
+    public static final long UNIX_START_TIMESTAMP = System.nanoTime();
+    
     /**
      * The entry point of the program.
      * @param args The command-line arguments from the console.
      */
     public static void main(String[] args)
-    {
+    {   
         if(!new File("assets/init").exists())
             ClientUtils.throwInternalError("assets/init file is missing!", false);
         

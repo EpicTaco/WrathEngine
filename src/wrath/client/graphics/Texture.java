@@ -18,7 +18,9 @@
 package wrath.client.graphics;
 
 import java.io.File;
+import java.util.HashMap;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL30;
 import wrath.client.ClientUtils;
 import wrath.client.Game;
 import wrath.common.Closeable;
@@ -29,7 +31,27 @@ import wrath.common.Reloadable;
  * @author Trent Spears
  */
 public class Texture implements Closeable, Reloadable
-{  
+{
+    private static final HashMap<File, Texture> preLoadedTex = new HashMap<>();
+    
+    /**
+     * Loads a Texture object.
+     * @param textureFile The image {@link java.io.File} to load the texture from.
+     * @return Returns the loaded {@link wrath.client.graphics.Texture} object.
+     */
+    public static Texture loadTexture(File textureFile)
+    {
+        if(preLoadedTex.containsKey(textureFile)) return preLoadedTex.get(textureFile);
+        else
+        {
+            Texture t = new Texture(textureFile);
+            preLoadedTex.put(textureFile, t);
+            return t;
+        }
+    }
+    
+    // Object
+    
     private final File file;
     private int texID;
     
@@ -37,29 +59,29 @@ public class Texture implements Closeable, Reloadable
      * Constructor.
      * @param textureFile The image {@link java.io.File} to load the texture from.
      */
-    public Texture(File textureFile)
-    {
-        this(textureFile, true);
-    }
-    
-    /**
-     * Constructor.
-     * @param textureFile The image {@link java.io.File} to load the texture from.
-     * @param antiAliasing If true, this Texture will go through Anti-Aliasing filtering.
-     */
-    public Texture(File textureFile, boolean antiAliasing)
+    protected Texture(File textureFile)
     {
         this.file = textureFile;
         this.texID = ClientUtils.getTexture(ClientUtils.loadImageFromFile(textureFile));
         Game.getCurrentInstance().getLogger().log("Created texture ID '" + texID + "' from file '" + file.getName() + "'!");
-        if(antiAliasing)
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID);
+        if(Game.getCurrentInstance().getConfig().getBoolean("TexureMipmapping", true)) GL30.glGenerateMipmap(GL11.GL_TEXTURE_2D);
+        if(Game.getCurrentInstance().getConfig().getBoolean("AntiAliasingTexture", true))
         {
-            GL11.glEnable(GL11.GL_TEXTURE_2D);
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+            if(Game.getCurrentInstance().getConfig().getBoolean("TexureMipmapping", true))
+            {
+                GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR_MIPMAP_LINEAR);
+                GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+            }
+            else
+            {
+                GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+                GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
+            }
+            
         }
+        Texture.unbindTextures();
         afterConstructor();
     }
     
@@ -79,6 +101,9 @@ public class Texture implements Closeable, Reloadable
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID);
     }
     
+    /**
+     * Don't run this method, instead use {@link #destroyTexture()}!
+     */
     @Override
     public void close()
     {

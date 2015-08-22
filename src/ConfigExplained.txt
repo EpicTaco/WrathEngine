@@ -8,11 +8,8 @@
 ### Display Options ###
 
 #Set to 'true' to enable Vsync with the monitor, otherwise false.
-#Be careful with this, as if the Ticks-per-second (which cannot be set in the config) is set to over your monitor's
-#refresh rate, this can cause issues in timing and animation with the game. Only use if necessary.
-#As an alternative, please use MaxFps instead as that runs independently of the game's timing.
-#Default is false
-DisplayVsync: false
+#Default is true
+DisplayVsync: true
 
 #The type of window to create. Options are: Windowed,Fullscreen,Fullscreen_Windowed and Windowed_Undecorated
 #Default is fullscreen_windowed
@@ -29,9 +26,9 @@ Height: 600
 #Default is 0
 DisplayRefreshRate: 0
 
-#Determines the number of samples to be used in the window for multi-sampling. When set to 0, sampling is disabled. 
-#Default is 4
-DisplaySamples: 4
+#Determines the number of samples to be used in the window for MSAA Anti-Aliasing. When set to 0, Anti-Aliasing is disabled. 
+#Default is 8
+AntiAliasingSamples: 8
 
 #Determines whether or not the window should be re-sizable by the user. Only applies in the Windowed WindowState.
 #Default is true
@@ -47,10 +44,15 @@ FullscreenUsesResolution: false
 #Default is 70
 FOV: 70
 
-#If true, a filter will be applied to text to make it look smoother.
-#Disabling this will give a noticeable FPS boost if text is being rendered.
+#If true, a filter will be applied to textures to make them look smoother.
+#Disabling this will give a noticeable FPS boost if many textures are being rendered.
 #Default is true
-AntiAliasText: true
+AntiAliasingTexture: true
+
+#If true, MipMaps are generated when Textures are loaded.
+#This usually leads to better performance and smoother rendering.
+#Default is true
+TexureMipmapping: true
 
 #If true, the game will render with two buffers, a front and back buffer.
 #It is HIGHLY recommended that this remains on, and will offer very little benefit when disabled.
