@@ -169,6 +169,5 @@ public class Camera
             updateMat = false;
         }
         GL20.glUniformMatrix4(shader.getUniformVariableLocation("viewMatrix"), false, matrixBuf);
-        GL20.glUseProgram(0);
     }
 }

@@ -35,11 +35,9 @@ class CustomGame(Game, GameEventHandler):
 		
 	def onGameOpen(self):
             self.getInputManager().setEngineKeysToDefault()
-            self.getInputManager().bindKey(Key.KEY_UP, Key.MOD_SHIFT, KeyAction.KEY_HOLD_DOWN, "move_up")
-            self.getInputManager().bindKey(Key.KEY_DOWN, Key.MOD_SHIFT, KeyAction.KEY_HOLD_DOWN, "move_down")
-            global entity
-            entity = EntityRenderer(GenericEntity(Vector3f(0.0,-1.5,-2.5), None, EntityDescriptor("body.obj", "white_texture.png", None, 0.5, 1.0, 0.0)))
-	    renders.append(entity)
+            self.getInputManager().addDefaultKeyBinding(Key.KEY_UP, Key.MOD_SHIFT, KeyAction.KEY_HOLD_DOWN, "move_up")
+            self.getInputManager().addDefaultKeyBinding(Key.KEY_DOWN, Key.MOD_SHIFT, KeyAction.KEY_HOLD_DOWN, "move_down")
+            renders.append(EntityRenderer(GenericEntity(Vector3f(0.0,0.0,-2.5), None, EntityDescriptor("body.obj", "purple_texture.png", None, 0.2, 0.0, 1.0))))
 
 	def onGameClose(self):
             pass
@@ -59,7 +57,7 @@ class CustomGame(Game, GameEventHandler):
 
 	def render(self):
             for obj in renders:
-	    	obj.render()
+	    	self.getRenderer().addEntityRenderingJob(obj)
 
 scriptsManager.setGlobalVariable("renders", [])
 CustomGame().start(launchargs)

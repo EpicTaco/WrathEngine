@@ -23,7 +23,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import org.lwjgl.opengl.GL11;
-import wrath.client.Game;
 import wrath.common.Reloadable;
 import wrath.util.Logger;
 
@@ -159,7 +158,6 @@ public class TextRenderer implements Reloadable
         final float characterWidth = fontSize * 0.1f;
         final float characterHeight = characterWidth * 0.75f;
         
-        GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glDisable(GL11.GL_DEPTH_TEST);
         fontTex.bindTexture();
         GL11.glEnable(GL11.GL_BLEND);
@@ -229,31 +227,31 @@ public class TextRenderer implements Reloadable
     private static void setDefaultMetrics()
     {
         DEF_SPACE_MAP.clear();
-        DEF_SPACE_MAP.put(' ', 0.95f);
+        DEF_SPACE_MAP.put(' ', 0.35f);
         DEF_SPACE_MAP.put('A', 0.8f);
-        DEF_SPACE_MAP.put('a', 0.6f);
+        DEF_SPACE_MAP.put('a', 0.45f);
         DEF_SPACE_MAP.put('B', 0.765f);
         DEF_SPACE_MAP.put('b', 0.65f);
-        DEF_SPACE_MAP.put('C', 0.825f);
+        DEF_SPACE_MAP.put('C', 0.78f);
         DEF_SPACE_MAP.put('c', 0.6f);
         DEF_SPACE_MAP.put('D', 0.9f);
         DEF_SPACE_MAP.put('d', 0.7f);
         DEF_SPACE_MAP.put('E', 0.825f);
-        DEF_SPACE_MAP.put('e', 0.6f);
+        DEF_SPACE_MAP.put('e', 0.55f);
         DEF_SPACE_MAP.put('F', 0.65f);
         DEF_SPACE_MAP.put('f', 0.45f);
         DEF_SPACE_MAP.put('G', 0.9f);
-        DEF_SPACE_MAP.put('g', 0.75f);
+        DEF_SPACE_MAP.put('g', 0.7f);
         DEF_SPACE_MAP.put('H', 0.8f);
         DEF_SPACE_MAP.put('h', 0.55f);
         DEF_SPACE_MAP.put('I', 0.4f);
-        DEF_SPACE_MAP.put('i', 0.3f);
+        DEF_SPACE_MAP.put('i', 0.2f);
         DEF_SPACE_MAP.put('J', 0.575f);
-        DEF_SPACE_MAP.put('j', 0.5f);
+        DEF_SPACE_MAP.put('j', 0.20f);
         DEF_SPACE_MAP.put('K', 0.85f);
         DEF_SPACE_MAP.put('k', 0.6f);
         DEF_SPACE_MAP.put('L', 0.675f);
-        DEF_SPACE_MAP.put('l', 0.25f);
+        DEF_SPACE_MAP.put('l', 0.2f);
         DEF_SPACE_MAP.put('M', 1.0f);
         DEF_SPACE_MAP.put('m', 0.85f);
         DEF_SPACE_MAP.put('N', 0.75f);
@@ -261,7 +259,7 @@ public class TextRenderer implements Reloadable
         DEF_SPACE_MAP.put('O', 0.925f);
         DEF_SPACE_MAP.put('o', 0.55f);
         DEF_SPACE_MAP.put('P', 0.85f);
-        DEF_SPACE_MAP.put('p', 0.65f);
+        DEF_SPACE_MAP.put('p', 0.55f);
         DEF_SPACE_MAP.put('Q', 0.9f);
         DEF_SPACE_MAP.put('q', 0.7f);
         DEF_SPACE_MAP.put('R', 0.7f);
@@ -269,7 +267,7 @@ public class TextRenderer implements Reloadable
         DEF_SPACE_MAP.put('S', 0.65f);
         DEF_SPACE_MAP.put('s', 0.475f);
         DEF_SPACE_MAP.put('T', 0.7f);
-        DEF_SPACE_MAP.put('t', 0.4f);
+        DEF_SPACE_MAP.put('t', 0.35f);
         DEF_SPACE_MAP.put('U', 0.78f);
         DEF_SPACE_MAP.put('u', 0.7f);
         DEF_SPACE_MAP.put('V', 0.95f);
@@ -286,7 +284,8 @@ public class TextRenderer implements Reloadable
         DEF_SPACE_MAP.put('[', 0.6f);
         DEF_SPACE_MAP.put('%', 1.05f);
         DEF_SPACE_MAP.put('@', 1.1f);
-        DEF_SPACE_MAP.put('.', 0.15f);
+        DEF_SPACE_MAP.put('!', 0.3f);
+        DEF_SPACE_MAP.put('.', 0.375f);
         DEF_SPACE_MAP.put(',', 0.15f);
         DEF_SPACE_MAP.put('0', 0.7f);
         DEF_SPACE_MAP.put('1', 0.7f);

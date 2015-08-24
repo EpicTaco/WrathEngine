@@ -39,6 +39,7 @@ import wrath.util.Logger;
 public class ShaderProgram implements Closeable
 {
     public static ShaderProgram DEFAULT_SHADER;
+    public static ShaderProgram DEFAULT_TERRAIN_SHADER;
     
     /**
      * Reads the two specified shader files and compiles the shaders into an OpenGL program format.
@@ -148,6 +149,14 @@ public class ShaderProgram implements Closeable
         GL20.glBindAttribLocation(programID, attribute, variable);
     }
     
+    /**
+     * Binds OpenGL to use this shader program.
+     */
+    public void bindShader()
+    {
+        GL20.glUseProgram(programID);
+    }
+    
     @Override
     public void close()
     {
@@ -232,7 +241,6 @@ public class ShaderProgram implements Closeable
     {
         GL20.glUseProgram(programID);
         GL20.glUniform1f(location, value);
-        GL20.glUseProgram(0);
     }
     
     /**
@@ -244,7 +252,6 @@ public class ShaderProgram implements Closeable
     {
         GL20.glUseProgram(programID);
         GL20.glUniform3f(location, value.x, value.y, value.z);
-        GL20.glUseProgram(0);
     }
     
     /**
@@ -256,7 +263,6 @@ public class ShaderProgram implements Closeable
     {
         GL20.glUseProgram(programID);
         GL20.glUniform1f(location, value ? 1f : 0f);
-        GL20.glUseProgram(0);
     }
     
     /**
@@ -270,7 +276,6 @@ public class ShaderProgram implements Closeable
         value.store(matrixBuf);
         matrixBuf.flip();
         GL20.glUniformMatrix4(location, false, matrixBuf);
-        GL20.glUseProgram(0);
     }
     
     /**
@@ -293,5 +298,13 @@ public class ShaderProgram implements Closeable
     protected void updateViewMatrix()
     {
         Game.getCurrentInstance().getPlayerCamera().updateViewMatrix(this);
+    }
+    
+    /**
+     * Unbinds any shader program currently being used by OpenGL.
+     */
+    public static void unbindShaders()
+    {
+        GL20.glUseProgram(0);
     }
 }

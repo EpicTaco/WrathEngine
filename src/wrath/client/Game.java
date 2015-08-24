@@ -26,6 +26,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import javax.imageio.ImageIO;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.LWJGLUtil;
@@ -45,8 +47,11 @@ import wrath.client.enums.ImageFormat;
 import wrath.client.events.InputEventHandler;
 import wrath.client.graphics.Camera;
 import wrath.client.graphics.Color;
+import wrath.client.graphics.EntityRenderer;
+import wrath.client.graphics.Model;
 import wrath.client.graphics.ShaderProgram;
 import wrath.client.graphics.TextRenderer;
+import wrath.client.graphics.TileRenderer;
 import wrath.common.Closeable;
 import wrath.common.Reloadable;
 import wrath.common.entities.Player;
@@ -466,8 +471,8 @@ public class Game
         
         isRunning = true;
         winManager.openWindow();
-        inpManager.loadKeys();
         evManager.getGameEventHandler().onGameOpen();
+        inpManager.loadKeys();
         loop();
     }
     
@@ -613,7 +618,40 @@ public class Game
         private boolean shouldRender = true;
         private long next = 0;
         
+        private final HashMap<Model, List<EntityRenderer>> entityRenderMap = new HashMap<>();
+        private final HashMap<Model, List<TileRenderer>> terrainRenderMap = new HashMap<>();
+        
         private RenderManager(){}
+        
+        /**
+         * Efficiently renders an Entity.
+         * @param ren The {@link wrath.client.graphics.EntityRenderer} to render.
+         */
+        public void addEntityRenderingJob(EntityRenderer ren)
+        {
+            if(entityRenderMap.containsKey(ren.getModel())) entityRenderMap.get(ren.getModel()).add(ren);
+            else
+            {
+                ArrayList<EntityRenderer> rl = new ArrayList<>();
+                rl.add(ren);
+                entityRenderMap.put(ren.getModel(), rl);
+            }
+        }
+        
+        /**
+         * Efficiently renders a Tile of Terrain.
+         * @param ren The {@link wrath.client.graphics.TileRenderer} to render.
+         */
+        public void addTerrainRenderingJob(TileRenderer ren)
+        {
+            if(terrainRenderMap.containsKey(ren.getTileModel())) terrainRenderMap.get(ren.getTileModel()).add(ren);
+            else
+            {
+                ArrayList<TileRenderer> rl = new ArrayList<>();
+                rl.add(ren);
+                terrainRenderMap.put(ren.getTileModel(), rl);
+            }
+        }
         
         /**
          * Gets the average FPS of the game while it has been running.
@@ -727,6 +765,39 @@ public class Game
                 {
                     GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
                     color.bindColor();
+                    
+                    terrainRenderMap.entrySet().stream().map((entry) ->
+                    {
+                        Model m = (Model) entry.getKey();
+                        m.renderSetup();
+                        for(TileRenderer r : (List<TileRenderer>) entry.getValue())
+                        {
+                            r.update();
+                            m.render(true);
+                        }
+                        return m;
+                    }).forEach((m) ->
+                    {
+                        m.renderStop();
+                    });
+                    terrainRenderMap.clear();
+                    
+                    entityRenderMap.entrySet().stream().map((entry) ->
+                    {
+                        Model m = (Model) entry.getKey();
+                        m.renderSetup();
+                        for(EntityRenderer r : (List<EntityRenderer>) entry.getValue())
+                        {
+                            r.update();
+                            m.render(true);
+                        }
+                        return m;
+                    }).forEach((m) ->
+                    {
+                        m.renderStop();
+                    });
+                    entityRenderMap.clear();
+                    
                     GAME_INSTANCE.render();
                     color.bindColor();
                     front.renderGUI();
@@ -1118,11 +1189,19 @@ public class Game
             GL11.glMatrixMode(GL11.GL_MODELVIEW);
             GL11.glLoadIdentity();
             if(gameConfig.getInt("AntiAliasingSamples", 8) > 0) GL11.glEnable(GL13.GL_MULTISAMPLE);
+            GL11.glEnable(GL11.GL_CULL_FACE);
+            GL11.glCullFace(GL11.GL_BACK);
             
             if(renManager.text == null) renManager.text = new TextRenderer(new File("assets/fonts/arial.png"), 0.75f);
             
-            if(MODE == RenderMode.Mode3D) renManager.projMatrix = ClientUtils.createProjectionMatrix(renManager.fov);
+            if(MODE == RenderMode.Mode3D)
+            {
+                renManager.projMatrix = ClientUtils.createProjectionMatrix(renManager.fov);
+                GL11.glEnable(GL11.GL_DEPTH_TEST);
+                GL11.glDepthFunc(GL11.GL_LESS);
+            }
             ShaderProgram.DEFAULT_SHADER = ShaderProgram.loadShaderProgram(new File("assets/shaders/defaultshader.vert"), new File("assets/shaders/defaultshader.frag"));
+            ShaderProgram.DEFAULT_TERRAIN_SHADER = ShaderProgram.loadShaderProgram(new File("assets/shaders/defaultterrainshader.vert"), new File("assets/shaders/defaultterrainshader.frag"));
             
             if(firstOpen) firstOpen = false;
             else refresher.run();

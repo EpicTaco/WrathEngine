@@ -20,6 +20,7 @@ package wrath.client.graphics;
 import java.io.File;
 import java.util.HashMap;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL30;
 import wrath.client.ClientUtils;
 import wrath.client.Game;
@@ -33,6 +34,16 @@ import wrath.common.Reloadable;
 public class Texture implements Closeable, Reloadable
 {
     private static final HashMap<File, Texture> preLoadedTex = new HashMap<>();
+    
+    /**
+     * Loads a Texture object.
+     * @param textureName The name of the texture. This includes the file extension.
+     * @return Returns the loaded {@link wrath.client.graphics.Texture} object.
+     */
+    public static Texture loadTexture(String textureName)
+    {
+        return loadTexture(new File("assets/textures/" + textureName));
+    }
     
     /**
      * Loads a Texture object.
@@ -66,6 +77,8 @@ public class Texture implements Closeable, Reloadable
         Game.getCurrentInstance().getLogger().log("Created texture ID '" + texID + "' from file '" + file.getName() + "'!");
         GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
         if(Game.getCurrentInstance().getConfig().getBoolean("TexureMipmapping", true)) GL30.glGenerateMipmap(GL11.GL_TEXTURE_2D);
         if(Game.getCurrentInstance().getConfig().getBoolean("AntiAliasingTexture", true))
         {
@@ -143,27 +156,27 @@ public class Texture implements Closeable, Reloadable
     public void reload()
     {
         this.texID = ClientUtils.getTexture(ClientUtils.loadImageFromFile(file));
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
+        if(Game.getCurrentInstance().getConfig().getBoolean("TexureMipmapping", true)) GL30.glGenerateMipmap(GL11.GL_TEXTURE_2D);
+        if(Game.getCurrentInstance().getConfig().getBoolean("AntiAliasingTexture", true))
+        {
+            if(Game.getCurrentInstance().getConfig().getBoolean("TexureMipmapping", true))
+            {
+                GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR_MIPMAP_LINEAR);
+                GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+            }
+            else
+            {
+                GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+                GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
+            }
+            
+        }
+        Texture.unbindTextures();
         Game.getCurrentInstance().getLogger().log("Created texture ID '" + texID + "' from file '" + file.getName() + "'!");
-    }
-    
-    /**
-     * Toggles Anti-Aliasing filters for this Texture.
-     * @param enabled If true, enables Anti-Aliasing.
-     */
-    public void setAntiAliasing(boolean enabled)
-    {
-        bindTexture();
-        if(enabled)
-        {
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-        }
-        else
-        {
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, 0);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, 0);
-        }
-        unbindTexture();
     }
     
     /**

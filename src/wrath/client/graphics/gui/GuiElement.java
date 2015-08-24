@@ -137,31 +137,39 @@ public abstract class GuiElement implements Renderable
     }
     
     @Override
-    public void render()
+    public void renderSetup()
     {
         GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glDisable(GL11.GL_DEPTH_TEST | GL11.GL_BLEND);
         GL11.glDepthMask(false);
         if(texture != null) texture.bindTexture();
-        
         GL11.glBegin(GL11.GL_QUADS);
-        {
-            color.bindColor();
-            
-            GL11.glTexCoord2f(0, 1);
-            GL11.glVertex3f(x, y - h, 0);
-            
-            GL11.glTexCoord2f(1, 1);
-            GL11.glVertex3f(x + w, y - h, 0);
-            
-            GL11.glTexCoord2f(1, 0);
-            GL11.glVertex3f(x + w, y, 0);
-            
-            GL11.glTexCoord2f(0, 0);
-            GL11.glVertex3f(x, y, 0);
-        }
+    }
+    
+    @Override
+    public void render(boolean consolidated)
+    {
+        if(consolidated) renderSetup();
+        color.bindColor();
+
+        GL11.glTexCoord2f(0, 1);
+        GL11.glVertex3f(x, y - h, 0);
+
+        GL11.glTexCoord2f(1, 1);
+        GL11.glVertex3f(x + w, y - h, 0);
+
+        GL11.glTexCoord2f(1, 0);
+        GL11.glVertex3f(x + w, y, 0);
+
+        GL11.glTexCoord2f(0, 0);
+        GL11.glVertex3f(x, y, 0);
+        if(consolidated) renderStop();
+    }
+    
+    @Override
+    public void renderStop()
+    {
         GL11.glEnd();
-        
         color.unbindColor();
         Texture.unbindTextures();
         GL11.glDepthMask(true);
@@ -169,6 +177,7 @@ public abstract class GuiElement implements Renderable
         GL11.glEnable(GL11.GL_DEPTH_TEST);
     }
     
+
     /**
      * Sets the {@link wrath.client.graphics.Color} of the GUI element.
      * @param color The {@link wrath.client.graphics.Color} to render the GUI component in.

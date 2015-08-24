@@ -24,6 +24,7 @@ import org.lwjgl.util.vector.Vector3f;
 import wrath.client.ClientUtils;
 import wrath.common.entities.Entity;
 import wrath.common.entities.EntityDescriptor;
+import wrath.util.Logger;
 
 /**
  * Class exclusive to the client to describe Render-able entities.
@@ -36,11 +37,12 @@ public class EntityRenderer implements Renderable
     private final Entity entity;
     private Light light = null;
     private Model model = null;
+    private float reflectivity = 0f;
+    private float shineDampening = 1f;
     
     private Matrix4f mat = new Matrix4f();
     private boolean updateMat = true;
     private boolean tmpBool = true;
-    
     
     /**
      * Constructor.
@@ -60,12 +62,15 @@ public class EntityRenderer implements Renderable
                 File texture = new File("assets/textures/" + entity.getEntityDescriptor().getTextureName());
                 if(modelFile.exists() && texture.exists())
                 {
-                    Model m = Model.loadModel(modelFile);
+                    Model m = Model.loadModel(entity.getEntityDescriptor().getModelName());
                     m.attachTexture(Texture.loadTexture(texture));
                     this.bindModel(m);
                     preLoadedModels.put(entity.getEntityDescriptor().getModelName() + "," + entity.getEntityDescriptor().getTextureName(), m);
                 }
             }
+            
+            this.reflectivity = entity.getEntityDescriptor().getReflectivity();
+            this.shineDampening = entity.getEntityDescriptor().getShineDampening();
         }
     }
     
@@ -106,17 +111,55 @@ public class EntityRenderer implements Renderable
         return model;
     }
     
-    @Override
-    public void render()
+    /**
+     * Gets the amount, in floating point number, the Entity is susceptible to having specular light reflect off of it.
+     * @return Returns the amount, in floating point number, the Entity is susceptible to having specular light reflect off of it.
+     */
+    public float getReflectivity()
     {
-        update();
-        model.render();
+        return reflectivity;
+    }
+    
+    /**
+     * Gets the distance at which the renderer's camera can no longer see reflected light.
+     * @return Returns the distance at which the renderer's camera can no longer see reflected light.
+     */
+    public float getShineDampening()
+    {
+        return shineDampening;
+    }
+    
+    @Override
+    public void render(boolean consolidated)
+    {
+        if(consolidated) renderSetup();
+        model.render(true);
     }
   
+    @Override
+    public void renderSetup()
+    {
+        update();
+    }
+    
+    @Override
+    public void renderStop(){}
+    
+    /**
+     * Sets the values of variables used to calculate specular lighting.
+     * @param reflectivity The amount, in floating point number, the Entity is susceptible to having specular light reflect off of it. Default 0.
+     * @param shineDampening The distance at which the renderer's camera can no longer see reflected light. Default 1.
+     */
+    public void setSpecularLightingProperties(float reflectivity, float shineDampening)
+    {
+        this.reflectivity = reflectivity;
+        this.shineDampening = shineDampening;
+    }
+    
     /**
      * Changes the model's shader settings to fit the current settings.
      */
-    protected void update()
+    public void update()
     {
         if(model.getShader() != null)
         {
@@ -133,7 +176,8 @@ public class EntityRenderer implements Renderable
                 updateMat = false;
             }
             model.getShader().setTransformationMatrix(mat);
-            
+            model.getShader().setUniformVariable(model.getShader().getUniformVariableLocation("reflectivity"), reflectivity);
+            model.getShader().setUniformVariable(model.getShader().getUniformVariableLocation("shineDamper"), shineDampening);
             if(light != null)
             {
                 model.getShader().setUniformVariable(model.getShader().getUniformVariableLocation("lightPosition"), light.getPosition());
@@ -151,7 +195,7 @@ public class EntityRenderer implements Renderable
     public static void renderEntity(Entity entity, Model model, Matrix4f transformationMatrix)
     {
         if(model.getShader() != null) model.getShader().setTransformationMatrix(transformationMatrix);
-        model.render();
+        model.render(true);
     }
     
     /**
@@ -171,13 +215,17 @@ public class EntityRenderer implements Renderable
             File texture = new File("assets/textures/" + entity.getEntityDescriptor().getTextureName());
             if(modelF.exists() && texture.exists())
             {
-                model = Model.loadModel(modelF);
+                model = Model.loadModel(entity.getEntityDescriptor().getModelName());
                 model.attachTexture(Texture.loadTexture(texture));
             }
-            else return;
+            else
+            {
+                Logger.getErrorLogger().log("Could not render classless Entity with model '" + descriptor.getModelName() + "' and texture '" + descriptor.getTextureName() + "'! Assets Could not load!");
+                return;
+            }
         }
         
         if(model.getShader() != null) model.getShader().setTransformationMatrix(transformationMatrix);
-        model.render();
+        model.render(true);
     }
 }

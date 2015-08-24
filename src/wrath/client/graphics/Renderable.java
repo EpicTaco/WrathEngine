@@ -25,6 +25,17 @@ public interface Renderable
 {
     /**
      * Called to render the said object.
+     * @param consolidated If true, the code will run properly without any additional steps, meaning renderSetup() and renderStop() are called automatically.
      */
-    public void render();
+    public void render(boolean consolidated);
+    
+    /**
+     * Prepares the renderer to draw this object.
+     */
+    public void renderSetup();
+    
+    /**
+     * Cleans up all resources associated with drawing this object.
+     */
+    public void renderStop();
 }

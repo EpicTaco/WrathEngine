@@ -70,7 +70,7 @@ public class TestGameInst extends Game implements GameEventHandler
     @Override
     public void render()
     {
-        render.render();
+        this.getRenderer().addEntityRenderingJob(render);
     }
     
     @Override

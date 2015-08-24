@@ -52,29 +52,39 @@ public class Background implements Renderable
     }
     
     @Override
-    public void render()
+    public void renderSetup()
     {
         GL11.glEnable(GL11.GL_TEXTURE_2D);
         if(tex != null) tex.bindTexture();
         color.bindColor();
         GL11.glBegin(GL11.GL_QUADS);
-        {
-            //Top Left
-            GL11.glTexCoord2f(0, 0);
-            GL11.glVertex3f(-1.0f, 1.0f, 0.0f);
-            
-            //Top Right
-            GL11.glTexCoord2f(1, 0);
-            GL11.glVertex3f(1.0f, 1.0f, 0.0f);
-            
-            //Bottom Right
-            GL11.glTexCoord2f(1, 1);
-            GL11.glVertex3f(1.0f, -1.0f, 0.0f);
-            
-            //Bottom Left
-            GL11.glTexCoord2f(0, 1);
-            GL11.glVertex3f(-1.0f, -1.0f, 0.0f);
-        }
+    }
+    
+    @Override
+    public void render(boolean consolidated)
+    {
+        if(consolidated) renderSetup();
+        //Top Left
+        GL11.glTexCoord2f(0, 0);
+        GL11.glVertex3f(-1.0f, 1.0f, 0.0f);
+
+        //Top Right
+        GL11.glTexCoord2f(1, 0);
+        GL11.glVertex3f(1.0f, 1.0f, 0.0f);
+
+        //Bottom Right
+        GL11.glTexCoord2f(1, 1);
+        GL11.glVertex3f(1.0f, -1.0f, 0.0f);
+
+        //Bottom Left
+        GL11.glTexCoord2f(0, 1);
+        GL11.glVertex3f(-1.0f, -1.0f, 0.0f);
+        if(consolidated) renderStop();
+    }
+    
+    @Override
+    public void renderStop()
+    {
         GL11.glEnd();
         color.unbindColor();
         Texture.unbindTextures();
