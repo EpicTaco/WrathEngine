@@ -16,10 +16,10 @@ of LWJGL 3 (which is using OpenGL, OpenAL, OpenCL and GLFW) for graphics and aud
     - Will feature a pure-java networking engine that is also easy-to-use and mod-able!
     - An optional launcher for the game that interprets HTML/CSS code to decorate it according to your game
 
-[Download Core Engine](http://epictaco.github.io/WrathEngine/WrathEngine-redist.zip)
+[Download Core Engine](http://nixfanboy.github.io/WrathEngine/WrathEngine-redist.zip)
 
-[Setting up the Engine](https://github.com/EpicTaco/WrathEngine/wiki/Getting-Started#setting-up-the-environment)
+[Setting up the Engine](https://github.com/nixfanboy/WrathEngine/wiki/Getting-Started#setting-up-the-environment)
 
-[Wiki](https://github.com/EpicTaco/WrathEngine/wiki/)
+[Wiki](https://github.com/nixfanboy/WrathEngine/wiki/)
 
-[Project Page](https://epictaco.github.io/WrathEngine)
+[Project Page](https://nixfanboy.github.io/WrathEngine)
