@@ -37,6 +37,8 @@ public class EntryPoint
      */
     public static void main(String[] args)
     {   
+        System.setProperty("org.lwjgl.librarypath", "assets/native");
+        
         if(!new File("assets/init").exists())
             ClientUtils.throwInternalError("assets/init file is missing!", false);
         

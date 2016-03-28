@@ -187,7 +187,7 @@ public class ClientUtils
         }
         catch(NullPointerException e)
         {
-            Logger.getErrorLogger().log("Could not convert Image to ByteBuffer! Operations Error has occured!");
+           System.err.println("Could not convert Image to ByteBuffer! Operations Error has occured!");
         }
         
         return ByteBuffer.allocate(0);
@@ -259,7 +259,7 @@ public class ClientUtils
         }
         catch(IOException e)
         {
-            Logger.getErrorLogger().log("Could not load image from file! I/O Error!");
+           System.err.println("Could not load image from file! I/O Error!");
         }
         
         return ret;
@@ -275,7 +275,7 @@ public class ClientUtils
     {
         if(!shaderFile.exists())
         {
-            Logger.getErrorLogger().log("Could not load shader from file '" + shaderFile.getAbsolutePath() + "'! File not found!");
+           System.err.println("Could not load shader from file '" + shaderFile.getAbsolutePath() + "'! File not found!");
             return null;
         }
         
@@ -291,7 +291,7 @@ public class ClientUtils
         }
         catch(IOException e)
         {
-            Logger.getErrorLogger().log("Could not load shader from file '" + shaderFile.getAbsolutePath() + "'! I/O Error!");
+           System.err.println("Could not load shader from file '" + shaderFile.getAbsolutePath() + "'! I/O Error!");
             return null;
         }
         
@@ -314,12 +314,12 @@ public class ClientUtils
                 }
                 catch(IOException e)
                 {
-                    Logger.getErrorLogger().log("Could not open URL '" + url + "' in browser! URL may not be valid!");
+                   System.err.println("Could not open URL '" + url + "' in browser! URL may not be valid!");
                 }
             }
             else
             {
-                Logger.getErrorLogger().log("Could not open URL '" + url + "' in browser! Action not supported!");
+               System.err.println("Could not open URL '" + url + "' in browser! Action not supported!");
             }
         }
     }

@@ -168,6 +168,6 @@ public class Camera
             matrixBuf.flip();
             updateMat = false;
         }
-        GL20.glUniformMatrix4(shader.getUniformVariableLocation("viewMatrix"), false, matrixBuf);
+        GL20.glUniformMatrix4fv(shader.getUniformVariableLocation("viewMatrix"), false, matrixBuf);
     }
 }

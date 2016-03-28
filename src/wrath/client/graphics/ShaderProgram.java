@@ -52,13 +52,13 @@ public class ShaderProgram implements Closeable
     {
         if(!vertFile.exists())
         {
-            Logger.getErrorLogger().log("Could not load shader from file '" + vertFile.getAbsolutePath() + "'! File not found!");
+            System.err.println("Could not load shader from file '" + vertFile.getAbsolutePath() + "'! File not found!");
             return null;
         }
         
         if(!fragFile.exists())
         {
-            Logger.getErrorLogger().log("Could not load shader from file '" + fragFile.getAbsolutePath() + "'! File not found!");
+            System.err.println("Could not load shader from file '" + fragFile.getAbsolutePath() + "'! File not found!");
             return null;
         }
         
@@ -74,7 +74,7 @@ public class ShaderProgram implements Closeable
         }
         catch(IOException e)
         {
-            Logger.getErrorLogger().log("Could not load shader from file '" + vertFile.getAbsolutePath() + "'! I/O Error!");
+            System.err.println("Could not load shader from file '" + vertFile.getAbsolutePath() + "'! I/O Error!");
             return null;
         }
         
@@ -90,7 +90,7 @@ public class ShaderProgram implements Closeable
         }
         catch(IOException e)
         {
-            Logger.getErrorLogger().log("Could not load shader from file '" + fragFile.getAbsolutePath() + "'! I/O Error!");
+            System.err.println("Could not load shader from file '" + fragFile.getAbsolutePath() + "'! I/O Error!");
             return null;
         }
         
@@ -104,16 +104,16 @@ public class ShaderProgram implements Closeable
         GL20.glCompileShader(vert);
         if(GL20.glGetShaderi(vert, GL20.GL_COMPILE_STATUS) == GL11.GL_FALSE)
         {
-            Logger.getErrorLogger().log("Could not load shader from file '" + vertFile.getAbsolutePath() + "'! Compile Error:");
-            Logger.getErrorLogger().log(GL20.glGetShaderInfoLog(vert));
+            System.err.println("Could not load shader from file '" + vertFile.getAbsolutePath() + "'! Compile Error:");
+            System.err.println(GL20.glGetShaderInfoLog(vert));
             return null;
         }
         
         GL20.glCompileShader(frag);
         if(GL20.glGetShaderi(frag, GL20.GL_COMPILE_STATUS) == GL11.GL_FALSE)
         {
-            Logger.getErrorLogger().log("Could not load shader from file '" + fragFile.getAbsolutePath() + "'! Compile Error:");
-            Logger.getErrorLogger().log(GL20.glGetShaderInfoLog(frag));
+            System.err.println("Could not load shader from file '" + fragFile.getAbsolutePath() + "'! Compile Error:");
+            System.err.println(GL20.glGetShaderInfoLog(frag));
             return null;
         }
         
@@ -217,7 +217,7 @@ public class ShaderProgram implements Closeable
         FloatBuffer pbuf = BufferUtils.createFloatBuffer(16);
         value.store(pbuf);
         pbuf.flip();
-        GL20.glUniformMatrix4(getUniformVariableLocation("projectionMatrix"), false, pbuf);
+        GL20.glUniformMatrix4fv(getUniformVariableLocation("projectionMatrix"), false, pbuf);
     }
     
     /**
@@ -229,7 +229,7 @@ public class ShaderProgram implements Closeable
         GL20.glUseProgram(programID);
         value.store(matrixBuf);
         matrixBuf.flip();
-        GL20.glUniformMatrix4(getUniformVariableLocation("transformationMatrix"), false, matrixBuf);
+        GL20.glUniformMatrix4fv(getUniformVariableLocation("transformationMatrix"), false, matrixBuf);
     }
     
     /**
@@ -275,7 +275,7 @@ public class ShaderProgram implements Closeable
         GL20.glUseProgram(programID);
         value.store(matrixBuf);
         matrixBuf.flip();
-        GL20.glUniformMatrix4(location, false, matrixBuf);
+        GL20.glUniformMatrix4fv(location, false, matrixBuf);
     }
     
     /**

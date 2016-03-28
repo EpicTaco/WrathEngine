@@ -74,7 +74,7 @@ public class Texture implements Closeable, Reloadable
     {
         this.file = textureFile;
         this.texID = ClientUtils.getTexture(ClientUtils.loadImageFromFile(textureFile));
-        Game.getCurrentInstance().getLogger().log("Created texture ID '" + texID + "' from file '" + file.getName() + "'!");
+        Game.getCurrentInstance().getLogger().println("Created texture ID '" + texID + "' from file '" + file.getName() + "'!");
         GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
@@ -176,7 +176,7 @@ public class Texture implements Closeable, Reloadable
             
         }
         Texture.unbindTextures();
-        Game.getCurrentInstance().getLogger().log("Created texture ID '" + texID + "' from file '" + file.getName() + "'!");
+        Game.getCurrentInstance().getLogger().println("Created texture ID '" + texID + "' from file '" + file.getName() + "'!");
     }
     
     /**

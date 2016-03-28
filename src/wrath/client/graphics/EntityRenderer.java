@@ -220,7 +220,7 @@ public class EntityRenderer implements Renderable
             }
             else
             {
-                Logger.getErrorLogger().log("Could not render classless Entity with model '" + descriptor.getModelName() + "' and texture '" + descriptor.getTextureName() + "'! Assets Could not load!");
+                System.err.println("Could not render classless Entity with model '" + descriptor.getModelName() + "' and texture '" + descriptor.getTextureName() + "'! Assets Could not load!");
                 return;
             }
         }

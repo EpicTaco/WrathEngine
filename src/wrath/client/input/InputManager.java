@@ -333,7 +333,7 @@ public class InputManager implements Closeable
             list.addBinding(new KeyData(key, keyMod, action, functionID));
         }
         else keyMap.put(key, new KeyList(new KeyData(key, keyMod, action, functionID)));
-        Game.getCurrentInstance().getLogger().log("Function '" + functionID + "' bound to key '" + key + "'.");
+        Game.getCurrentInstance().getLogger().println("Function '" + functionID + "' bound to key '" + key + "'.");
     }
 
     /**
@@ -342,7 +342,7 @@ public class InputManager implements Closeable
      */
     public void bindKeysToDefaults()
     {
-        Game.getCurrentInstance().getLogger().log("Setting keys to defaults!");
+        Game.getCurrentInstance().getLogger().println("Setting keys to defaults!");
         defaults.stream().forEach((d) ->
         {
             if(keyMap.containsKey(d.getKey()))
@@ -452,11 +452,11 @@ public class InputManager implements Closeable
             try
             {
                 inpFile.createNewFile();
-                Game.getCurrentInstance().getLogger().log("Saved key bindings not found, Generating file @ '" + inpFile.getName() + "'!");
+                Game.getCurrentInstance().getLogger().println("Saved key bindings not found, Generating file @ '" + inpFile.getName() + "'!");
             }
             catch(IOException ex)
             {
-                Logger.getErrorLogger().log("Could not create Key Bindings file!");
+                System.err.println("Could not create Key Bindings file!");
             }
             bindKeysToDefaults();
             saveKeys();
@@ -472,7 +472,7 @@ public class InputManager implements Closeable
                     return;
                 }
                 
-                Game.getCurrentInstance().getLogger().log("Reading key bindings from file '" + inpFile.getName() + "'!");
+                Game.getCurrentInstance().getLogger().println("Reading key bindings from file '" + inpFile.getName() + "'!");
                 try(BufferedReader in = new BufferedReader(new FileReader(inpFile))) 
                 {
                     String inputBuffer;
@@ -491,7 +491,7 @@ public class InputManager implements Closeable
                         functionID = inputArray[0].trim().toLowerCase();
                         if(!savedFuncMap.containsKey(functionID))
                         {
-                            Game.getCurrentInstance().getLogger().log("Unknown function '" + functionID + "' while loading key binds from file '" + inpFile.getAbsolutePath() + "'; Line " + lineNum);
+                            Game.getCurrentInstance().getLogger().println("Unknown function '" + functionID + "' while loading key binds from file '" + inpFile.getAbsolutePath() + "'; Line " + lineNum);
                             continue;
                         }
                         
@@ -501,14 +501,14 @@ public class InputManager implements Closeable
                         }
                         catch(NumberFormatException e)
                         {
-                            Game.getCurrentInstance().getLogger().log("Unknown key mod value '" + inputArray[1] + "' while loading key binds from file '" + inpFile.getAbsolutePath() + "'; Line " + lineNum);
+                            Game.getCurrentInstance().getLogger().println("Unknown key mod value '" + inputArray[1] + "' while loading key binds from file '" + inpFile.getAbsolutePath() + "'; Line " + lineNum);
                             continue;
                         }
                         
                         action = KeyAction.valueOf(inputArray[2]);
                         if(action == null)
                         {
-                            Game.getCurrentInstance().getLogger().log("Unknown key action value '" + inputArray[2] + "' while loading key binds from file '" + inpFile.getAbsolutePath() + "'; Line " + lineNum);
+                            Game.getCurrentInstance().getLogger().println("Unknown key action value '" + inputArray[2] + "' while loading key binds from file '" + inpFile.getAbsolutePath() + "'; Line " + lineNum);
                             continue;
                         }
                         
@@ -518,7 +518,7 @@ public class InputManager implements Closeable
                         }
                         catch(NumberFormatException e)
                         {
-                            Game.getCurrentInstance().getLogger().log("Unknown key value '" + inputArray[3] + "' while loading key binds from file '" + inpFile.getAbsolutePath() + "'; Line " + lineNum);
+                            Game.getCurrentInstance().getLogger().println("Unknown key value '" + inputArray[3] + "' while loading key binds from file '" + inpFile.getAbsolutePath() + "'; Line " + lineNum);
                             continue;
                         }
                         
@@ -528,7 +528,7 @@ public class InputManager implements Closeable
             }
             catch(IOException e)
             {
-                Logger.getErrorLogger().log("Could not load saved keys from file '" + inpFile.getAbsolutePath() + "'! Binding default keys!");
+                System.err.println("Could not load saved keys from file '" + inpFile.getAbsolutePath() + "'! Binding default keys!");
                 bindKeysToDefaults();
             }
         }
@@ -618,7 +618,7 @@ public class InputManager implements Closeable
             }
             catch(IOException ex)
             {
-                Logger.getErrorLogger().log("Could not create Key Bindings file! I/O Error Occured!");
+                System.err.println("Could not create Key Bindings file! I/O Error Occured!");
             }
         }
         
@@ -639,10 +639,10 @@ public class InputManager implements Closeable
         }
         catch (IOException e) 
         {
-            Logger.getErrorLogger().log("Could not save key bindings, I/O Error Occured!");
+            System.err.println("Could not save key bindings, I/O Error Occured!");
         }
         
-        Game.getCurrentInstance().getLogger().log("Finished writing key binds data to file '" + inpFile.getName() + "'!");
+        Game.getCurrentInstance().getLogger().println("Finished writing key binds data to file '" + inpFile.getName() + "'!");
     }
 
     /**

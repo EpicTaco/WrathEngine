@@ -74,7 +74,7 @@ public class TextRenderer implements Reloadable
             }
             catch(IOException e)
             {
-                Logger.getErrorLogger().log("Could not read Metrics File '" + metricsFile.getName() + "'! I/O Error!");
+                System.err.println("Could not read Metrics File '" + metricsFile.getName() + "'! I/O Error!");
             }
         }
         
@@ -126,7 +126,7 @@ public class TextRenderer implements Reloadable
             }
             catch(IOException e)
             {
-                Logger.getErrorLogger().log("Could not read Metrics File '" + metricsFile.getName() + "'! I/O Error!");
+                System.err.println("Could not read Metrics File '" + metricsFile.getName() + "'! I/O Error!");
             }
         }
     }

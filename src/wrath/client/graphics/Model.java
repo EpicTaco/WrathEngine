@@ -109,7 +109,7 @@ public class Model implements Renderable, Closeable, Reloadable
         if(!mfile.exists()) model = new Model(name, vaoid, new Integer[]{vtvboid, invboid, nmvboid}, verticies, indicies, normals, useDefaultShaders);
         else model = new Model(name, vaoid, new Integer[]{vtvboid, invboid, nmvboid}, null, null, null, useDefaultShaders);
             
-        Game.getCurrentInstance().getLogger().log("Loaded model '" + name + "' with " + verticies.length + " verticies, " + indicies.length + " indicies, and " + normals.length + " normals.");
+        Game.getCurrentInstance().getLogger().println("Loaded model '" + name + "' with " + verticies.length + " verticies, " + indicies.length + " indicies, and " + normals.length + " normals.");
         if(useDefaultShaders) model.attachShader(ShaderProgram.DEFAULT_SHADER);
         
         // Unbinding OpenGL Objects
@@ -271,7 +271,7 @@ public class Model implements Renderable, Closeable, Reloadable
         }
         catch(IOException e)
         {
-            Logger.getErrorLogger().log("Could not load model from file '" + file.getName() + "'! I/O Error!");
+            System.err.println("Could not load model from file '" + file.getName() + "'! I/O Error!");
         }
         
         return src;
@@ -334,7 +334,7 @@ public class Model implements Renderable, Closeable, Reloadable
     {
         this.texture = texture;
         if(this.textureCoords != null) textureCoords = this.textureCoords;
-        if(shader == null) Game.getCurrentInstance().getLogger().log("Warning: If no shader is present to pass texture co-ordinates, then the texture will not render!");
+        if(shader == null) Game.getCurrentInstance().getLogger().println("Warning: If no shader is present to pass texture co-ordinates, then the texture will not render!");
         GL30.glBindVertexArray(vao);
         int vboid = GL15.glGenBuffers();
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboid);
@@ -543,7 +543,7 @@ public class Model implements Renderable, Closeable, Reloadable
         vbos.add(invboid);
         vbos.add(nmvboid);
         vbos.add(texvboid);
-        Game.getCurrentInstance().getLogger().log("Reloaded model '" + name + "'!");
+        Game.getCurrentInstance().getLogger().println("Reloaded model '" + name + "'!");
         if(defaultShaders) this.attachShader(ShaderProgram.DEFAULT_SHADER);
         
         // Unbinding OpenGL Objects

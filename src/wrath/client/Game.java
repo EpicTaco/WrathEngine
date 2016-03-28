@@ -28,19 +28,19 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.imageio.ImageIO;
 import org.lwjgl.BufferUtils;
-import org.lwjgl.LWJGLUtil;
-import org.lwjgl.Sys;
+import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
-import org.lwjgl.glfw.GLFWvidmode;
+import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.openal.AL;
 import org.lwjgl.openal.ALContext;
+import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
-import org.lwjgl.opengl.GLContext;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.util.vector.Matrix4f;
 import wrath.client.enums.ImageFormat;
@@ -83,8 +83,8 @@ public class Game
     private final double TPS;
     private final String VERSION;
 
-    private final Config gameConfig = new Config("game");
-    private final Logger gameLogger = new Logger("info");
+    private final Config gameConfig = new Config(new File("etc/configs/game.cfg"));
+    private final Logger gameLogger = new Logger(new File("etc/logs/game.log"));
     private final Scheduler gameScheduler = new Scheduler();
     
     private GLFWErrorCallback errStr;
@@ -109,7 +109,7 @@ public class Game
      * Describes all the essential and unmodifiable variables of the Game.
      * @param gameTitle Title of the Game.
      * @param version Version of the Game.
-     * @param ticksPerSecond The amount of times the logic of the game should update in one second. Recommended 30-60.
+     * @param ticksPerSecond The amount of times the printlnic of the game should update in one second. Recommended 30-60.
      * @param renderMode Describes how to game should be rendered (2D or 3D).
      */
     public Game(String gameTitle, String version, double ticksPerSecond, RenderMode renderMode)
@@ -134,8 +134,6 @@ public class Game
             ClientUtils.throwInternalError("Missing assets folder! Try re-downloading!", true);
             stopImpl();
         }
-           
-        System.setProperty("org.lwjgl.librarypath", "assets/native");
     }
 
     /**
@@ -173,16 +171,6 @@ public class Game
     }
     
     /**
-     * Returns the standard error logger for the application as a whole.
-     * Same operation as {@link wrath.util.Logger#getErrorLogger() }.
-     * @return Returns the standard error {@link wrath.util.Logger} for the game.
-     */
-    public Logger getErrorLogger()
-    {
-        return Logger.getErrorLogger();
-    }
-    
-    /**
      * Gets the {@link wrath.client.Game.EventManager} class that manages all event handlers.
      * This class is used to control, access and change Event Handlers from the {@link wrath.client.events} package.
      * @return Returns the {@link wrath.client.Game.EventManager} class that manages all event handlers.
@@ -208,15 +196,6 @@ public class Game
     public Logger getLogger()
     {
         return gameLogger;
-    }
-    
-    /**
-     * Gets the Operating System the game is running on.
-     * @return Returns the enumerator-style object representing what Operating System the game is running on.
-     */
-    public LWJGLUtil.Platform getOS()
-    {
-        return LWJGLUtil.getPlatform();
     }
     
     /**
@@ -274,11 +253,11 @@ public class Game
     }
     
     /**
-     * Gets the amount of times the game's logic will update in one second.
+     * Gets the amount of times the game's printlnic will update in one second.
      * Recommended to not be over 64 or under 10.
      * If the TPS is set over 60 and VSync is on, the ticks will be forced to 60 TPS.
      * Unfortunately, there are not any good ways to overcome said bug, though I am looking into potential solutions.
-     * @return Returns the Ticks-per-second of the game's logic.
+     * @return Returns the Ticks-per-second of the game's printlnic.
      */
     public double getTPS()
     {
@@ -432,7 +411,7 @@ public class Game
      */
     public void start(String[] args)
     {
-        gameLogger.log("Launching '" + TITLE + "' Client v." + VERSION + " on '" + LWJGLUtil.getPlatformName().toUpperCase() +"' platform with LWJGL v." + Sys.getVersion() + "!");
+        gameLogger.println("Launching '" + TITLE + "' Client v." + VERSION + "  with LWJGL v." + Version.getVersion() + "!");
 
         //Initialize GLFW and OpenGL
         GLFW.glfwSetErrorCallback((errStr = new GLFWErrorCallback()
@@ -440,13 +419,13 @@ public class Game
             @Override
             public void invoke(int error, long description) 
             {
-                Logger.getErrorLogger().log("GLFW hit ERROR ID '" + error + "' with message '" + description + "'!");
+                System.err.println("GLFW hit ERROR ID '" + error + "' with message '" + description + "'!");
             }
         }));
         
         if(GLFW.glfwInit() != GL11.GL_TRUE)
         {
-            Logger.getErrorLogger().log("Could not initialize GLFW! Unknown Error!");
+            System.err.println("Could not initialize GLFW! Unknown Error!");
             ClientUtils.throwInternalError("Failed to initialize GLFW!", false);
             stopImpl();
         }
@@ -458,7 +437,7 @@ public class Game
             if(b.length <= 1) continue;
             
             gameConfig.setProperty(b[0], b[1]);
-            gameLogger.log("Set property '" + b[0] + "' to value '" + b[1] + "'!");
+            gameLogger.println("Set property '" + b[0] + "' to value '" + b[1] + "'!");
         }
         
         //Auto-loads Java Plugins from specified directory.
@@ -466,7 +445,7 @@ public class Game
         {
             Object[] list = JarLoader.loadPluginsDirectory(new File(gameConfig.getString("AutoLoadJavaPluginsDirectory", "etc/plugins")));
             for(Object obj : list) evManager.getGameEventHandler().onLoadJavaPlugin(obj);
-            if(list.length != 0) gameLogger.log("Loaded " + list.length + " plugins from the directory '" + gameConfig.getString("AutoLoadJavaPluginsDirectory", "etc/plugins") + "'!");
+            if(list.length != 0) gameLogger.println("Loaded " + list.length + " plugins from the directory '" + gameConfig.getString("AutoLoadJavaPluginsDirectory", "etc/plugins") + "'!");
         }
         
         isRunning = true;
@@ -498,9 +477,9 @@ public class Game
         
         gameConfig.save();
         inpManager.saveKeys();
-        gameLogger.log("Average FPS throughout session: " + renManager.avgFps);
-        gameLogger.log("Time of Session: " + (double)((double)(System.nanoTime() - EntryPoint.UNIX_START_TIMESTAMP)/1000/1000/1000) + " seconds.");
-        gameLogger.log("Stopping '" + TITLE + "' Client v." + VERSION + "!");
+        gameLogger.println("Average FPS throughout session: " + renManager.avgFps);
+        gameLogger.println("Time of Session: " + (double)((double)(System.nanoTime() - EntryPoint.UNIX_START_TIMESTAMP)/1000/1000/1000) + " seconds.");
+        gameLogger.println("Stopping '" + TITLE + "' Client v." + VERSION + "!");
         if(gameLogger != null && !gameLogger.isClosed()) gameLogger.close();
         errStr.release();
         }catch(Exception e){}
@@ -782,19 +761,17 @@ public class Game
                     });
                     terrainRenderMap.clear();
                     
-                    entityRenderMap.entrySet().stream().map((entry) ->
-                    {
+                    entityRenderMap.entrySet().stream().forEach((entry) -> {
                         Model m = (Model) entry.getKey();
-                        m.renderSetup();
-                        for(EntityRenderer r : (List<EntityRenderer>) entry.getValue())
-                        {
-                            r.update();
-                            m.render(true);
+                        if (!(m == null)) {
+                            m.renderSetup();
+                            for(EntityRenderer r : (List<EntityRenderer>) entry.getValue())
+                            {
+                                r.update();
+                                m.render(true);
+                            }
+                            m.renderStop();
                         }
-                        return m;
-                    }).forEach((m) ->
-                    {
-                        m.renderStop();
                     });
                     entityRenderMap.clear();
                     
@@ -1001,8 +978,8 @@ public class Game
         {
             if(windowState == WindowState.FULLSCREEN || windowState == WindowState.FULLSCREEN_WINDOWED) return;
             
-            ByteBuffer vidmode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
-            GLFW.glfwSetWindowPos(window, (GLFWvidmode.width(vidmode) / 2) - (width / 2), (GLFWvidmode.height(vidmode) / 2) - (height / 2));
+            GLFWVidMode vidmode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
+            GLFW.glfwSetWindowPos(window, (vidmode.width() / 2) - (width / 2), (vidmode.height() / 2) - (height / 2));
         }
     
         /**
@@ -1013,7 +990,7 @@ public class Game
             if(!windowOpen) return;
             windowOpen = false;
         
-            gameLogger.log("Closing window [" + width + "x" + height + "]");
+            gameLogger.println("Closing window [" + width + "x" + height + "]");
         
             winSizeStr.release();
             trashCollector.run();
@@ -1100,24 +1077,22 @@ public class Game
             
             if(windowState == WindowState.FULLSCREEN) 
             {
-                ByteBuffer videomode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
-                int twidth = GLFWvidmode.width(videomode);
-                int theight = GLFWvidmode.height(videomode);
+                GLFWVidMode videomode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
                 if(!gameConfig.getBoolean("FullscreenUsesResolution", false))
                 {
-                    gameConfig.setProperty("Width", twidth);
-                    gameConfig.setProperty("Height", theight);
-                    width = twidth;
-                    height = theight;
+                    gameConfig.setProperty("Width", videomode.width());
+                    gameConfig.setProperty("Height", videomode.height());
+                    width = videomode.width();
+                    height = videomode.height();
                 }
 
-                window = GLFW.glfwCreateWindow(twidth, theight, TITLE, GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL);
+                window = GLFW.glfwCreateWindow(videomode.width(), videomode.height(), TITLE, GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL);
             }
             else if(windowState == WindowState.FULLSCREEN_WINDOWED) 
             {
-                ByteBuffer videomode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
-                width = GLFWvidmode.width(videomode);
-                height = GLFWvidmode.height(videomode);
+                GLFWVidMode videomode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
+                width = videomode.width();
+                height = videomode.height();
 
                 GLFW.glfwWindowHint(GLFW.GLFW_DECORATED, GL11.GL_FALSE);
                 window = GLFW.glfwCreateWindow(width, height, TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
@@ -1127,7 +1102,6 @@ public class Game
                 width = gameConfig.getInt("Width", 800);
                 height = gameConfig.getInt("Height", 600);
                 window = GLFW.glfwCreateWindow(width, height, TITLE, MemoryUtil.NULL, MemoryUtil.NULL);
-
             }
             else if(windowState == WindowState.WINDOWED_UNDECORATED) 
             {
@@ -1140,19 +1114,19 @@ public class Game
 
             if(window == MemoryUtil.NULL) 
             {
-                Logger.getErrorLogger().log("Could not initialize window! Window Info[" + width + "x" + height + "]");
+                System.err.println("Could not initialize window! Window Info[" + width + "x" + height + "]");
                 ClientUtils.throwInternalError("Window failed to initialize!", false);
                 stopImpl();
             }
 
-            gameLogger.log("Opened window [" + width + "x" + height + "] in " + windowState.toString().toUpperCase() + " mode.");
+            gameLogger.println("Opened window [" + width + "x" + height + "] in " + windowState.toString().toUpperCase() + " mode.");
 
             inpManager.openInput();
             
             GLFW.glfwMakeContextCurrent(window);
             if(gameConfig.getBoolean("DisplayVsync", false)) GLFW.glfwSwapInterval(1);
             else GLFW.glfwSwapInterval(0);
-            GLContext.createFromCurrent();
+            GL.createCapabilities();
             
             audiocontext = ALContext.create();
             audiocontext.makeCurrent();
@@ -1241,11 +1215,11 @@ public class Game
                 try 
                 {
                     ImageIO.write(image, format.name(), saveTo);
-                    gameLogger.log("Saved screenshot '" + saveTo.getName() + "'!");
+                    gameLogger.println("Saved screenshot '" + saveTo.getName() + "'!");
                 }
                 catch(IOException e) 
                 {
-                    Logger.getErrorLogger().log("Could not save Screenshot to '" + saveTo.getName() + "'! I/O Error has occured!");
+                    System.err.println("Could not save Screenshot to '" + saveTo.getName() + "'! I/O Error has occured!");
                 }
             });
 
